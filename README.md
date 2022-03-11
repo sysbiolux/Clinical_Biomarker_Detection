@@ -17,7 +17,16 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - In *mlxtend*: The files *feature_importance.py* and *__init__.py* in the ***./env/lib/.../mlxtend/evaluate/*** folder must be replaced by the two files [feature_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod) and [__init__.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod).
 
 ## The Pipeline Steps
-![pipeline_flowchart.gv.pdf](https://github.com/sysbiolux/Clinical_Biomarker_Detection/files/8232514/pipeline_flowchart.gv.pdf)
+![pipeline_flowchart_legend gv](https://user-images.githubusercontent.com/38098941/157884373-e0fc6fee-623c-4ca1-a8dd-47ba5260cbf3.svg)
+* Step: Refers to the configurable processing steps
+* Technique: Point where a technique must be selected
+* Specification: Possible configurable technique specifications
+* Starting point: Pipeline entry point
+* Pipe funnel point: Pipeline end point
+![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/157884274-6d565e24-1b3c-4512-b1a0-a26705945ffc.svg)
+* Abbreviations:  
+  - rus: random under-sampling  
+  - smote: synthetic minority over-sampling technique
 
 ## Usage
 
