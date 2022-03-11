@@ -30,6 +30,9 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - rus: random under-sampling  
   - smote: synthetic minority over-sampling technique
 
+* Note:  
+  - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped. In case of IR and FT being disabled in the configuration file, both steps will be skipped except the standard scaling mechanism of continuous features during FT.
+
 ## Usage
 
 ### Pipeline Configuration
