@@ -48,27 +48,25 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | fig_max_open_warning | 0 | Warning shown by matplotlib after number of open figures | int |
 | pandas_col_display_option | 5 | Number of columns displayed in pandas dataframe | int |
 | tiff_figure_dpi | 300 | Dot per inches resolution of the result figures | int |
-curr_dir = os.getcwd()  # Pathway to current directory, str (dir)
-folder_prefix = 'results/BASE-II'  # Prefix of folder name for results can be a folder in folder, str (suffixed in code)
-train_path = curr_dir + '/' + 'data/train_imputed.csv'  # Path to imputed training set, str (file)
-test_path = curr_dir + '/' + 'data/test_imputed.csv'  # Path to imputed training set, str (file)
-output_feature = 'PM-Frailty_Index'  # Target output feature, str (must be binary vector)
-output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion',
-                  'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max',
-                  'PM-Frailty_weightloss']  # Output-related features, str (can be list)
-kernels = ['poly', 'rbf', 'sigmoid']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
-non_linear_kernels = ['poly', 'rbf', 'sigmoid']  # Repeat with the above kernels that are non_linear, str (can be list)
-cache_size = 200  # Cache size of SVM classifier, 200 (HPC), 2000 (local), int
-decision_func_shape = 'ovr'  # Decision function shape of classifier, one vs rest 'ovr' or one vs one 'ovo', 'ovr', str
-clf_verbose = False  # Classifier verbose either True or False, False, bool
-grid_verbose = 1  # Grid search verbose, either 1 or 2, 1, int
-hard_iter_cap = 150000  # Hard stopping criterion, 150000, int
-splits = 10  # Stratified k fold splits, 10, int
-scorer = 'F2'  # Scorer used during the experimental steps, F.5, F1, F2, or accuracy, default accuracy, str
-shuffle_all = 1000  # Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values
-shuffle_male = 500  # Proven 500 for a set of 600 samples
-shuffle_female = 500  # Proven 500 for a set of 600 samples
-parallel_method = 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
+| curr_dir | os.getcwd() | Pathway to current directory | str, directory |
+| folder_prefix | 'results/BASE-II' | Prefix of folder name for results can be a folder in folder | str |
+| train_path | curr_dir + '/' + 'data/train_imputed.csv' | Path to imputed training set | str, file |
+| test_path | curr_dir + '/' + 'data/test_imputed.csv' | Path to imputed training set | str, file |
+| output_feature | 'PM-Frailty_Index' | Target output feature | str, binary feature |
+| output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
+| kernels | \['poly', 'rbf', 'sigmoid'] | Kernels to use for the Support Vector Machine classifier | str, list |
+| non_linear_kernels | \['poly', 'rbf', 'sigmoid'] | Repeat with the above kernels that are non_linear | str, list |
+| cache_size | 200 | Cache size of SVM classifier | int |
+| decision_func_shape | 'ovr' | Decision function shape of classifier, one vs rest 'ovr' or one vs one 'ovo' | str |
+| clf_verbose | False | Classifier verbose | bool |
+| grid_verbose | 1 | Grid search verbose | int |
+| hard_iter_cap | 150000 | Hard stopping criterion | int |
+| splits | 10 | Stratified k fold splits | int |
+| scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, or accuracy | str |
+| shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values | int |
+| shuffle_male | 500 | Proven 500 for a set of 600 samples | int |
+| shuffle_female | 500 | Proven 500 for a set of 600 samples | int |
+| parallel_method | 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
 n_jobs = -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
 enable_data_split = True  # True if data should be split based on the binary split feature below, default True, bool
 split_feature = 'PM-sex'  # Feature based on which data is split, str (will be set to None if disabled)
