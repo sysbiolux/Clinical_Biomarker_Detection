@@ -32,7 +32,7 @@ imp_font = 8  # Specific font size for feature importance plots, 8, int
 plot_style = 'fivethirtyeight'  # Matplotlib plot style, str
 fig_max_open_warning = 0  # Warning shown by matplotlib after number of open figures, int
 pandas_col_display_option = 5  # Number of columns displayed in pandas dataframe, int
-tiff_figure_dpi = 300  # Dot per inches resolution of the result figures
+tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
 # Other font sizes for titles, ticks, or labels are defined in the corresponding function
 # Later all fonts will be generalized
 
