@@ -23,8 +23,10 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 * Specification: Possible configurable technique specifications
 * Starting point: Pipeline entry point
 * Pipe funnel point: Pipeline end point
+
 ![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/157884274-6d565e24-1b3c-4512-b1a0-a26705945ffc.svg)
 * Abbreviations:  
+  - T/F: True/False
   - rus: random under-sampling  
   - smote: synthetic minority over-sampling technique
 
