@@ -107,9 +107,24 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | additional_technique_params | {} | Add additional technique parameter to introduce here if not supported already | dict |
 
 ### Run On Local Machine
+Regarding local machine: verbose=[1, 2] or True, n_jobs=-1, cache_size=2000, reduced grid search intervals
+Set parallel_method to threading, multiprocess, or loki for analysis on local machines
 
 ### Run On HPC Cluster
+Regarding HPC: verbose=0 or False, n_jobs=number of ip-engines which will be set automatically, cache_size=200, exhaustive grid search intervals
+Set parallel_method to ipyparallel to enable analysis on the HPC cluster
+Once on the HPC node: Check available modules, create python environment, install requirements, create directories, import data e.g.
+./data/train_imputed.csv and ./data/test_imputed.csv, sync pipeline script, config, utils and launcher files.
+The [regular launcher file](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_launcher.sh) and the [long job launcher file](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_long_launcher.sh) can be adapted for their resource allocations, but also to set the email-adress for job status notification.
+Run script on HPC using 'sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py' after the configurations in
+base_II_config.py are set to your needs.
 
 ## Results
+The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `BASE-II-DS-REI-RHCF-ST-PCA-FT-RUS-FI-SVM-HPC` for a pipeline applied on BASE-II with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS. Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA).  
+The results will consist of confusion matrices, roc_auc curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
 
 ## Planned Updates
+- [ ] Continue modifying this readme file from ***Run On Local Machine*** on
+- [ ] Extend the pipeline to allow tree-based classification
+- [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
+- [ ] Add delight to the experience when all tasks are complete :tada:
