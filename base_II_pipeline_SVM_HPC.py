@@ -86,16 +86,14 @@ print(f"\n##########################################\n##########################
 # Loading the BASE-II utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
 try:
-    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.base_II_utils import *
-    # from base_II_utils import *
+    from source.base_II_utils import *
     print("BASE-II utils file loaded successfully!\n")
 except ImportError('BASE-II utils file could not be found or loaded correctly.'):
     exit()
 # Loading the BASE-II configuration file
 print(f"Loading the BASE-II configuration file ...")
 try:
-    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.base_II_config import *
-    # from base_II_config import *
+    from base_II_config import *
     print("BASE-II configuration file loaded successfully!\n")
 except ImportError('BASE-II configuration file could not be found or loaded correctly.'):
     exit()
