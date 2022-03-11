@@ -63,7 +63,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | hard_iter_cap | 150000 | Hard stopping criterion | int |
 | splits | 10 | Stratified k fold splits | int |
 | scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, or accuracy | str |
-| shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values | int |
+| shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
 | shuffle_male | 500 | Proven 500 for a set of 600 samples | int |
 | shuffle_female | 500 | Proven 500 for a set of 600 samples | int |
 | parallel_method | 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
