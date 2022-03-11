@@ -68,6 +68,9 @@ def get_score_importances(
     ):
     # type: (...) -> Tuple[float, List[np.ndarray]]
     """
+    Function adapted to enable parallelization.
+    Author: Jeff DIDIER
+ 
     Return ``(base_score, score_decreases)`` tuple with the base score and
     score decreases when a feature is not available.
 
@@ -88,8 +91,10 @@ def get_score_importances(
         feature_importances = np.mean(score_decreases, axis=0)
 
     """
+    # set random generator outside of distributors
     rng = check_random_state(random_state)
     base_score = score_func.score(X, y)
+    # distribute the function to calculate scores to the workers
     result = Parallel(n_jobs=n_jobs)(delayed(_get_scores_shufled)(score_func, X, y, columns_to_shuffle=col_idx, random_state=rng, n_iter=n_iter) for col_idx in range(X.shape[1]))
     scores_decreases = []
     for scores_shuffled in result:
