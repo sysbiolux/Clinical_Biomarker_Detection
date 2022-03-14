@@ -8,7 +8,7 @@ The Clinical Biomarker Detection pipeline presented in this repository applies p
 The repository is composed of the main pipeline script [base_II_pipeline_SVM_HPC.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_pipeline_SVM_HPC.py) and the configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) that needs to be configured in respect to the clinical data and the research topic.  
 Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including two modified files for both python packages `eli5` and `mlxtend`.
 
-### Requirements
+### Requirements (necessary for both local machine and HPC application)
 * The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`.
 
 * After installing the required packages, files in the *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing.
@@ -22,7 +22,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 * Technique: Point where a technique must be selected
 * Specification: Possible configurable technique specifications
 * Starting point: Pipeline entry point
-* Pipe funnel point: Pipeline end point
+* Pipe funnel point: Pipeline funnel exit
 
 ![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/157884274-6d565e24-1b3c-4512-b1a0-a26705945ffc.svg)
 * Abbreviations:  
@@ -31,7 +31,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - smote: synthetic minority over-sampling technique
 
 * Note:  
-  - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped. In case of IR and FT being disabled in the configuration file, both steps will be skipped except the standard scaling mechanism of continuous features during FT.
+  - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier.
 
 ## Usage
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
@@ -124,7 +124,7 @@ The results will be stored in the configured `folder_prefix` folder and bear the
 The results will consist of confusion matrices, roc_auc curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
 
 ## Planned Updates
-- [ ] Continue modifying this readme file from ***Run On Local Machine*** on
+- [ ] Continue editing this README file
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Add boxplot of most important features in Original data
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
