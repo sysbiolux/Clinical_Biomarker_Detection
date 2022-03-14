@@ -76,7 +76,7 @@ shuffle_female = 500  # Proven 500 for a set of 600 samples
 ######################################################################################
 # ## Select parallel method and enabling various pipeline steps with given techniques
 ######################################################################################
-parallel_method = 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
+parallel_method = 'ipyparallel'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
 n_jobs = -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
 enable_data_split = True  # True if data should be split based on the binary split feature below, default True, bool
 split_feature = 'PM-sex'  # Feature based on which data is split, str (will be set to None if disabled)
@@ -97,7 +97,7 @@ enable_resampling = True  # Change to True to enable & False to disable resampli
 resampling_tech = 'rus'  # 'rus' (random under-sampling), 'smote' (synthetic minority over-sampling technique), str
 enable_ft = True  # Change to True to enable & False to disable feature transformation, default True, bool
 scaler_tech = 'standard'  # Change scaler function to 'standard', 'minmax' or 'robust' scaler, default 'standard', str
-pca_tech = 'kernel_pca'  # Select pca technique to choose between 'normal_pca' and 'kernel_pca', def 'normal_pca', str
+pca_tech = 'normal_pca'  # Select pca technique to choose between 'normal_pca' and 'kernel_pca', def 'normal_pca', str
 # /!\ Resampling_tech and pca_tech will be set to '' anyhow if disabled, scaler_tech must be given
 pipeline_order = 'samples->features'  # Order of the steps either 'samples->features' or 'features->samples', first, str
 enable_feature_importance = True  # Change to True to enable & False to disable feature importance, default True, bool
