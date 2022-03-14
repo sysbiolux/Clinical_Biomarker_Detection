@@ -82,7 +82,7 @@ enable_data_split = True  # True if data should be split based on the binary spl
 split_feature = 'PM-sex'  # Feature based on which data is split, str (will be set to None if disabled)
 enable_subgroups = False  # True if data shall be limited to subgroups, else full feature input, default False, bool
 subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, default 'all', tuple of str, str or 'all'
-# /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix above
+# /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix below
 # Possible subgroups are prefixed: BF- (body fluids), PM- (physical measurements), IM- (individual medications), ID-
 # (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), OT- (others)
 enable_engineered_input_removal = True  # Change to enable or disable removal of engineered input features, True, bool
