@@ -8,7 +8,7 @@
 #SBATCH --qos=long
 #SBATCH -p batch
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-use=username@uni.lu
+##SBATCH --mail-use=user.name@mail.provider
 
 # Safeguard for NOT running this launcher on access/login nodes
 print_error_and_exit() { echo "***ERROR*** $*"; exit 1; }
