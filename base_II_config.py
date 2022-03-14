@@ -88,7 +88,8 @@ subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, defau
 enable_engineered_input_removal = True  # Change to enable or disable removal of engineered input features, True, bool
 engineered_input_prefix = ('IM-', 'ID-')  # Prefix of features used in engineering, IM, ID, str, tuple of str, can be ''
 enable_rhcf = True  # Change to True to enable & False to disable RHCF, default True, bool
-# Set threshold variables for RHCF with Cramer's V, Spearman's Rank and Point bi-serial, will be None if disabled
+# Set threshold variables for RHCF with Cramer's V, Spearman's Rank and Point bi-serial, will be None if disabled,
+# can be a decimal threshold or a given percentile threshold
 thresh_cramer = (0.6, 'decimal')  # Corrected Cramer's V correlation threshold, default (0.6, 'decimal'), tuple
 thresh_spearman = (95, 'percentile')  # Spearman's Rank correlation threshold, default (95, 'percentile'), tuple
 thresh_pbs = (0.6, 'decimal')  # Point bi-serial correlation threshold, default (0.6, 'decimal'), tuple
