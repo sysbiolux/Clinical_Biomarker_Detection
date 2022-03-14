@@ -1,9 +1,11 @@
-# Clinical Biomarker Detection
+# Clinical Biomarker Detection - Pipeline
 DRIVEN-DTU WP13: Biomarker Detection In Clinical Cohort Data Using Machine Learning
 
+---
 ## Description
 The Clinical Biomarker Detection pipeline presented in this repository applies pre-processing and machine learning-based approaches to identify strong biomarkers for a given disease in clinical cohort data. The pipeline is currently designed to apply Support Vector Machine Classification to predict a binary target feature (e.g. disease) in combination with other configurable techniques and processing steps that can drastically improve the prediction power.
 
+---
 ## Getting Started
 The repository is composed of the main pipeline script [base_II_pipeline_SVM_HPC.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_pipeline_SVM_HPC.py) and the configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) that needs to be configured in respect to the clinical data and the research topic.  
 Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including two modified files for both python packages `eli5` and `mlxtend`.
@@ -11,11 +13,12 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 ### Requirements (necessary for both local machine and HPC application)
 * The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`.
 
-* After installing the required packages, files in the *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing.
+* **/!\\ /!\\ /!\\** After installing the required packages, files in the *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing.
 
   - In *eli5*: The file *permutation_importance.py* in the ***./env/lib/.../eli5/*** folder must be replaced by this [permutation_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/eli5_mod) file.
   - In *mlxtend*: The files *feature_importance.py* and *\__init__.py* in the ***./env/lib/.../mlxtend/evaluate/*** folder must be replaced by the two files [feature_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod) and [__init__.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod).
 
+---
 ## The Pipeline Steps
 ![pipeline_flowchart_legend gv](https://user-images.githubusercontent.com/38098941/157884373-e0fc6fee-623c-4ca1-a8dd-47ba5260cbf3.svg)
 * Step: Refers to the configurable processing steps
@@ -33,6 +36,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 * Note:  
   - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier.
 
+---
 ## Usage
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
@@ -106,10 +110,12 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | additional_kernel_params | {} | Add additional kernel parameter to introduce here if not supported already | dict |
 | additional_technique_params | {} | Add additional technique parameter to introduce here if not supported already | dict |
 
+---
 ### Run On Local Machine
-Regarding local machine: verbose=[1, 2] or True, n_jobs=-1, cache_size=2000, reduced grid search intervals
-Set parallel_method to threading, multiprocess, or loki for analysis on local machines
+For running the pipeline on a local machine it is recommended to reduce the grid search parameter intervals accordingly to guarantee reasonable computational time. For a better overview on the progress of the classification step, the `clf_verbose` can be set to `true` and the `grid_verbose` to `2`. Also, if enough computational memory is available, the SVM parameter `cache_size` can be increased to up to `2000` (mb).  
+Currently, the `parallel_method` supported for local machine analysis is limited to `threading` and `multiprocess`, as the method `ipyparallel` is reserved for the analysis on the HPC clusters. the number of available workers `n_jobs` can be set to `-1` for all CPUs or to a specific number of CPUs available to the local machine.
 
+---
 ### Run On HPC Cluster
 Regarding HPC: verbose=0 or False, n_jobs=number of ip-engines which will be set automatically, cache_size=200, exhaustive grid search intervals
 Set parallel_method to ipyparallel to enable analysis on the HPC cluster
@@ -119,13 +125,19 @@ The [regular launcher file](https://github.com/sysbiolux/Clinical_Biomarker_Dete
 Run script on HPC using 'sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py' after the configurations in
 base_II_config.py are set to your needs.
 
+---
 ## Results
-The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `BASE-II-DS-REI-RHCF-ST-PCA-FT-RUS-FI-SVM-HPC` for a pipeline applied on BASE-II with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS. Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA).  
+The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `BASE-II-DS-REI-RHCF-ST-PCA-FT-RUS-FI-SVM-HPC` for a pipeline applied on BASE-II with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
+
+Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA to save computational time).  
+
 The results will consist of confusion matrices, roc_auc curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
 
+---
 ## Planned Updates
-- [ ] Continue editing this README file
+- [x] Continue editing this README file
 - [ ] Extend the pipeline to allow tree-based classification
+- [ ] Make pipeline generate a similar .out file of the code execution when running locally compared to HPC .out
 - [ ] Add boxplot of most important features in Original data
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
