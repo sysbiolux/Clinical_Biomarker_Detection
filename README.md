@@ -126,5 +126,6 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 ## Planned Updates
 - [ ] Continue modifying this readme file from ***Run On Local Machine*** on
 - [ ] Extend the pipeline to allow tree-based classification
+- [ ] Add boxplot of most important features in Original data
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
