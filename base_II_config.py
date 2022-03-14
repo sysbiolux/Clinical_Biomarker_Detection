@@ -177,13 +177,6 @@ additional_technique_params = {}  # Add additional technique parameter to introd
 # Exhaustive interval kernel_pca_coef0_lpsr: [0.1, 0.5, 1.0]
 # -------------------------------------------------------------------------------------------------------------------- #
 
-###############################
-# What could still be improved
-###############################
-# Things that still could be improved:
-
-#    Add Classifier step to choose between Support Vector Machines or Tree-based classifier (xgboost, Random Forest)
-
 ########################################################################################################################
 # END OF BASE II CONFIG ################################################################################################
 ########################################################################################################################
