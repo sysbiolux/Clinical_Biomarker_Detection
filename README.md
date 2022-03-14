@@ -11,7 +11,7 @@ The repository is composed of the main pipeline script [base_II_pipeline_SVM_HPC
 Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including two modified files for both python packages `eli5` and `mlxtend`.
 
 ### Requirements (necessary for both local machine and HPC application)
-* The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`.
+* The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`. Python version used: `Python version 3.8.6`.
 
 * **/!\\ /!\\ /!\\** After installing the required packages, files in the *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing.
 
@@ -117,13 +117,9 @@ Currently, the `parallel_method` supported for local machine analysis is limited
 
 ---
 ### Run On HPC Cluster
-Regarding HPC: verbose=0 or False, n_jobs=number of ip-engines which will be set automatically, cache_size=200, exhaustive grid search intervals
-Set parallel_method to ipyparallel to enable analysis on the HPC cluster
-Once on the HPC node: Check available modules, create python environment, install requirements, create directories, import data e.g.
-./data/train_imputed.csv and ./data/test_imputed.csv, sync pipeline script, config, utils and launcher files.
-The [regular launcher file](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_launcher.sh) and the [long job launcher file](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_long_launcher.sh) can be adapted for their resource allocations, but also to set the email-adress for job status notification.
-Run script on HPC using 'sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py' after the configurations in
-base_II_config.py are set to your needs.
+For running the pipeline on HPC clusters, it is first necessary to set up and activate the appropriate environment including `Python version 3.8.6` and the required python packages that are listed in the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) using `pip install -r requirements.txt`. In the provided [regular HPC launcher script](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_launcher.sh) and the [long HPC launcher script](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_long_launcher.sh), the following information may need to be adjusted to your settings: `--mail-use` for job status notifications, `language-to-load` to specify the python language to load, and `environment-to-load` to specify the path to the environment source. Please also verify the resource allocation before submitting a job and adjust if necessary. When the environment is set up, packages installed and files in eli5 and mlxtend replaced, you can start adjusting the configuration file to the needs of your data and experimental setting. Please note that on HPC, parallelization via the `parallel_method` `ipyparallel` is recommended. The number of of jobs will be automatically set to the number of available workers based on the launcher script. The `clf_verbose` can be set to `false` and the `grid_verbose` to `1` to avoid massive printouts, and the SVM parameter `cache_size` can be adjusted to `200` (mb). On the HPC node, the files should be accessible and stored in the same way as found in this repository, and verify the path to the cleaned imputed training and test data set and the path where results should be stored so that it matches the variables in the configuration file.  
+
+If everything is set and ready, run the pipeline with the configured experimental settings on HPC clusters using the command 'sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py'.
 
 ---
 ## Results
