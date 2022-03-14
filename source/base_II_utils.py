@@ -205,7 +205,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.xticks(tick_marks, classes, rotation=45, size=14)
     plt.yticks(tick_marks, classes, size=14)
     fmt = '.2f' if normalize else 'd'
-    thresh = c_matrix.max() / 2.
+    thresh = c_matrix.max() / 1.65
     # Labeling the plot
     for i, j in itertools.product(range(c_matrix.shape[0]), range(c_matrix.shape[1])):
         plt.text(j, i, format(c_matrix[i, j], fmt), fontsize=20,
