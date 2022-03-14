@@ -144,7 +144,7 @@ total_params_and_splits = {'regularization_lpsr': regularization_lpsr, 'shrinkin
                            'k_neighbors_smote_lpsr': k_neighbors_smote_lpsr,
                            'splits': splits}
 
-# Kernel PCA specific dictionary enabled with FF and kernel pca technique, using same rules as above
+# Kernel PCA specific dictionary enabled with FT and kernel pca technique, using same rules as above
 pca_kernel_dict = {'kpca_components_lpsr': kernel_pca_lpsr, 'kpca_kernel_lpsr': kernel_pca_kernel_lpsr,
                    'kpca_gamma_lpsr': kernel_pca_gamma_lpsr, 'kpca_tol_lpsr': kernel_pca_tol_lpsr,
                    'kpca_degree_lpsr': kernel_pca_degree_lpsr, 'kpca_coef0_lpsr': kernel_pca_coef0_lpsr}
