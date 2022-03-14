@@ -13,10 +13,16 @@
 # Safeguard for NOT running this launcher on access/login nodes
 print_error_and_exit() { echo "***ERROR*** $*"; exit 1; }
 
-module purge || print_error_and_exit # No 'module' command
-module load lang/Python/3.8.6-GCCcore-10.2.0
+# Set language module and environment path to load
+language-to-load=lang/Python/3.8.6-GCCcore-10.2.0
+environment-to-load=./ML_env_${ULHPC_CLUSTER}/bin/activate
 
-source ./ML_env_${ULHPC_CLUSTER}/bin/activate
+# load modules
+module purge || print_error_and_exit # No 'module' command
+module load language-to-load
+
+#activate python environment
+source environment-to-load
 
 profile=job_${SLURM_JOB_ID}
 
