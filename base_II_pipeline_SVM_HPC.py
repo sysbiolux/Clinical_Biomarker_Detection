@@ -153,6 +153,7 @@ else:
 # Update kernel pca dictionary to total params and splits if kernel pca activated and reset SVM kernels to linear
 if pca_tech == 'kernel_pca':
     kernels = ['linear']  # Change possible SVM kernels to linear if kPCA is on, so only linear SVC parameter are loaded
+    non_linear_kernels = [None]
     gamma_psr, coef0_ps, degree_p = [[None]] * 3
     total_params_and_splits.update({'gamma_psr': gamma_psr,
                                     'coef0_ps': coef0_ps,
@@ -167,6 +168,7 @@ if pca_tech == 'kernel_pca':
             {k: v for k, v in pca_kernel_dict.items() if k not in ['kpca_degree_lpsr']})
 else:
     kernels = kernels
+    non_linear_kernels = non_linear_kernels
     gamma_psr, coef0_ps, degree_p = gamma_psr, coef0_ps, degree_p
 # Be sure that scaler tech is set, cannot be empty, thus reset to default if not set
 if scaler_tech not in ('standard', 'minmax', 'robust'):
