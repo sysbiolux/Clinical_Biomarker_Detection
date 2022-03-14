@@ -119,7 +119,7 @@ Currently, the `parallel_method` supported for local machine analysis is limited
 ### Run On HPC Cluster
 For running the pipeline on HPC clusters, it is first necessary to set up and activate the appropriate environment including the `Python version 3.8.6` and the required python packages that are listed in the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) using `pip install -r requirements.txt`.  
 In the provided [regular HPC launcher script](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_launcher.sh) and the [long HPC launcher script](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/HPC_SVM_long_launcher.sh), the following information may need to be adjusted to your settings:  
-* `--mail-use` for job status notifications
+* `--mail-use` for job status notifications (fill-in valid e-mail address and uncomment if needed)
 * `language_to_load` to specify the python language module to load
 * `environment_to_load` to specify the path to the environment source
 * Please also verify the resource allocation before submitting a job and adjust if necessary.  
