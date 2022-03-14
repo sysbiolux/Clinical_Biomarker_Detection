@@ -14,15 +14,15 @@
 print_error_and_exit() { echo "***ERROR*** $*"; exit 1; }
 
 # Set language module and environment path to load
-language-to-load=lang/Python/3.8.6-GCCcore-10.2.0
-environment-to-load=./ML_env_${ULHPC_CLUSTER}/bin/activate
+language_to_load=lang/Python/3.8.6-GCCcore-10.2.0
+environment_to_load=./ML_env_${ULHPC_CLUSTER}/bin/activate
 
 # load modules
 module purge || print_error_and_exit # No 'module' command
-module load language-to-load
+module load ${language_to_load}
 
 #activate python environment
-source environment-to-load
+source ${environment_to_load}
 
 profile=job_${SLURM_JOB_ID}
 
