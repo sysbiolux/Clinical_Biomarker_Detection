@@ -1616,7 +1616,7 @@ for kern in kernels:
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
-        print("\nProcessing feature importance with linear kernel:\n")
+        print("\n******************************************\nProcessing feature importance with linear kernel...\n")
         # Full data
         lin_imp = grid_imba.best_estimator_.named_steps['clf'].coef_[0]
         lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=40)
@@ -1626,7 +1626,7 @@ for kern in kernels:
         plt.savefig(folder_name + f'/{kern}_full_feature_importance_linear.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
-        print('Full data top important features with linear kernel...',
+        print('Full data top important features with linear kernel:\n',
               features[lin_idx[-lin_above_zero_imp:]][::-1], '\n')
 
         # male data
@@ -1640,7 +1640,7 @@ for kern in kernels:
             plt.savefig(folder_name + f'/{kern}_male_feature_importance_linear.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Male data top important features with linear kernel...',
+            print('Male data top important features with linear kernel:\n',
                   features_male[lin_idx_male[-lin_above_zero_imp_male:]][::-1], '\n')
 
             # Female data
@@ -1653,7 +1653,7 @@ for kern in kernels:
             plt.savefig(folder_name + f'/{kern}_female_feature_importance_linear.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Female data top important features with linear kernel...\n',
+            print('Female data top important features with linear kernel:\n',
                   features_female[lin_idx_female[-lin_above_zero_imp_female:]][::-1], '\n')
 
     #############################################
