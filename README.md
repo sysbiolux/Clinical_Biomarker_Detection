@@ -41,7 +41,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) presents 64 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) presents 67 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -89,6 +89,9 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | pca_tech | 'normal_pca' | Select pca technique to choose between 'normal_pca' and 'kernel_pca' | str |
 | pipeline_order | 'samples->features' | Order of the steps either 'samples->features' or 'features->samples' | str |
 | enable_feature_importance | True | Change to True to enable & False to disable feature importance | bool |
+| feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all', str |
+| enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True, bool |
+| box_bar_figures | 'combined' | Whether the box and bar plots should be separated or combined figure, 'separated' or 'combined', str |
 | regularization_lpsr | \[x for x in np.logspace(-2, 6, 9)] | Regularization parameter, default 1 | int |
 | shrinking_lpsr | \[True, False] | Shrinking heuristic, default True | bool |
 | tolerance_lpsr | \[x for x in np.logspace(-4, -2, 3)] | Stopping criterion tolerance, default 0.001 | float |
@@ -142,8 +145,8 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 ---
 ## Planned Updates
 - [x] ~Continue editing this README file~
+- [x] Add boxplot of most important features in Original data
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Make pipeline generate a similar .out file of the code execution when running locally compared to HPC .out
-- [ ] Add boxplot of most important features in Original data
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
