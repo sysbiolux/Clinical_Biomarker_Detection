@@ -86,14 +86,16 @@ print(f"\n##########################################\n##########################
 # Loading the BASE-II utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
 try:
-    from source.base_II_utils import *
+    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.base_II_utils import *
+    # from base_II_utils import *
     print("BASE-II utils file loaded successfully!\n")
 except ImportError('BASE-II utils file could not be found or loaded correctly.'):
     exit()
 # Loading the BASE-II configuration file
 print(f"Loading the BASE-II configuration file ...")
 try:
-    from base_II_config import *
+    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.base_II_config import *
+    # from base_II_config import *
     print("BASE-II configuration file loaded successfully!\n")
 except ImportError('BASE-II configuration file could not be found or loaded correctly.'):
     exit()
@@ -188,7 +190,23 @@ else:
 if scorer not in ('F.5', 'F1', 'F2'):
     scorer = 'accuracy'
     raise Warning("Scorer was not among the possible scores. Default 'accuracy' is loaded.")
-
+# Reset feature importance method settings
+if not enable_feature_importance:
+    feature_importance_method = ''
+    enable_box_bar_plots = False
+elif feature_importance_method not in ('sklearn', 'mlxtend', 'eli5', 'all'):
+    feature_importance_method = 'all'
+    raise Warning("Feature importance method not set correctly. Default 'all' is loaded.")
+else:
+    enable_box_bar_plots, feature_importance_method = enable_box_bar_plots, feature_importance_method
+# Reset box and bar plot settings dependent on the feature importance
+if not enable_box_bar_plots:
+    box_bar_figures = ''
+elif box_bar_figures not in ('separated', 'combined'):
+    box_bar_figures = 'combined'
+    raise Warning("Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.")
+else:
+    box_bar_figures = box_bar_figures
 
 ##################################
 # ## Configuration variable check
@@ -208,11 +226,11 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
                             "Got train: %s and test: %s." % (train_path, test_path))
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
-              resampling_tech, folder_prefix, pca_tech, scaler_tech, scorer]
+              resampling_tech, folder_prefix, pca_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures]
 if not all(isinstance(i, str) for i in config_str):
     raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
                     'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
-                    'scaler_tech, scorer. Got %s instead.' % config_str)
+                    'scaler_tech, scorer, feature_importance_method, box_bar_figures. Got %s instead.' % config_str)
 # Variables check that should strictly be a list of strings or str
 if not (all(isinstance(i, str) for i in output_related) or isinstance(output_related, list)):
     raise TypeError('One or multiple of the configured output features were not recognized as str or list of str: '
@@ -223,11 +241,11 @@ if not (all(isinstance(i, list) for i in kernel_info) or all(isinstance(i, str) 
                     'non_linear_kernels, kernel_pca_kernel_lpsr. Got %s.' % kernel_info)
 # Variables check that should strictly be a boolean
 config_bool = [enable_rhcf, enable_resampling, enable_ft, clf_verbose, additional_params, enable_feature_importance,
-               enable_engineered_input_removal, enable_data_split, enable_subgroups]
+               enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots]
 if not all(isinstance(i, bool) for i in config_bool):
     raise TypeError('The following configured variables must be boolean: enable_rhcf, enable_resampling, '
                     'enable_ft, clf_verbose, additional_params, enable_feature_importance, '
-                    'enable_engineered_input_removal, enable_data_split, enable_subgroups. '
+                    'enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots. '
                     'Got %s instead.' % config_bool)
 # Variables that could be str or tuple of str
 if not (isinstance(engineered_input_prefix, tuple) or all(isinstance(i, str) for i in engineered_input_prefix)):
@@ -283,7 +301,7 @@ if enable_ft:
 
 
 ########################################################################################################################
-# ## PART 3: SETTING UP THE RESULTS FOLDER, HPC OPERABILITY, AND FUNCTIONS #############################################
+# ## PART 2: SETTING UP THE RESULTS FOLDER, HPC OPERABILITY, AND FUNCTIONS #############################################
 ########################################################################################################################
 ###################################################
 # ## Creating the results folder and clear content
@@ -382,8 +400,9 @@ if parallel_method == 'ipyparallel':
 else:
     n_jobs = n_jobs  # Assume running on local machine with different parallel backend (e.g. threading)
 
+
 ########################################################################################################################
-# ## PART 2: MAIN PART OF THE SCRIPT WITH EXECUTABLE CODE ##############################################################
+# ## PART 3: MAIN PART OF THE SCRIPT WITH EXECUTABLE CODE ##############################################################
 ########################################################################################################################
 ##################################
 # ## Script configuration summary
@@ -442,7 +461,8 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Feature transformation (FT) step enabled: {enable_ft}\n"
       f"Scaler technique for continuous variables selected: {scaler_tech + ' scaler'}\n"
       f"PCA technique selected: {pca_tech.replace('_', ' ')}\n"
-      f"Feature importance three-methods test and visualizations enabled: {enable_feature_importance}\n"
+      f"Feature importance methods and visualizations enabled: {enable_feature_importance, feature_importance_method}\n"
+      f"Box and bar plotting enabled and selected method: {enable_box_bar_plots, box_bar_figures}\n"
       f"Order of steps in the pipeline if FT or resampling are enabled: {pipeline_order}\n"
       f"Additional grid search parameters that are not directly supported: {additional_params}\n"
       f"Additional technique parameters: {additional_technique_params}\n"
@@ -673,7 +693,7 @@ if enable_rhcf:
             parallel_meth=parallel_method, training_features=train_features, features_list=feature_list,
             categorical=categorical_idx, n_job=n_jobs, cramer_threshold=thresh_cramer)
         # Heatmap of the cramer matrix (saving process inside function)
-        cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name)
+        cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name, tiff_figure_dpi)
     else:
         cat_to_drop, cramer_set = [], []
 
@@ -684,7 +704,7 @@ if enable_rhcf:
                                                                      continuous=continuous_idx,
                                                                      spearman_threshold=thresh_spearman)
         # Heatmap of the spearman matrix (saving process inside function)
-        spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name)
+        spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name, tiff_figure_dpi)
     else:
         cont_to_drop, spearman_set = [], []
     # General data update after continuous and categorical correlation features were identified
@@ -699,7 +719,7 @@ if enable_rhcf:
             cat_before_rhcf=categorical_idx, features_list=feature_list, feat_after_rhcf=rem_feat,
             feat_idx_after_rhcf=rem_idx, n_job=n_jobs, pbs_threshold=thresh_pbs)
         # Heatmap of the point bi-serial matrix (saving process inside function)
-        pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name)
+        pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name, tiff_figure_dpi)
     else:
         pbs_to_drop, rem_cat, rem_cont, pbs_set = [], [], [], []
 
@@ -737,7 +757,7 @@ if enable_rhcf:
                 parallel_meth=parallel_method, training_features=train_men_features, features_list=feature_list_male,
                 categorical=categorical_idx_male, n_job=n_jobs, cramer_threshold=thresh_cramer)
             # Heatmap of the male cramer matrix (saving process inside function)
-            cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name)
+            cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name, tiff_figure_dpi)
         else:
             cat_to_drop_male, cramer_set_male = [], []
 
@@ -747,7 +767,8 @@ if enable_rhcf:
                 training_features=train_men_features, features_list=feature_list_male, continuous=continuous_idx_male,
                 spearman_threshold=thresh_spearman)
             # Heatmap of the male spearman matrix (saving process inside function)
-            spearman_heatmap(spearman_res_male, thresh_spearman, 'male', continuous_idx_male, folder_name)
+            spearman_heatmap(spearman_res_male, thresh_spearman, 'male', continuous_idx_male, folder_name,
+                             tiff_figure_dpi)
         else:
             cont_to_drop_male, spearman_set_male = [], []
         # General data update after continuous and categorical correlation features were identified
@@ -764,7 +785,8 @@ if enable_rhcf:
                     features_list=feature_list_male, feat_after_rhcf=rem_feat_male, feat_idx_after_rhcf=rem_idx_male,
                     n_job=n_jobs, pbs_threshold=thresh_pbs)
             # Heatmap of the male point bi-serial matrix (saving process inside function)
-            pbs_heatmap(res_pb_r_male, thresh_pbs, 'male', rem_cat_male, rem_cont_male, longest_male, folder_name)
+            pbs_heatmap(res_pb_r_male, thresh_pbs, 'male', rem_cat_male, rem_cont_male, longest_male, folder_name,
+                        tiff_figure_dpi)
         else:
             pbs_to_drop_male, rem_cont_male, rem_cat_male, pbs_set_male = [], [], [], []
 
@@ -804,7 +826,8 @@ if enable_rhcf:
                 features_list=feature_list_female, categorical=categorical_idx_female, n_job=n_jobs,
                 cramer_threshold=thresh_cramer)
             # Heatmap of the female cramer matrix (saving process inside function)
-            cramer_heatmap(cramer_res_female, thresh_cramer, 'female', categorical_idx_female, folder_name)
+            cramer_heatmap(cramer_res_female, thresh_cramer, 'female', categorical_idx_female, folder_name,
+                           tiff_figure_dpi)
         else:
             cat_to_drop_female, cramer_set_female = [], []
 
@@ -814,7 +837,8 @@ if enable_rhcf:
                 training_features=train_female_features, features_list=feature_list_female,
                 continuous=continuous_idx_female, spearman_threshold=thresh_spearman)
             # Heatmap of the female spearman matrix (saving process inside function)
-            spearman_heatmap(spearman_res_female, thresh_spearman, 'female', continuous_idx_female, folder_name)
+            spearman_heatmap(spearman_res_female, thresh_spearman, 'female', continuous_idx_female, folder_name,
+                             tiff_figure_dpi)
         else:
             cont_to_drop_female, spearman_set_female = [], []
 
@@ -833,7 +857,7 @@ if enable_rhcf:
                     feat_idx_after_rhcf=rem_idx_female, n_job=n_jobs, pbs_threshold=thresh_pbs)
             # Heatmap of the female point bi-serial matrix (saving process inside function)
             pbs_heatmap(res_pb_r_female, thresh_pbs, 'female', rem_cat_female, rem_cont_female, longest_female,
-                        folder_name)
+                        folder_name, tiff_figure_dpi)
         else:
             pbs_to_drop_female, rem_cont_female, rem_cat_female, pbs_set_female = [], [], [], []
 
@@ -1272,341 +1296,438 @@ for kern in kernels:
     # ## Non linear feature importance (FI)
     ########################################
     # Readjust font size for feature importance figures
-    if enable_feature_importance and kern in non_linear_kernels:
+    if enable_feature_importance and (kern in non_linear_kernels):
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
         # FEATURE IMPORTANCE BY SKLEARN.INSPECTION
-        print("Starting feature importance permutation by SKLEARN:")
-        # Full data
-        print("In full data ...")
-        with parallel_backend(parallel_method):
-            perm_importance = permutation_importance(estimator=grid_imba.best_estimator_, X=train_features,
-                                                     y=train_labels, random_state=seed, n_repeats=shuffle_all,
-                                                     n_jobs=n_jobs)
-        sorted_idx, sk_above_zero_imp = sorted_above_zero(importance_mean=perm_importance.importances_mean, bar_cap=40)
-        # Figure of most important features
-        importance_plot(datatype='full', method='sklearn', kern=kern, idx_sorted=sorted_idx, features_list=features,
-                        importance_mean=perm_importance.importances_mean, importance_above_zero=sk_above_zero_imp,
-                        importance_std=perm_importance.importances_std)
-        plt.savefig(
-            folder_name + f'/{kern}_full_feature_importance_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            print("In male data ...")
+        if feature_importance_method in ('all', 'sklearn'):
+            print("Starting feature importance permutation by SKLEARN:")
+            # Full data
+            print("In full data ...")
             with parallel_backend(parallel_method):
-                perm_importance_male = permutation_importance(grid_imba_male.best_estimator_, train_men_features,
-                                                              train_men_labels, random_state=seed,
-                                                              n_repeats=shuffle_male, n_jobs=n_jobs)
-            sorted_idx_male, sk_above_zero_imp_male = sorted_above_zero(
-                importance_mean=perm_importance_male.importances_mean, bar_cap=40)
-            # Figure of the most important features
-            importance_plot(datatype='male', method='sklearn', kern=kern, idx_sorted=sorted_idx_male,
-                            features_list=features_male,
-                            importance_mean=perm_importance_male.importances_mean,
-                            importance_above_zero=sk_above_zero_imp_male,
-                            importance_std=perm_importance_male.importances_std)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_sklearn.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                perm_importance = permutation_importance(estimator=grid_imba.best_estimator_, X=train_features,
+                                                         y=train_labels, random_state=seed, n_repeats=shuffle_all,
+                                                         n_jobs=n_jobs)
+            sorted_idx, sk_above_zero_imp = sorted_above_zero(importance_mean=perm_importance.importances_mean,
+                                                              bar_cap=40)
+            # Figure of most important features
+            importance_plot(datatype='full', method='sklearn', kern=kern, idx_sorted=sorted_idx, features_list=features,
+                            importance_mean=perm_importance.importances_mean, importance_above_zero=sk_above_zero_imp,
+                            importance_std=perm_importance.importances_std)
+            plt.savefig(
+                folder_name + f'/{kern}_full_feature_importance_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            print("In female data ...")
-            with parallel_backend(parallel_method):
-                perm_importance_female = permutation_importance(grid_imba_female.best_estimator_, train_female_features,
-                                                                train_female_labels, random_state=seed,
-                                                                n_repeats=shuffle_female, n_jobs=n_jobs)
-            sorted_idx_female, sk_above_zero_imp_female = sorted_above_zero(
-                importance_mean=perm_importance_female.importances_mean, bar_cap=40)
-            # Figure of the most important features
-            importance_plot(datatype='female', method='sklearn', kern=kern, idx_sorted=sorted_idx_female,
-                            features_list=features_female,
-                            importance_mean=perm_importance_female.importances_mean,
-                            importance_above_zero=sk_above_zero_imp_female,
-                            importance_std=perm_importance_female.importances_std)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_sklearn.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                print("In male data ...")
+                with parallel_backend(parallel_method):
+                    perm_importance_male = permutation_importance(grid_imba_male.best_estimator_, train_men_features,
+                                                                  train_men_labels, random_state=seed,
+                                                                  n_repeats=shuffle_male, n_jobs=n_jobs)
+                sorted_idx_male, sk_above_zero_imp_male = sorted_above_zero(
+                    importance_mean=perm_importance_male.importances_mean, bar_cap=40)
+                # Figure of the most important features
+                importance_plot(datatype='male', method='sklearn', kern=kern, idx_sorted=sorted_idx_male,
+                                features_list=features_male,
+                                importance_mean=perm_importance_male.importances_mean,
+                                importance_above_zero=sk_above_zero_imp_male,
+                                importance_std=perm_importance_male.importances_std)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_sklearn.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                print("In female data ...")
+                with parallel_backend(parallel_method):
+                    perm_importance_female = permutation_importance(grid_imba_female.best_estimator_,
+                                                                    train_female_features,
+                                                                    train_female_labels, random_state=seed,
+                                                                    n_repeats=shuffle_female, n_jobs=n_jobs)
+                sorted_idx_female, sk_above_zero_imp_female = sorted_above_zero(
+                    importance_mean=perm_importance_female.importances_mean, bar_cap=40)
+                # Figure of the most important features
+                importance_plot(datatype='female', method='sklearn', kern=kern, idx_sorted=sorted_idx_female,
+                                features_list=features_female,
+                                importance_mean=perm_importance_female.importances_mean,
+                                importance_above_zero=sk_above_zero_imp_female,
+                                importance_std=perm_importance_female.importances_std)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_sklearn.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+            else:
+                sorted_idx_male, sk_above_zero_imp_male, sorted_idx_female, sk_above_zero_imp_female = [None] * 4
         else:
-            sorted_idx_male, sk_above_zero_imp_male, sorted_idx_female, sk_above_zero_imp_female = [None] * 4
+            sorted_idx, sk_above_zero_imp, sorted_idx_male,\
+                sk_above_zero_imp_male, sorted_idx_female, sk_above_zero_imp_female = [None] * 6
 
         # FEATURE IMPORTANCE BY ELI5 (modified ELI5 scripts)
-        print("\nStarting feature importance permutation by ELI5:")
-        # Full data
-        print("In full data ...")
-        with parallel_backend(parallel_method):
-            perm_all, perm_mean = get_score_importances(score_func=grid_imba.best_estimator_, X=train_features,
-                                                        y=train_labels, n_iter=shuffle_all, random_state=seed,
-                                                        n_jobs=n_jobs)  # use classifier score
-        sorted_idx_eli, el_above_zero_imp = sorted_above_zero(importance_mean=perm_mean, bar_cap=40)
-        std_perm = np.std(perm_all, axis=1)
-        # Figure of most important features
-        importance_plot(datatype='full', method='eli5', kern=kern, idx_sorted=sorted_idx_eli, features_list=features,
-                        importance_mean=perm_mean, importance_above_zero=el_above_zero_imp, importance_std=std_perm)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_eli5.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            print("In male data ...")
+        if feature_importance_method in ('all', 'eli5'):
+            print("\nStarting feature importance permutation by ELI5:")
+            # Full data
+            print("In full data ...")
             with parallel_backend(parallel_method):
-                perm_all_male, perm_mean_male = get_score_importances(score_func=grid_imba_male.best_estimator_,
-                                                                      X=train_men_features, y=train_men_labels,
-                                                                      n_iter=shuffle_male, random_state=seed,
-                                                                      n_jobs=n_jobs)  # use classifier score
-            sorted_idx_eli_male, el_above_zero_imp_male = sorted_above_zero(importance_mean=perm_mean_male, bar_cap=40)
-            std_perm_male = np.std(perm_all_male, axis=1)
+                perm_all, perm_mean = get_score_importances(score_func=grid_imba.best_estimator_, X=train_features,
+                                                            y=train_labels, n_iter=shuffle_all, random_state=seed,
+                                                            n_jobs=n_jobs)  # use classifier score
+            sorted_idx_eli, el_above_zero_imp = sorted_above_zero(importance_mean=perm_mean, bar_cap=40)
+            std_perm = np.std(perm_all, axis=1)
             # Figure of most important features
-            importance_plot(datatype='male', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_male,
-                            features_list=features_male,
-                            importance_mean=perm_mean_male,
-                            importance_above_zero=el_above_zero_imp_male,
-                            importance_std=std_perm_male)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_eli5.tiff',
+            importance_plot(datatype='full', method='eli5', kern=kern, idx_sorted=sorted_idx_eli,
+                            features_list=features, importance_mean=perm_mean, importance_above_zero=el_above_zero_imp,
+                            importance_std=std_perm)
+            plt.savefig(folder_name + f'/{kern}_full_feature_importance_eli5.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            print("In female data ...")
-            with parallel_backend(parallel_method):
-                perm_all_female, perm_mean_female = get_score_importances(score_func=grid_imba_female.best_estimator_,
-                                                                          X=train_female_features,
-                                                                          y=train_female_labels,
-                                                                          n_iter=shuffle_female, random_state=seed,
+            # Male data
+            if enable_data_split:
+                print("In male data ...")
+                with parallel_backend(parallel_method):
+                    perm_all_male, perm_mean_male = get_score_importances(score_func=grid_imba_male.best_estimator_,
+                                                                          X=train_men_features, y=train_men_labels,
+                                                                          n_iter=shuffle_male, random_state=seed,
                                                                           n_jobs=n_jobs)  # use classifier score
-            sorted_idx_eli_female, el_above_zero_imp_female = sorted_above_zero(importance_mean=perm_mean_female,
+                sorted_idx_eli_male, el_above_zero_imp_male = sorted_above_zero(importance_mean=perm_mean_male,
                                                                                 bar_cap=40)
-            std_perm_female = np.std(perm_all_female, axis=1)
-            # Figure of most important features
-            importance_plot(datatype='female', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_female,
-                            features_list=features_female, importance_mean=perm_mean_female,
-                            importance_above_zero=el_above_zero_imp_female, importance_std=std_perm_female)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_eli5.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+                std_perm_male = np.std(perm_all_male, axis=1)
+                # Figure of most important features
+                importance_plot(datatype='male', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_male,
+                                features_list=features_male,
+                                importance_mean=perm_mean_male,
+                                importance_above_zero=el_above_zero_imp_male,
+                                importance_std=std_perm_male)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_eli5.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                print("In female data ...")
+                with parallel_backend(parallel_method):
+                    perm_all_female, perm_mean_female = get_score_importances(
+                        score_func=grid_imba_female.best_estimator_, X=train_female_features, y=train_female_labels,
+                        n_iter=shuffle_female, random_state=seed, n_jobs=n_jobs)  # use classifier score
+                sorted_idx_eli_female, el_above_zero_imp_female = sorted_above_zero(importance_mean=perm_mean_female,
+                                                                                    bar_cap=40)
+                std_perm_female = np.std(perm_all_female, axis=1)
+                # Figure of most important features
+                importance_plot(datatype='female', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_female,
+                                features_list=features_female, importance_mean=perm_mean_female,
+                                importance_above_zero=el_above_zero_imp_female, importance_std=std_perm_female)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_eli5.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+            else:
+                sorted_idx_eli_male, el_above_zero_imp_male,\
+                    sorted_idx_eli_female, el_above_zero_imp_female = [None] * 4
         else:
-            sorted_idx_eli_male, el_above_zero_imp_male, sorted_idx_eli_female, el_above_zero_imp_female = [None] * 4
+            sorted_idx_eli, el_above_zero_imp, sorted_idx_eli_male, el_above_zero_imp_male,\
+                sorted_idx_eli_female, el_above_zero_imp_female = [None] * 6
 
         # FEATURE IMPORTANCE BY MLXTEND (modified MLXTEND scripts)
-        print("\nStarting feature importance permutation by MLXTEND:")
-        # Full data
-        print("In full data ...")
-        with parallel_backend(parallel_method):
-            imp_all, imp_vals = feature_importance_permutation(
-                X=train_features, y=train_labels, predict_method=grid_imba.best_estimator_, num_rounds=shuffle_all,
-                seed=seed, n_jobs=n_jobs)
-        std = np.std(imp_all, axis=1)
-        indices, ml_above_zero_imp = sorted_above_zero(importance_mean=imp_vals, bar_cap=40)
-        # Figure of most important features
-        importance_plot(datatype='full', method='mlxtend', kern=kern, idx_sorted=indices, features_list=features,
-                        importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_mlxtend.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            print("In male data ...")
+        if feature_importance_method in ('all', 'mlxtend'):
+            print("\nStarting feature importance permutation by MLXTEND:")
+            # Full data
+            print("In full data ...")
             with parallel_backend(parallel_method):
-                imp_all_male, imp_vals_male = feature_importance_permutation(
-                    X=train_men_features, y=train_men_labels, predict_method=grid_imba_male.best_estimator_,
-                    num_rounds=shuffle_male, seed=seed, n_jobs=n_jobs)
-            std_male = np.std(imp_all_male, axis=1)
-            indices_male, ml_above_zero_imp_male = sorted_above_zero(importance_mean=imp_vals_male, bar_cap=40)
+                imp_all, imp_vals = feature_importance_permutation(
+                    X=train_features, y=train_labels, predict_method=grid_imba.best_estimator_, num_rounds=shuffle_all,
+                    seed=seed, n_jobs=n_jobs)
+            std = np.std(imp_all, axis=1)
+            indices, ml_above_zero_imp = sorted_above_zero(importance_mean=imp_vals, bar_cap=40)
             # Figure of most important features
-            importance_plot(datatype='male', method='mlxtend', kern=kern, idx_sorted=indices_male,
-                            features_list=features_male,
-                            importance_mean=imp_vals_male,
-                            importance_above_zero=ml_above_zero_imp_male,
-                            importance_std=std_male)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_mlxtend.tiff',
+            importance_plot(datatype='full', method='mlxtend', kern=kern, idx_sorted=indices, features_list=features,
+                            importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std)
+            plt.savefig(folder_name + f'/{kern}_full_feature_importance_mlxtend.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            print("In female data ...")
-            with parallel_backend(parallel_method):
-                imp_all_female, imp_vals_female = feature_importance_permutation(
-                    X=train_female_features, y=train_female_labels, predict_method=grid_imba_female.best_estimator_,
-                    num_rounds=shuffle_female, seed=seed, n_jobs=n_jobs)
-            std_female = np.std(imp_all_female, axis=1)
-            indices_female, ml_above_zero_imp_female = sorted_above_zero(importance_mean=imp_vals_female, bar_cap=40)
-            # Figure of most important features
-            importance_plot(datatype='female', method='mlxtend', kern=kern, idx_sorted=indices_female,
-                            features_list=features_female,
-                            importance_mean=imp_vals_female,
-                            importance_above_zero=ml_above_zero_imp_female,
-                            importance_std=std_female)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_mlxtend.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                print("In male data ...")
+                with parallel_backend(parallel_method):
+                    imp_all_male, imp_vals_male = feature_importance_permutation(
+                        X=train_men_features, y=train_men_labels, predict_method=grid_imba_male.best_estimator_,
+                        num_rounds=shuffle_male, seed=seed, n_jobs=n_jobs)
+                std_male = np.std(imp_all_male, axis=1)
+                indices_male, ml_above_zero_imp_male = sorted_above_zero(importance_mean=imp_vals_male, bar_cap=40)
+                # Figure of most important features
+                importance_plot(datatype='male', method='mlxtend', kern=kern, idx_sorted=indices_male,
+                                features_list=features_male,
+                                importance_mean=imp_vals_male,
+                                importance_above_zero=ml_above_zero_imp_male,
+                                importance_std=std_male)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_mlxtend.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                print("In female data ...")
+                with parallel_backend(parallel_method):
+                    imp_all_female, imp_vals_female = feature_importance_permutation(
+                        X=train_female_features, y=train_female_labels, predict_method=grid_imba_female.best_estimator_,
+                        num_rounds=shuffle_female, seed=seed, n_jobs=n_jobs)
+                std_female = np.std(imp_all_female, axis=1)
+                indices_female, ml_above_zero_imp_female = sorted_above_zero(importance_mean=imp_vals_female,
+                                                                             bar_cap=40)
+                # Figure of most important features
+                importance_plot(datatype='female', method='mlxtend', kern=kern, idx_sorted=indices_female,
+                                features_list=features_female,
+                                importance_mean=imp_vals_female,
+                                importance_above_zero=ml_above_zero_imp_female,
+                                importance_std=std_female)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_mlxtend.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+            else:
+                indices_male, ml_above_zero_imp_male, indices_female, ml_above_zero_imp_female = [None] * 4
         else:
-            indices_male, ml_above_zero_imp_male, indices_female, ml_above_zero_imp_female = [None] * 4
+            indices, ml_above_zero_imp, indices_male, ml_above_zero_imp_male,\
+                indices_female, ml_above_zero_imp_female = [None] * 6
 
         # Print summary
-        print('\n******************************************\nFull feature importance summary:\n')
-        print('Top important features with sklearn:', features[sorted_idx[-sk_above_zero_imp:]][::-1], '\n')
-        print('Top important features with eli5:', features[sorted_idx_eli[-el_above_zero_imp:]][::-1], '\n')
-        print('Top important features with mlxtend:', features[indices[-ml_above_zero_imp:]][::-1], '\n')
-        print('******************************************')
-        if enable_data_split:
-            print('Male feature importance summary:\n')
-            print('Top important features with sklearn:',
-                  features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1], '\n')
-            print('Top important features with eli5:',
-                  features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1], '\n')
-            print('Top important features with mlxtend:',
-                  features_male[indices_male[-ml_above_zero_imp_male:]][::-1], '\n')
+        if enable_feature_importance:
+            print('\n******************************************\nFull feature importance summary:\n')
+            if feature_importance_method in ('all', 'sklearn'):
+                print('Top important features with sklearn:', features[sorted_idx[-sk_above_zero_imp:]][::-1], '\n')
+            if feature_importance_method in ('all', 'eli5'):
+                print('Top important features with eli5:', features[sorted_idx_eli[-el_above_zero_imp:]][::-1], '\n')
+            if feature_importance_method in ('all', 'mlxtend'):
+                print('Top important features with mlxtend:', features[indices[-ml_above_zero_imp:]][::-1], '\n')
+            print('******************************************')
+            if enable_data_split:
+                print('Male feature importance summary:\n')
+                if feature_importance_method in ('all', 'sklearn'):
+                    print('Top important features with sklearn:',
+                          features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1], '\n')
+                if feature_importance_method in ('all', 'eli5'):
+                    print('Top important features with eli5:',
+                          features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1], '\n')
+                if feature_importance_method in ('all', 'mlxtend'):
+                    print('Top important features with mlxtend:',
+                          features_male[indices_male[-ml_above_zero_imp_male:]][::-1], '\n')
 
-            print('******************************************\nFemale feature importance summary:\n')
-            print('Top important features with sklearn:',
-                  features_female[sorted_idx_female[-sk_above_zero_imp_female:]][::-1], '\n')
-            print('Top important features with eli5:',
-                  features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1], '\n')
-            print('Top important features with mlxtend:',
-                  features_female[indices_female[-ml_above_zero_imp_female:]][::-1], '\n')
+                print('******************************************\nFemale feature importance summary:\n')
+                if feature_importance_method in ('all', 'sklearn'):
+                    print('Top important features with sklearn:',
+                          features_female[sorted_idx_female[-sk_above_zero_imp_female:]][::-1], '\n')
+                if feature_importance_method in ('all', 'eli5'):
+                    print('Top important features with eli5:',
+                          features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1], '\n')
+                if feature_importance_method in ('all', 'mlxtend'):
+                    print('Top important features with mlxtend:',
+                          features_female[indices_female[-ml_above_zero_imp_female:]][::-1], '\n')
 
         ####################################################
         # ## Evaluate non-linear feature importance methods
         ####################################################
-        # Venn diagram of top important features
-        # Full data
-        sklearn = set(features[sorted_idx[-sk_above_zero_imp:]])
-        eli5 = set(features[sorted_idx_eli[-el_above_zero_imp:]])
-        mlxtend = set(features[indices[-ml_above_zero_imp:]])
+        # Venn diagram of top important features, only possible with all methods selected
+        if feature_importance_method == 'all':
+            # Full data
+            sklearn = set(features[sorted_idx[-sk_above_zero_imp:]])
+            eli5 = set(features[sorted_idx_eli[-el_above_zero_imp:]])
+            mlxtend = set(features[indices[-ml_above_zero_imp:]])
 
-        plot_venn(kernel=kern, datatype='Full', set1=sklearn, set2=eli5, set3=mlxtend,
-                  tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
-                  feat_info='top important', weighted=True)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_venn_diagram.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            sklearn_male = set(features_male[sorted_idx_male[-sk_above_zero_imp_male:]])
-            eli5_male = set(features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]])
-            mlxtend_male = set(features_male[indices_male[-ml_above_zero_imp_male:]])
-
-            plot_venn(kernel=kern, datatype='Male', set1=sklearn_male, set2=eli5_male, set3=mlxtend_male,
+            plot_venn(kernel=kern, datatype='Full', set1=sklearn, set2=eli5, set3=mlxtend,
                       tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                       feat_info='top important', weighted=True)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_venn_diagram.tiff',
+            plt.savefig(folder_name + f'/{kern}_full_feature_importance_venn_diagram.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            sklearn_female = set(features_female[sorted_idx_female[-sk_above_zero_imp_female:]])
-            eli5_female = set(features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]])
-            mlxtend_female = set(features_female[indices_female[-ml_above_zero_imp_female:]])
+            # Male data
+            if enable_data_split:
+                sklearn_male = set(features_male[sorted_idx_male[-sk_above_zero_imp_male:]])
+                eli5_male = set(features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]])
+                mlxtend_male = set(features_male[indices_male[-ml_above_zero_imp_male:]])
 
-            plot_venn(kernel=kern, datatype='Female', set1=sklearn_female, set2=eli5_female, set3=mlxtend_female,
-                      tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
-                      feat_info='top important', weighted=True)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_venn_diagram.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+                plot_venn(kernel=kern, datatype='Male', set1=sklearn_male, set2=eli5_male, set3=mlxtend_male,
+                          tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
+                          feat_info='top important', weighted=True)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_venn_diagram.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                sklearn_female = set(features_female[sorted_idx_female[-sk_above_zero_imp_female:]])
+                eli5_female = set(features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]])
+                mlxtend_female = set(features_female[indices_female[-ml_above_zero_imp_female:]])
 
-        # Scatter plot comparing the feature importance measuring effect between the three methods
-        metrics = ["r", "CI95%", "p-val"]
-        # Full data
-        scatter_comparison(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
-                           mean3=imp_vals,
-                           new_feat_idx=range(len(features)), metric_list=metrics)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_comparison.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            scatter_comparison(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
-                               mean2=perm_mean_male, mean3=imp_vals_male,
-                               new_feat_idx=range(len(features_male)), metric_list=metrics)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_comparison.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
-            # Female data
-            scatter_comparison(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
-                               mean2=perm_mean_female, mean3=imp_vals_female,
-                               new_feat_idx=range(len(features_female)), metric_list=metrics)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_comparison.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+                plot_venn(kernel=kern, datatype='Female', set1=sklearn_female, set2=eli5_female, set3=mlxtend_female,
+                          tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
+                          feat_info='top important', weighted=True)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_venn_diagram.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
 
-        # Scatter plot to check correlation between the three methods using r2 and linear equation
-        # Full data
-        scatter_r_squared(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
-                          mean3=imp_vals, tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
-                          new_feat_idx=range(len(features)), fontsize=12)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_r2.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            scatter_r_squared(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
-                              mean2=perm_mean_male, mean3=imp_vals_male,
+            # Scatter plot comparing the feature importance measuring effect between the three methods
+            metrics = ["r", "CI95%", "p-val"]
+            # Full data
+            scatter_comparison(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
+                               mean3=imp_vals,
+                               new_feat_idx=range(len(features)), metric_list=metrics)
+            plt.savefig(folder_name + f'/{kern}_full_feature_importance_comparison.tiff',
+                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.close()
+            # Male data
+            if enable_data_split:
+                scatter_comparison(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
+                                   mean2=perm_mean_male, mean3=imp_vals_male,
+                                   new_feat_idx=range(len(features_male)), metric_list=metrics)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_comparison.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                scatter_comparison(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
+                                   mean2=perm_mean_female, mean3=imp_vals_female,
+                                   new_feat_idx=range(len(features_female)), metric_list=metrics)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_comparison.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+
+            # Scatter plot to check correlation between the three methods using r2 and linear equation
+            # Full data
+            scatter_r_squared(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
+                              mean3=imp_vals,
                               tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
-                              new_feat_idx=range(len(features_male)), fontsize=12)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_r2.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                              new_feat_idx=range(len(features)), fontsize=12)
+            plt.savefig(folder_name + f'/{kern}_full_feature_importance_r2.tiff', bbox_inches='tight',
+                        dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            scatter_r_squared(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
-                              mean2=perm_mean_female, mean3=imp_vals_female,
-                              tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
-                              new_feat_idx=range(len(features_female)), fontsize=12)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_r2.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                scatter_r_squared(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
+                                  mean2=perm_mean_male, mean3=imp_vals_male,
+                                  tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
+                                  new_feat_idx=range(len(features_male)), fontsize=12)
+                plt.savefig(folder_name + f'/{kern}_male_feature_importance_r2.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                scatter_r_squared(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
+                                  mean2=perm_mean_female, mean3=imp_vals_female,
+                                  tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
+                                  new_feat_idx=range(len(features_female)), fontsize=12)
+                plt.savefig(folder_name + f'/{kern}_female_feature_importance_r2.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
 
         # Violin plot of the shuffling effect on the most important feature scores
         # Sklearn on full data
-        plot_violin(kern, 'Full sklearn', perm_importance.importances[sorted_idx[-sk_above_zero_imp:]],
-                    features[sorted_idx[-sk_above_zero_imp:]], fontsize=7)
-        plt.savefig(folder_name + f'/{kern}_full_violin_plot_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            plot_violin(kern, 'Male sklearn',
-                        perm_importance_male.importances[sorted_idx_male[-sk_above_zero_imp_male:]],
-                        features_male[sorted_idx_male[-sk_above_zero_imp_male:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_male_violin_plot_sklearn.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+        if feature_importance_method in ('all', 'sklearn'):
+            plot_violin(kern, 'Full sklearn', perm_importance.importances[sorted_idx[-sk_above_zero_imp:]],
+                        features[sorted_idx[-sk_above_zero_imp:]], fontsize=7)
+            plt.savefig(folder_name + f'/{kern}_full_violin_plot_sklearn.tiff', bbox_inches='tight',
+                        dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            plot_violin(kern, 'Female sklearn',
-                        perm_importance_female.importances[sorted_idx_female[-sk_above_zero_imp_female:]],
-                        features_female[sorted_idx_female[-sk_above_zero_imp_female:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_female_violin_plot_sklearn.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                plot_violin(kern, 'Male sklearn',
+                            perm_importance_male.importances[sorted_idx_male[-sk_above_zero_imp_male:]],
+                            features_male[sorted_idx_male[-sk_above_zero_imp_male:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_male_violin_plot_sklearn.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                plot_violin(kern, 'Female sklearn',
+                            perm_importance_female.importances[sorted_idx_female[-sk_above_zero_imp_female:]],
+                            features_female[sorted_idx_female[-sk_above_zero_imp_female:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_female_violin_plot_sklearn.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
         # ELI5 on full data
-        plot_violin(kern, 'Full eli5', perm_all[sorted_idx_eli[-el_above_zero_imp:]],
-                    features[sorted_idx_eli[-el_above_zero_imp:]], fontsize=7)
-        plt.savefig(folder_name + f'/{kern}_full_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            plot_violin(kern, 'Male eli5', perm_all_male[sorted_idx_eli_male[-el_above_zero_imp_male:]],
-                        features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_male_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        if feature_importance_method in ('all', 'eli5'):
+            plot_violin(kern, 'Full eli5', perm_all[sorted_idx_eli[-el_above_zero_imp:]],
+                        features[sorted_idx_eli[-el_above_zero_imp:]], fontsize=7)
+            plt.savefig(folder_name + f'/{kern}_full_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            plot_violin(kern, 'Female eli5', perm_all_female[sorted_idx_eli_female[-el_above_zero_imp_female:]],
-                        features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_female_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                plot_violin(kern, 'Male eli5', perm_all_male[sorted_idx_eli_male[-el_above_zero_imp_male:]],
+                            features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_male_violin_plot_eli5.tiff', bbox_inches='tight',
+                            dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                plot_violin(kern, 'Female eli5', perm_all_female[sorted_idx_eli_female[-el_above_zero_imp_female:]],
+                            features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_female_violin_plot_eli5.tiff', bbox_inches='tight',
+                            dpi=tiff_figure_dpi)
+                plt.close()
         # MLXTEND on full data
-        plot_violin(kern, 'Full mlxtend', imp_all[indices[-ml_above_zero_imp:]], features[indices[-ml_above_zero_imp:]],
-                    fontsize=7)
-        plt.savefig(folder_name + f'/{kern}_full_violin_plot_mlxtend.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
-        # Male data
-        if enable_data_split:
-            plot_violin(kern, 'Male mlxtend', imp_all_male[indices_male[-ml_above_zero_imp_male:]],
-                        features_male[indices_male[-ml_above_zero_imp_male:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_male_violin_plot_mlxtend.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+        if feature_importance_method in ('all', 'mlxtend'):
+            plot_violin(kern, 'Full mlxtend',
+                        imp_all[indices[-ml_above_zero_imp:]], features[indices[-ml_above_zero_imp:]],
+                        fontsize=7)
+            plt.savefig(folder_name + f'/{kern}_full_violin_plot_mlxtend.tiff', bbox_inches='tight',
+                        dpi=tiff_figure_dpi)
             plt.close()
-            # Female data
-            plot_violin(kern, 'Female mlxtend', imp_all_female[indices_female[-ml_above_zero_imp_female:]],
-                        features_female[indices_female[-ml_above_zero_imp_female:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_female_violin_plot_mlxtend.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
-            plt.close()
+            # Male data
+            if enable_data_split:
+                plot_violin(kern, 'Male mlxtend', imp_all_male[indices_male[-ml_above_zero_imp_male:]],
+                            features_male[indices_male[-ml_above_zero_imp_male:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_male_violin_plot_mlxtend.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # Female data
+                plot_violin(kern, 'Female mlxtend', imp_all_female[indices_female[-ml_above_zero_imp_female:]],
+                            features_female[indices_female[-ml_above_zero_imp_female:]], fontsize=7)
+                plt.savefig(folder_name + f'/{kern}_female_violin_plot_mlxtend.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+
+        #############################################################################
+        # ## Box and bar plots of most important continuous and categorical features
+        #############################################################################
+        if enable_box_bar_plots:
+            # Case of sklearn method
+            if feature_importance_method in ('all', 'sklearn'):
+                # Full data
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx,
+                                 features, sk_above_zero_imp, output_feature, 'full', kern, folder_name,
+                                 importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
+                if enable_data_split:
+                    # Male data
+                    box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
+                                     sorted_idx_male, features_male, sk_above_zero_imp_male, output_feature, 'male',
+                                     kern, folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
+                    # Female data
+                    box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
+                                     test_female_labels, sorted_idx_female, features_female, sk_above_zero_imp_female,
+                                     output_feature, 'female', kern, folder_name, importance_method='sklearn',
+                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+            # Case of eli5 method
+            if feature_importance_method in ('all', 'eli5'):
+                # Full data
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx_eli,
+                                 features, el_above_zero_imp, output_feature, 'full', kern, folder_name,
+                                 importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
+                if enable_data_split:
+                    # Male data
+                    box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
+                                     sorted_idx_eli_male, features_male, el_above_zero_imp_male, output_feature, 'male',
+                                     kern, folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
+                    # Female data
+                    box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
+                                     test_female_labels, sorted_idx_eli_female, features_female,
+                                     el_above_zero_imp_female, output_feature, 'female', kern, folder_name,
+                                     importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                     fontsize=fix_font)
+            # Case of mlxtend method
+            if feature_importance_method in ('all', 'mlxtend'):
+                # Full data
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels, indices,
+                                 features, ml_above_zero_imp, output_feature, 'full', kern, folder_name,
+                                 importance_method='mlxtend', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
+                if enable_data_split:
+                    # Male data
+                    box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
+                                     indices_male, features_male, ml_above_zero_imp_male, output_feature, 'male', kern,
+                                     folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
+                    # Female data
+                    box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
+                                     test_female_labels, indices_female, features_female, ml_above_zero_imp_female,
+                                     output_feature, 'female', kern, folder_name, importance_method='mlxtend',
+                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
 
     ####################################
     # ## Linear feature importance (FI)
@@ -1655,6 +1776,29 @@ for kern in kernels:
             plt.close()
             print('Female data top important features with linear kernel:\n',
                   features_female[lin_idx_female[-lin_above_zero_imp_female:]][::-1], '\n')
+        else:
+            lin_idx_male, lin_above_zero_imp_male, lin_idx_female, lin_above_zero_imp_female = [None] * 4
+
+        ############################################################
+        # ## Box and bar plots in case of linear feature importance
+        ############################################################
+        if enable_box_bar_plots:
+            # Full data
+            box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_idx,
+                             features, lin_above_zero_imp, output_feature, 'full', kern, folder_name,
+                             importance_method='linear', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                             fontsize=fix_font)
+            if enable_data_split:
+                # Male data
+                box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
+                                 lin_idx_male, features_male, lin_above_zero_imp_male, output_feature, 'male', kern,
+                                 folder_name, importance_method='linear', tiff_size=tiff_figure_dpi,
+                                 graphs=box_bar_figures, fontsize=fix_font)
+                # Female data
+                box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
+                                 lin_idx_female, features_female, lin_above_zero_imp_female, output_feature, 'female',
+                                 kern, folder_name, importance_method='linear', tiff_size=tiff_figure_dpi,
+                                 graphs=box_bar_figures, fontsize=fix_font)
 
     #############################################
     # ## Display the summary performance metrics

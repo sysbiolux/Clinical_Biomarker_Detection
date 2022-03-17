@@ -4,7 +4,7 @@
 # November 2021 - March 2022, University of Luxembourg #################################################################
 ########################################################################################################################
 
-# Configure up to 64 variables specific for the BASE-II-SVM-PIPELINE-HPC.py script. Configured variables will undergo
+# Configure up to 67 variables specific for the BASE-II-SVM-PIPELINE-HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file /!\
@@ -89,7 +89,7 @@ enable_engineered_input_removal = True  # Change to enable or disable removal of
 engineered_input_prefix = ('IM-', 'ID-')  # Prefix of features used in engineering, IM, ID, str, tuple of str, can be ''
 enable_rhcf = True  # Change to True to enable & False to disable RHCF, default True, bool
 # Set threshold variables for RHCF with Cramer's V, Spearman's Rank and Point bi-serial, will be None if disabled,
-# can be a decimal threshold or a given percentile threshold
+# # can be a decimal threshold or a given percentile threshold
 thresh_cramer = (0.6, 'decimal')  # Corrected Cramer's V correlation threshold, default (0.6, 'decimal'), tuple
 thresh_spearman = (95, 'percentile')  # Spearman's Rank correlation threshold, default (95, 'percentile'), tuple
 thresh_pbs = (0.6, 'decimal')  # Point bi-serial correlation threshold, default (0.6, 'decimal'), tuple
@@ -101,6 +101,9 @@ pca_tech = 'normal_pca'  # Select pca technique to choose between 'normal_pca' a
 # /!\ Resampling_tech and pca_tech will be set to '' anyhow if disabled, scaler_tech must be given
 pipeline_order = 'samples->features'  # Order of the steps either 'samples->features' or 'features->samples', first, str
 enable_feature_importance = True  # Change to True to enable & False to disable feature importance, default True, bool
+feature_importance_method = 'all'  # Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, def. 'all', str
+enable_box_bar_plots = True  # True to enable box and bar plots of most important features, default True, bool
+box_bar_figures = 'combined'  # Whether the box and bar plots should be separated or combined figure, 'combined', str
 
 ###############################################################
 # ## Grid search parameter intervals (Support Vector Machines)
