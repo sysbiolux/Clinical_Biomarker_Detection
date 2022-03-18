@@ -40,8 +40,8 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 ---
 ## The Pipeline Steps and Relevant Techniques Briefly Explained
 
-* Input: Entry of the pipeline. The pipeline is desinged to take as input a preferrably cleaned and imputed version of the data, which is already split into training and test sets.
-* Data splitting (DS): Step of splitting the input data sets based on a given binary feature, e.g. gender, specific disease,... If no splitting feature is given or the step being disabled, it will be ignored.
+* Input: Entry of the pipeline. The pipeline is desinged to take as input a preferrably cleaned and imputed version of the data, which is already split into training and test sets.  
+* Data splitting (DS): Step of splitting the input data sets based on a given binary feature, e.g. gender, specific disease,... If no splitting feature is given or the step being disabled, it will be ignored.  
 * Subgroups (SG): Step of data subgroup selections based on priorly added prefixes to the features, e.g. BF- for body fluids, PM- for physical measurements,... If no subgroups are selected or the step being disabled, all input features will be passed to the next step. This step is specifically designed to match and select given subgroups, but individual feature names could be added as well to the selection. 
 * Remove engineered input (REI): Step to remove features or group of features that are already represented in an engineered feature of the data set to avoid having redundant information and correlated features in the data set. Such features can include entire subgroups that were engineered into other features, but also individual feature names could be added to this list. If no features are selected or the step being disabled, this step will be ignored.
 * Remove highly correlated features (RHCF): Step to remove the highly correlated features in the data set for the following associations of possible feature data types: continuous-continuous, categorical-categorical, and continuous-categorical correlation. If disabled, the step will be ignored. The following techniques will be applied.
