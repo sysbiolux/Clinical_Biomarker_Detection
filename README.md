@@ -19,7 +19,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - In *mlxtend*: The files *feature_importance.py* and *\__init__.py* in the ***./env/lib/.../mlxtend/evaluate/*** folder must be replaced by the two files [feature_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod) and [\__init__.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod).
 
 ---
-## The Pipeline Steps
+## The Pipeline Flow
 ![pipeline_flowchart_legend gv](https://user-images.githubusercontent.com/38098941/157884373-e0fc6fee-623c-4ca1-a8dd-47ba5260cbf3.svg)
 * Step: Refers to the configurable processing steps
 * Technique: Point where a technique must be selected
@@ -32,9 +32,35 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - T/F: True/False
   - rus: random under-sampling  
   - smote: synthetic minority over-sampling technique
+  - chi_sq: chi squared
 
 * Note:  
   - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier.
+
+---
+## The Pipeline Steps and Relevant Techniques Briefly Explained
+
+* Input: Entry of the pipeline. The pipeline is desinged to take as input a preferrably cleaned and imputed version of the data, which is already split into training and test sets.
+* Data splitting (DS): Step of splitting the input data sets based on a given binary feature, e.g. gender, specific disease,... If no splitting feature is given or the step being disabled, it will be ignored.
+* Subgroups (SG): Step of data subgroup selections based on priorly added prefixes to the features, e.g. BF- for body fluids, PM- for physical measurements,... If no subgroups are selected or the step being disabled, all input features will be passed to the next step. This step is specifically designed to match and select given subgroups, but individual feature names could be added as well to the selection. 
+* Remove engineered input (REI): Step to remove features or group of features that are already represented in an engineered feature of the data set to avoid having redundant information and correlated features in the data set. Such features can include entire subgroups that were engineered into other features, but also individual feature names could be added to this list. If no features are selected or the step being disabled, this step will be ignored.
+* Remove highly correlated features (RHCF): Step to remove the highly correlated features in the data set for the following associations of possible feature data types: continuous-continuous, categorical-categorical, and continuous-categorical correlation. If disabled, the step will be ignored. The following techniques will be applied.
+  - continuous-continuous: Spearman's Rank Order Correlation using decimal or percentile threshold
+  - categorical-categorical: Corrected Cramer's V Correlation using decimal or percentile threshold
+  - continuous-categorical: Point Bi-serial correlation using decimal or percentile threshold (correlated features will be removed from the longer list)
+* Imbalance resampling (IR): Step of the classification pipeline to resample imbalanced data. The order of steps in the classification pipeline can be defined in the configuration file, e.g. resampling before feature transformation or vice versa. If disabled, the step will be ignored. If enabled, the following techniques can be selected.
+  - Random under-sampling (RUS): Randomly select majority class samples to equal the number of minority class samples.
+  - Synthetic minority over-sampling technique (SMOTE): Creation of synthetic minority class samples using k-nearest neighbors algorithm to equal the number of majority class samples. 
+* Feature transformation (FT): Step of the classification pipeline to transform the features. The order of steps in the classification pipeline can be defined in the configuration file, e.g. resampling before feature transformation or vice versa. If disabled, the step will be ignored. If enabled, the following techniques can be defined.
+  - Scaler technique: Select between the standard scaler (distribution centered around 0, standard deviation of 1, mean removed), robust scaler (median and scales removed according to the quantile range), or Minmax scaler (scaling each feature to a specific range like \[0, 1]). The scaler technique will only be applied on the continuous features, with standard scaler being the default if none is selected. The default scaling technique will also be applied alone in case this step is disabled.
+  - Feature technique: Select between linear and non-linear PCA for continuous features. For categorical features, currently only the *select k best method* using chi squared is available. If the step is disabled, the features will not be transformed. Please note that in case of non-linear PCA, the classifier kernel will be forced to be linear in order to avoid applying non-linear kernel transformations twice (if linear PCA is selected, non-linear classifier kernels are allowed).
+* Feature importance (FI): Step to identify the most important features selected by the classification model if this step is enabled. In case of linear classification, feature importance by permutation is not necessary and the information can be retrieved directly from the trained estimator. In case of non-linear classification, the feature importance is measured using the feature permutation algorithm. In this case, it is possible to choose between three different methods that showed consistent results. It is also possible to select all and check the results consistency yourself.
+  - sklearn's *permutation_importance* function of the sklearn.inspection group.
+  - eli5's *get_score_importance* function of the eli5.permutation_importance group (mod files required).
+  - mlxtend's *feature_importance_permutation* function of the mlxtend.evaluate group (mod files required).
+  - 'all' to run the feature importance will all three methods and to plot comparisons (mod files required).
+* Box and bar plotting (BBP): Step to visualize the most important features in a ranked order between the negative and positive classes. If disabled, the step will be ignored. If enabled, the most important categorical and continuous features can be plotted separately or combined as defined in the configuration file.
+* Output: Classification model of the selected output-target, model evaluation summaries and plots, e.g. confusion matrices, ROC-AUC curves, performance metrics, summary plots for the various enabled steps like heatmaps of the highly correlated features, venn diagrams of removed features if data is split, comparison plots of feature importance methods if all enabled, list of features ranked by their importancy, ...
 
 ---
 ## Usage
@@ -43,7 +69,7 @@ Depending of the configured setup and user preferences, the pipeline can either 
 ### Pipeline Configuration
 The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) presents 69 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
-#### General settings
+#### General Settings
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -55,7 +81,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | pandas_col_display_option | 5 | Number of columns displayed in pandas dataframe | int |
 | tiff_figure_dpi | 300 | Dot per inches resolution of the result figures | int |
 
-#### Data and topic specific settings
+#### Data and Topic-specific Settings
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -68,7 +94,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | negative_class | 'non-frail' | Name to give the negative class of the output feature |
 | output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
 
-#### Machine learning classifier-specific fixed parameters
+#### Machine Learning Classifier-specific Fixed Parameters
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -85,7 +111,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | shuffle_male | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
 | shuffle_female | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
 
-#### Selecting parallel backend, enabled steps and technical specifications
+#### Selecting Parallel Backend, Enabled Steps and Technical Specifications
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -112,7 +138,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True, bool |
 | box_bar_figures | 'combined' | Whether the box and bar plots should be separated or combined figure, 'separated' or 'combined', str |
 
-#### Machine learning classifier-specific parameters for grid search
+#### Machine Learning Classifier-specific Parameters For Grid Search
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -132,7 +158,7 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | kernel_pca_degree_lpsr | \[2, 3, 4, 5] | Polynomial degree, default 3 | int |
 | kernel_pca_coef0_lpsr | \[0.1, 0.5, 1.0] | Coef0 parameter, default 1 | float |
 
-#### Dictionaries based on the above configuration (mainly used to inform about configuration settings and number of total fits to compute)
+#### Dictionaries Based on the Above Configuration For Summaries
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
