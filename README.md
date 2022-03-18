@@ -41,7 +41,9 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) presents 67 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/base_II_config.py) presents 69 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+
+#### General settings
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
@@ -52,12 +54,24 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | fig_max_open_warning | 0 | Warning shown by matplotlib after number of open figures | int |
 | pandas_col_display_option | 5 | Number of columns displayed in pandas dataframe | int |
 | tiff_figure_dpi | 300 | Dot per inches resolution of the result figures | int |
+
+#### Data and topic specific settings
+
+| Variable | Example | Description | Type |
+| :--- | :--- | :--- | :--- |
 | curr_dir | os.getcwd() | Pathway to current directory | str, directory |
 | folder_prefix | 'results/BASE-II' | Prefix of folder name for results can be a folder in folder | str |
 | train_path | curr_dir + '/' + 'data/train_imputed.csv' | Path to imputed training set | str, file |
 | test_path | curr_dir + '/' + 'data/test_imputed.csv' | Path to imputed training set | str, file |
 | output_feature | 'PM-Frailty_Index' | Target output feature | str, binary feature |
+| positive_class | 'frail' | Name to give the positive class of the output feature |
+| negative_class | 'non-frail' | Name to give the negative class of the output feature |
 | output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
+
+#### Machine learning classifier-specific fixed parameters
+
+| Variable | Example | Description | Type |
+| :--- | :--- | :--- | :--- |
 | kernels | \['poly', 'rbf', 'sigmoid'] | Kernels to use for the Support Vector Machine classifier | str, list |
 | non_linear_kernels | \['poly', 'rbf', 'sigmoid'] | Repeat with the above kernels that are non_linear | str, list |
 | cache_size | 200 | Cache size of SVM classifier, 200 (HPC) - 2000 (local) | int |
@@ -70,6 +84,11 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
 | shuffle_male | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
 | shuffle_female | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/shuffle_proof)) | int |
+
+#### Selecting parallel backend, enabled steps and technical specifications
+
+| Variable | Example | Description | Type |
+| :--- | :--- | :--- | :--- |
 | parallel_method | 'ipyparallel' | Parallel backend agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local) | str |
 | n_jobs | -1 | Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled | int |
 | enable_data_split | True | True if data should be split based on the binary split feature below | bool |
@@ -92,6 +111,11 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all', str |
 | enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True, bool |
 | box_bar_figures | 'combined' | Whether the box and bar plots should be separated or combined figure, 'separated' or 'combined', str |
+
+#### Machine learning classifier-specific parameters for grid search
+
+| Variable | Example | Description | Type |
+| :--- | :--- | :--- | :--- |
 | regularization_lpsr | \[x for x in np.logspace(-2, 6, 9)] | Regularization parameter, default 1 | int |
 | shrinking_lpsr | \[True, False] | Shrinking heuristic, default True | bool |
 | tolerance_lpsr | \[x for x in np.logspace(-4, -2, 3)] | Stopping criterion tolerance, default 0.001 | float |
@@ -107,6 +131,11 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | kernel_pca_gamma_lpsr | \[None, 0.1, 1.0, 10.0] | Gamma parameter, default None | float |
 | kernel_pca_degree_lpsr | \[2, 3, 4, 5] | Polynomial degree, default 3 | int |
 | kernel_pca_coef0_lpsr | \[0.1, 0.5, 1.0] | Coef0 parameter, default 1 | float |
+
+#### Dictionaries based on the above configuration (mainly used to inform about configuration settings and number of total fits to compute)
+
+| Variable | Example | Description | Type |
+| :--- | :--- | :--- | :--- |
 | total_params_and_splits | {'regularization_lpsr': regularization_lpsr, 'shrinking_lpsr': shrinking_lpsr, 'tolerance_lpsr': tolerance_lpsr, 'gamma_psr': gamma_psr, 'coef0_ps': coef0_ps, 'degree_p': degree_p, 'pca_lpsr': pca_lpsr, 'k_best_lpsr': k_best_lpsr, 'k_neighbors_smote_lpsr': k_neighbors_smote_lpsr, 'splits': splits} | Dictionary of parameters for SVC and normal PCA | dict |
 | pca_kernel_dict | {'kpca_components_lpsr': kernel_pca_lpsr, 'kpca_kernel_lpsr': kernel_pca_kernel_lpsr, 'kpca_gamma_lpsr': kernel_pca_gamma_lpsr, 'kpca_tol_lpsr': kernel_pca_tol_lpsr, 'kpca_degree_lpsr': kernel_pca_degree_lpsr, 'kpca_coef0_lpsr': kernel_pca_coef0_lpsr} | Dictionary of parameters specific to the kernel PCA technique | dict |
 | additional_params | False | Change to True if additional non pre-supported parameters are added | bool |
