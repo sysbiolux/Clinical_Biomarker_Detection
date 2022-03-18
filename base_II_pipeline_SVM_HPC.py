@@ -1744,7 +1744,7 @@ for kern in kernels:
         # Figure of most important features
         importance_plot(datatype='full', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx, features_list=features,
                         importance_mean=lin_imp, importance_above_zero=lin_above_zero_imp, importance_std=None)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance_linear.tiff', bbox_inches='tight',
+        plt.savefig(folder_name + f'/{kern}_full_feature_importance.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
         print('Full data top important features with linear kernel:\n',
@@ -1758,7 +1758,7 @@ for kern in kernels:
             importance_plot(datatype='male', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_male,
                             features_list=features_male, importance_mean=lin_imp_male,
                             importance_above_zero=lin_above_zero_imp_male, importance_std=None)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance_linear.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/{kern}_male_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             print('Male data top important features with linear kernel:\n',
@@ -1771,7 +1771,7 @@ for kern in kernels:
             importance_plot(datatype='female', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_female,
                             features_list=features_female, importance_mean=lin_imp_female,
                             importance_above_zero=lin_above_zero_imp_female, importance_std=None)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance_linear.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/{kern}_female_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             print('Female data top important features with linear kernel:\n',
@@ -1786,18 +1786,18 @@ for kern in kernels:
             # Full data
             box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_idx,
                              features, lin_above_zero_imp, output_feature, 'full', kern, folder_name,
-                             importance_method='linear', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                             importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
                              fontsize=fix_font)
             if enable_data_split:
                 # Male data
                 box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
                                  lin_idx_male, features_male, lin_above_zero_imp_male, output_feature, 'male', kern,
-                                 folder_name, importance_method='linear', tiff_size=tiff_figure_dpi,
+                                 folder_name, importance_method='', tiff_size=tiff_figure_dpi,
                                  graphs=box_bar_figures, fontsize=fix_font)
                 # Female data
                 box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
                                  lin_idx_female, features_female, lin_above_zero_imp_female, output_feature, 'female',
-                                 kern, folder_name, importance_method='linear', tiff_size=tiff_figure_dpi,
+                                 kern, folder_name, importance_method='', tiff_size=tiff_figure_dpi,
                                  graphs=box_bar_figures, fontsize=fix_font)
 
     #############################################
