@@ -1534,8 +1534,8 @@ def importance_plot(datatype, method, kern, idx_sorted, features_list, importanc
 # Function to plot box and bar plot of the most important features
 ###################################################################
 def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feature, feature_names, features_above_zero,
-                     target_feature, datatype, kernel, folder_dir, tiff_size, importance_method, graphs='combined',
-                     fontsize=18):
+                     target_feature, negative_class, positive_class, datatype, kernel, folder_dir, tiff_size,
+                     importance_method, graphs='combined', fontsize=18):
     """
     Function to create either separate or combined box and bar plots of the most important continuous and categorical
     features.
@@ -1558,6 +1558,10 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         number of important features with importance above zero
     target_feature : str
         string referring to the target output feature of the analysis
+    negative_class : str
+        name of the negative target feature class
+    positive_class : str
+        name of the positive target feature class
     datatype : str
         string referring to the data set being analyzed (e.g. full, male, female)
     kernel : str
@@ -1579,7 +1583,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
     # Create a column with target feature information
     tmp = []
     for k in range(len(full_labels)):
-        tmp += ['frail' if full_labels[k] == 1 else 'non-frail']
+        tmp += [positive_class if full_labels[k] == 1 else negative_class]
     # Transform combined data and truncated feature names into pandas dataframe via dictionary
     data_frame = pd.DataFrame({key: train_value for (key, train_value) in zip(feature_names,
                                                                               full_data.transpose())})
@@ -1602,7 +1606,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             ax = sns.catplot(data=melted_cont_data_frame, x=target_feature, y='value', hue=target_feature,
                              col='Most important cont feature', kind='box', col_wrap=cont_col_wrap_definer,
                              sharey=False, sharex=True, saturation=.5, aspect=1.2, height=2.5, linewidth=.8,
-                             fliersize=.8, legend_out=True, legend=True, hue_order=['non-frail', 'frail'])
+                             fliersize=.8, legend_out=True, legend=True, hue_order=[negative_class, positive_class])
             # Titles
             ax.set_titles("{col_name}")
             ax.figure.suptitle(f'{datatype.capitalize()} {kernel} box plot of most important continuous '
@@ -1639,7 +1643,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             ax = sns.catplot(data=melted_cat_data_frame, x='value', y='percent', hue=target_feature,
                              col='Most important cat feature', kind='bar', col_wrap=cat_col_wrap_definer, sharey=True,
                              sharex=False, legend=True, legend_out=True, saturation=.5, aspect=1.6, height=2.5,
-                             linewidth=.8, hue_order=['non-frail', 'frail'])
+                             linewidth=.8, hue_order=[negative_class, positive_class])
             # Titles
             ax.set_titles("{col_name}")
             ax.figure.suptitle(f'{datatype.capitalize()} {kernel} bar plot of most important categorical '
@@ -1700,7 +1704,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
                                     data=melted_cont_data_frame[melted_cont_data_frame['Most important cont feature']
                                                                 == trunc_name],
                                     x=target_feature, y='value',
-                                    hue=target_feature, hue_order=['non-frail', 'frail'],
+                                    hue=target_feature, hue_order=[negative_class, positive_class],
                                     saturation=.5, linewidth=.8, fliersize=.8)
                         # Remove legend and labels for each plot
                         axe[k, p].legend([], [], frameon=False)
@@ -1713,7 +1717,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
                                     data=melted_cat_data_frame[melted_cat_data_frame['Most important cat feature']
                                                                == trunc_name],
                                     x='value', y='percent',
-                                    hue=target_feature, hue_order=['non-frail', 'frail'],
+                                    hue=target_feature, hue_order=[negative_class, positive_class],
                                     saturation=.5, linewidth=.8)
                         # Remove legend and labels for each plot
                         axe[k, p].legend([], [], frameon=False)

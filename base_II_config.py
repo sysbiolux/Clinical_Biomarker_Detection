@@ -4,7 +4,7 @@
 # November 2021 - March 2022, University of Luxembourg #################################################################
 ########################################################################################################################
 
-# Configure up to 67 variables specific for the BASE-II-SVM-PIPELINE-HPC.py script. Configured variables will undergo
+# Configure up to 69 variables specific for the BASE-II-SVM-PIPELINE-HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file /!\
@@ -46,6 +46,8 @@ folder_prefix = 'results/BASE-II'  # Prefix of folder name for results can be a 
 train_path = curr_dir + '/' + 'data/train_imputed.csv'  # Path to imputed training set, str (file)
 test_path = curr_dir + '/' + 'data/test_imputed.csv'  # Path to imputed training set, str (file)
 output_feature = 'PM-Frailty_Index'  # Target output feature, str (must be binary vector)
+positive_class = 'frail'  # Name to give the positive class of your target feature, str
+negative_class = 'non-frail'  # Name to give the negative class of your target feature, str
 output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion',
                   'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max',
                   'PM-Frailty_weightloss']  # Output-related features, str (can be list)

@@ -207,6 +207,11 @@ elif box_bar_figures not in ('separated', 'combined'):
     raise Warning("Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.")
 else:
     box_bar_figures = box_bar_figures
+# check if target feature and positive/negative classes are given
+for string in (output_feature, positive_class, negative_class):
+    if len(string) == 0:
+        raise TypeError("One or more of the following information is missing in the configuration file to start the "
+                        "pipeline: output_feature, positive_class, or negative_class. Got %s instead." % string)
 
 ##################################
 # ## Configuration variable check
@@ -226,11 +231,13 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
                             "Got train: %s and test: %s." % (train_path, test_path))
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
-              resampling_tech, folder_prefix, pca_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures]
+              resampling_tech, folder_prefix, pca_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures,
+              negative_class, positive_class]
 if not all(isinstance(i, str) for i in config_str):
     raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
                     'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
-                    'scaler_tech, scorer, feature_importance_method, box_bar_figures. Got %s instead.' % config_str)
+                    'scaler_tech, scorer, feature_importance_method, box_bar_figures, negative_class, positive_class. '
+                    'Got %s instead.' % config_str)
 # Variables check that should strictly be a list of strings or str
 if not (all(isinstance(i, str) for i in output_related) or isinstance(output_related, list)):
     raise TypeError('One or multiple of the configured output features were not recognized as str or list of str: '
@@ -314,7 +321,7 @@ if enable_ft:
 # Feature Importance FI, Support Vector Machines SVM, High Performance Computing HPC
 intermediate_dict = {'SG': enable_subgroups, 'DS': enable_data_split, 'REI': enable_engineered_input_removal,
                      'RHCF': enable_rhcf, 'RUS_SMOTE': enable_resampling, 'PCA-FT_KPCA-FT': enable_ft,
-                     'FI': enable_feature_importance}
+                     'FI': enable_feature_importance, 'BBP': enable_box_bar_plots}
 # Generating the folder intermediate name depending on enabled pipeline steps
 folder_intermediate, tmp, tmp1 = '', '', ''
 for key, items in intermediate_dict.items():
@@ -437,6 +444,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Training set absolute pathway: {train_path.replace(backslash, '/')}\n"
       f"Test set absolute pathway: {test_path.replace(backslash, '/')}\n"
       f"Target output feature: {output_feature}\n"
+      f"Names selected for the positive and negative classes respectively: {positive_class, negative_class}\n"
       f"Features directly linked to the target: {output_related}\n"
       f"Data set splitting enabled based on splitting feature: {enable_data_split, split_feature}\n"
       f"Prefix of engineered input features: {engineered_input_prefix}\n"
@@ -528,7 +536,7 @@ print('The shape of the original test set is:\n', test.shape)
 ######################################
 # ## Features and labels preparations
 ######################################
-# Remove features that were used to calculate the output feature frailty_index
+# Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
 train = train.drop(columns=[out for out in output_related])
 test = test.drop(columns=[out for out in output_related])
@@ -562,19 +570,23 @@ else:  # Continue with full data only, split feature will be turned to None
         train_female_features, test_female_features, train_female_labels, test_female_labels, \
         feature_list_wo_gender = [None] * 9
 
-# Print the binary counts and ratio of frailty in the train and test sets
-print('\nNon frailty/frailty counts in the full train set:', np.bincount(train_labels),
-      '\nratio:', round(np.bincount(train_labels)[0] / np.bincount(train_labels)[1], 3))
-print('Non frailty/frailty counts in the full test set:', np.bincount(test_labels),
-      '\nratio:', round(np.bincount(test_labels)[0] / np.bincount(test_labels)[1], 3))
+# Print the binary counts and ratio of negative and positive classes in the train and test sets
+print(f'\n{negative_class.capitalize()}/{positive_class.capitalize()} counts in the full train set:',
+      np.bincount(train_labels), '\nratio:', round(np.bincount(train_labels)[0] / np.bincount(train_labels)[1], 3))
+print(f'{negative_class.capitalize()}/{positive_class.capitalize()} counts in the full test set:',
+      np.bincount(test_labels), '\nratio:', round(np.bincount(test_labels)[0] / np.bincount(test_labels)[1], 3))
 if enable_data_split:
-    print('\nNon frailty/frailty counts in the male train set:', np.bincount(train_men_labels),
+    print(f'\n{negative_class.capitalize()}/{positive_class.capitalize()} counts in the male train set:',
+          np.bincount(train_men_labels),
           '\nratio:', round(np.bincount(train_men_labels)[0] / np.bincount(train_men_labels)[1], 3))
-    print('Non frailty/frailty counts in the male test set:', np.bincount(test_men_labels),
+    print(f'{negative_class.capitalize()}/{positive_class.capitalize()} counts in the male test set:',
+          np.bincount(test_men_labels),
           '\nratio:', round(np.bincount(test_men_labels)[0] / np.bincount(test_men_labels)[1], 3))
-    print('\nNon frailty/frailty counts in the female train set:', np.bincount(train_female_labels),
+    print(f'\n{negative_class.capitalize()}/{positive_class.capitalize()} counts in the female train set:',
+          np.bincount(train_female_labels),
           '\nratio:', round(np.bincount(train_female_labels)[0] / np.bincount(train_female_labels)[1], 3))
-    print('Non frailty/frailty counts in the female test set:', np.bincount(test_female_labels),
+    print(f'{negative_class.capitalize()}/{positive_class.capitalize()} counts in the female test set:',
+          np.bincount(test_female_labels),
           '\nratio:', round(np.bincount(test_female_labels)[0] / np.bincount(test_female_labels)[1], 3))
 
 #####################################
@@ -1118,9 +1130,9 @@ for kern in kernels:
     else:
         grid_imba_male, grid_imba_female = [None] * 2
 
-    ##########################################################################
-    # ## Beginning of the kernel-based gender-specific frailty classification
-    ##########################################################################
+    ###############################################################
+    # ## Beginning of the machine learning classification pipeline
+    ###############################################################
     # Fit the model to the training data
     print(f'Starting the machine learning classification pipeline ...\n')
     with parallel_backend(parallel_method):
@@ -1195,19 +1207,19 @@ for kern in kernels:
         print(f"\nMale data model evaluation for {kern.upper()} kernel:")
         evaluate_model(male_predictions, male_probs, train_male_predictions, train_male_probs, test_men_labels,
                        train_men_labels, fontsize=16)
-        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_MALE.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_male.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # Female data
         print(f"\nFemale data model evaluation for {kern.upper()} kernel:")
         evaluate_model(female_predictions, female_probs, train_female_predictions, train_female_probs,
                        test_female_labels, train_female_labels, fontsize=16)
-        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_FEMALE.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_female.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
 
     # Confusion matrix full data
     cm = confusion_matrix(test_labels, predictions)
     print(f"\nFull data confusion matrix for {kern.upper()} kernel:")
-    plot_confusion_matrix(cm, classes=['Non-frail', 'Frail'],
+    plot_confusion_matrix(cm, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix', normalize=True)
     plt.savefig(folder_name + f'/{kern}_cm_ALL.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
@@ -1215,16 +1227,16 @@ for kern in kernels:
         # Male data
         cm_male = confusion_matrix(test_men_labels, male_predictions)
         print(f"\nMale data confusion matrix for {kern.upper()} kernel:")
-        plot_confusion_matrix(cm_male, classes=['Non-frail', 'Frail'],
+        plot_confusion_matrix(cm_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/{kern}_cm_MALE.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/{kern}_cm_male.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # Female data
         cm_female = confusion_matrix(test_female_labels, female_predictions)
         print(f"\nFemale data confusion matrix for {kern.upper()} kernel:")
-        plot_confusion_matrix(cm_female, classes=['Non-frail', 'Frail'],
+        plot_confusion_matrix(cm_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/{kern}_cm_FEMALE.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/{kern}_cm_female.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
 
     # Turn the original feature lists into np arrays with technically just shorter names for later use
@@ -1677,57 +1689,62 @@ for kern in kernels:
             if feature_importance_method in ('all', 'sklearn'):
                 # Full data
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx,
-                                 features, sk_above_zero_imp, output_feature, 'full', kern, folder_name,
-                                 importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 features, sk_above_zero_imp, output_feature, negative_class.capitalize(),
+                                 positive_class.capitalize(), 'full', kern, folder_name, importance_method='sklearn',
+                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     sorted_idx_male, features_male, sk_above_zero_imp_male, output_feature, 'male',
-                                     kern, folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
+                                     sorted_idx_male, features_male, sk_above_zero_imp_male, output_feature,
+                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
+                                     folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
                                      graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, sorted_idx_female, features_female, sk_above_zero_imp_female,
-                                     output_feature, 'female', kern, folder_name, importance_method='sklearn',
-                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'female',
+                                     kern, folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
             # Case of eli5 method
             if feature_importance_method in ('all', 'eli5'):
                 # Full data
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx_eli,
-                                 features, el_above_zero_imp, output_feature, 'full', kern, folder_name,
-                                 importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 features, el_above_zero_imp, output_feature, negative_class.capitalize(),
+                                 positive_class.capitalize(), 'full', kern, folder_name, importance_method='eli5',
+                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     sorted_idx_eli_male, features_male, el_above_zero_imp_male, output_feature, 'male',
-                                     kern, folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
+                                     sorted_idx_eli_male, features_male, el_above_zero_imp_male, output_feature,
+                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
+                                     folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
                                      graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, sorted_idx_eli_female, features_female,
-                                     el_above_zero_imp_female, output_feature, 'female', kern, folder_name,
-                                     importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                     fontsize=fix_font)
+                                     el_above_zero_imp_female, output_feature, negative_class.capitalize(),
+                                     positive_class.capitalize(), 'female', kern, folder_name, importance_method='eli5',
+                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
             # Case of mlxtend method
             if feature_importance_method in ('all', 'mlxtend'):
                 # Full data
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels, indices,
-                                 features, ml_above_zero_imp, output_feature, 'full', kern, folder_name,
-                                 importance_method='mlxtend', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 features, ml_above_zero_imp, output_feature, negative_class.capitalize(),
+                                 positive_class.capitalize(), 'full', kern, folder_name, importance_method='mlxtend',
+                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     indices_male, features_male, ml_above_zero_imp_male, output_feature, 'male', kern,
+                                     indices_male, features_male, ml_above_zero_imp_male, output_feature,
+                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
                                      folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
                                      graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, indices_female, features_female, ml_above_zero_imp_female,
-                                     output_feature, 'female', kern, folder_name, importance_method='mlxtend',
-                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'female',
+                                     kern, folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
 
     ####################################
     # ## Linear feature importance (FI)
@@ -1785,20 +1802,22 @@ for kern in kernels:
         if enable_box_bar_plots:
             # Full data
             box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_idx,
-                             features, lin_above_zero_imp, output_feature, 'full', kern, folder_name,
-                             importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                             fontsize=fix_font)
+                             features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
+                             positive_class.capitalize(), 'full', kern, folder_name, importance_method='',
+                             tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
             if enable_data_split:
                 # Male data
                 box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                 lin_idx_male, features_male, lin_above_zero_imp_male, output_feature, 'male', kern,
-                                 folder_name, importance_method='', tiff_size=tiff_figure_dpi,
-                                 graphs=box_bar_figures, fontsize=fix_font)
+                                 lin_idx_male, features_male, lin_above_zero_imp_male, output_feature,
+                                 negative_class.capitalize(), positive_class.capitalize(), 'male', kern, folder_name,
+                                 importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
                 # Female data
                 box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
-                                 lin_idx_female, features_female, lin_above_zero_imp_female, output_feature, 'female',
-                                 kern, folder_name, importance_method='', tiff_size=tiff_figure_dpi,
-                                 graphs=box_bar_figures, fontsize=fix_font)
+                                 lin_idx_female, features_female, lin_above_zero_imp_female, output_feature,
+                                 negative_class.capitalize(), positive_class.capitalize(), 'female', kern, folder_name,
+                                 importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
 
     #############################################
     # ## Display the summary performance metrics
