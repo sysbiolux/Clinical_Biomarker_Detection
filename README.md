@@ -36,7 +36,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - chi_sq: chi squared
 
 * Note:  
-  - Only one possibility of pipe-order is shown in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier.
+  - Only one possibility of pipe-order is shown in detail in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier.
 
 ---
 ## The Pipeline Steps and Relevant Techniques Briefly Explained
