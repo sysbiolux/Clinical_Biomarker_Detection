@@ -81,8 +81,18 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
 
 # Starting the script and try to load the dependent files
-print(f"\n##########################################\n##########################################\n\nStarting the "
-      f"Biomarker Detection in Clinical Cohort Data Pipeline analysis script...\n")
+print(f"\n################################################\n################################################")
+# Pipeline logo
+logo = '  _________________  ________         ______\n'\
+       ' /  ______/   ___  \/  ____  \       /  ___  \\\n'\
+       '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
+       '| |      /  __   <   /    /  / /__//   _____/\n'\
+       '\  \____/  /_/    \ /____/  /     /  /\n'\
+       ' \_____/__________/________/     /__/ v.3/21/2022\n'\
+       '---=====================================---\n'\
+       '  CLINICAL BIOMARKER DETECTION - PIPELINE\n'
+print(logo)
+print(f"\nStarting the Clinical Biomarker Detection Pipeline ...\n")
 # Loading the BASE-II utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
 try:
@@ -1898,7 +1908,7 @@ if client:
     client.shutdown(hub=True)
     print('\nHPC client hub shut down!')
 
-print('\n##########################################\n##########################################\n')
+print('\n################################################\n################################################\n')
 
 ########################################################################################################################
 # END OF BASE II SVM PIPELINE HPC ######################################################################################
