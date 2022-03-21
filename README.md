@@ -210,8 +210,8 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 
 ---
 ## Planned Updates
-- [x] ~Continue editing this README file~
-- [x] ~Add boxplot of most important features in Original data~
+- [x] ~Continue editing this README file - done 3/14/2022~
+- [x] ~Add boxplot of most important features in Original data - done 3/18/2022~
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Make pipeline generate a similar .out file of the code execution when running locally compared to HPC .out
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
