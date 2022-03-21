@@ -20,14 +20,15 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 
 ---
 ## The Pipeline Flow (To be updated with feature_importance_method and box_bar_plot step)
-![pipeline_flowchart_legend gv](https://user-images.githubusercontent.com/38098941/157884373-e0fc6fee-623c-4ca1-a8dd-47ba5260cbf3.svg)
+![pipeline_flowchart_legend gv](https://user-images.githubusercontent.com/38098941/159273463-e41be6e8-d8d8-41d3-96d9-89216e5d5c55.svg)
 * Step: Refers to the configurable processing steps
 * Technique: Point where a technique must be selected
 * Specification: Possible configurable technique specifications
 * Starting point: Pipeline entry point
 * Pipe funnel point: Pipeline funnel exit
+* Ending point: End of pipeline and results output
 
-![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/157884274-6d565e24-1b3c-4512-b1a0-a26705945ffc.svg)
+![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/159273787-dad5cbf3-5b6e-4da9-9228-3002d92ba69a.svg)
 * Abbreviations:  
   - T/F: True/False
   - rus: random under-sampling  
