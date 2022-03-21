@@ -21,12 +21,12 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 ---
 ## The Pipeline Flow
 ![pipeline_flowchart_legend](https://user-images.githubusercontent.com/38098941/159273463-e41be6e8-d8d8-41d3-96d9-89216e5d5c55.svg)
-* Step: Refers to the configurable processing steps
-* Technique: Point where a technique must be selected
-* Specification: Possible configurable technique specifications
-* Starting point: Pipeline entry point
-* Pipe funnel point: Pipeline funnel exit
-* Ending point: End of pipeline and results output
+* Step (8): Refers to the configurable processing steps
+* Technique (14): Point where a technique must be selected
+* Specification (31): Possible configurable technique specifications
+* Starting point (1): Pipeline entry point
+* Pipe funnel point (1): Pipeline funnel exit
+* Ending point (1): End of pipeline and results output
 
 ![pipeline_flowchart](https://user-images.githubusercontent.com/38098941/159273787-dad5cbf3-5b6e-4da9-9228-3002d92ba69a.svg)
 * Abbreviations:  
