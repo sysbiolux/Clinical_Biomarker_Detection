@@ -101,8 +101,8 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | train_path | curr_dir + '/' + 'data/train_imputed.csv' | Path to imputed training set | str, file |
 | test_path | curr_dir + '/' + 'data/test_imputed.csv' | Path to imputed training set | str, file |
 | output_feature | 'PM-Frailty_Index' | Target output feature | str, binary feature |
-| positive_class | 'frail' | Name to give the positive class of the output feature |
-| negative_class | 'non-frail' | Name to give the negative class of the output feature |
+| positive_class | 'frail' | Name to give the positive class of the output feature | str |
+| negative_class | 'non-frail' | Name to give the negative class of the output feature | str |
 | output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
 
 #### Machine Learning Classifier-specific Fixed Parameters
@@ -145,9 +145,9 @@ The configuration file [base_II_config.py](https://github.com/sysbiolux/Clinical
 | pca_tech | 'normal_pca' | Select pca technique to choose between 'normal_pca' and 'kernel_pca' | str |
 | pipeline_order | 'samples->features' | Order of the steps either 'samples->features' or 'features->samples' | str |
 | enable_feature_importance | True | Change to True to enable & False to disable feature importance | bool |
-| feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all', str |
-| enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True, bool |
-| box_bar_figures | 'combined' | Whether the box and bar plots should be separated or combined figure, 'separated' or 'combined', str |
+| feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all' | str |
+| enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True | bool |
+| box_bar_figures | 'combined' | Whether the box and bar plots should be separated or combined figure, 'separated' or 'combined' | str |
 
 #### Machine Learning Classifier-specific Parameters For Grid Search
 
