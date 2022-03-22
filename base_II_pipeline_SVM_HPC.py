@@ -97,7 +97,6 @@ print(f"\nStarting the Clinical Biomarker Detection Pipeline ...\n")
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
 try:
     from source.base_II_utils import *
-    # from base_II_utils import *
     print("BASE-II utils file loaded successfully!\n")
 except ImportError('BASE-II utils file could not be found or loaded correctly.'):
     exit()
@@ -105,7 +104,6 @@ except ImportError('BASE-II utils file could not be found or loaded correctly.')
 print(f"Loading the BASE-II configuration file ...")
 try:
     from base_II_config import *
-    # from base_II_config import *
     print("BASE-II configuration file loaded successfully!\n")
 except ImportError('BASE-II configuration file could not be found or loaded correctly.'):
     exit()
