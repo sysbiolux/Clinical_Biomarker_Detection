@@ -387,6 +387,8 @@ else:
 # Enable only if running with ipyparallel on HPC
 if parallel_method != 'ipyparallel':
     client = None
+    file_path = curr_dir + '/' + folder_name + '/' + 'CBD-P_output_raw.txt'
+    sys.stdout = open(file_path, "w")
 else:
     # To know the location of the python script
     FILE_DIR = os.path.dirname(os.path.abspath(__file__))
