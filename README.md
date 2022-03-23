@@ -97,7 +97,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
 | curr_dir | os.getcwd() | Pathway to current directory | str, directory |
-| folder_prefix | 'results/BASE-II' | Prefix of folder name for results can be a folder in folder | str |
+| folder_prefix | 'results/CBD-P' | Prefix of folder name for results can be a folder in folder | str |
 | train_path | curr_dir + '/' + 'data/train_imputed.csv' | Path to imputed training set | str, file |
 | test_path | curr_dir + '/' + 'data/test_imputed.csv' | Path to imputed training set | str, file |
 | output_feature | 'PM-Frailty_Index' | Target output feature | str, binary feature |
