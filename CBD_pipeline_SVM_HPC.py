@@ -1,7 +1,6 @@
 ########################################################################################################################
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
-# Berlin Aging Study-II (BASE-II): Gender-Specific Frailty Machine Learning Support Vector Machine Classification ######
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
 # November 2021 - March 2022, University of Luxembourg #################################################################
 ########################################################################################################################
@@ -95,19 +94,19 @@ print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
       f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n")
-# Loading the BASE-II utils file
-print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
+# Loading the CBD-P utils file
+print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
-    from source.base_II_utils import *
-    print("BASE-II utils file loaded successfully!\n")
-except ImportError('BASE-II utils file could not be found or loaded correctly.'):
+    from source.CBDP_utils import *
+    print("CBD-P utils file loaded successfully!\n")
+except ImportError('CBD-P utils file could not be found or loaded correctly.'):
     exit()
-# Loading the BASE-II configuration file
-print(f"Loading the BASE-II configuration file ...")
+# Loading the CBD-P configuration file
+print(f"Loading the CBD-P configuration file ...")
 try:
-    from base_II_config import *
-    print("BASE-II configuration file loaded successfully!\n")
-except ImportError('BASE-II configuration file could not be found or loaded correctly.'):
+    from CBDP_config import *
+    print("CBD-P configuration file loaded successfully!\n")
+except ImportError('CBD-P configuration file could not be found or loaded correctly.'):
     exit()
 
 
