@@ -22,10 +22,10 @@
 
 # ON HPC: Check available modules, create python environment, install requirements, create directories, import data e.g.
 # ./data/train_imputed.csv and ./data/test_imputed.csv, sync script, config, utils and launcher files.
-# Run script on HPC using 'sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py' after the configurations in
-# base_II_config.py are set to your needs.
+# Run script on HPC using 'sbatch HPC_SVM_launcher.sh CBD_pipeline_SVM_HPC.py' after the configurations in
+# CBDP_config.py are set to your needs.
 
-# REQUIRED FILES: base_II_pipeline_SVM_HPC.py, base_II_utils.py, base_II_config.py, HPC_SVM_launcher.sh,
+# REQUIRED FILES: CBD_pipeline_SVM_HPC.py, CBDP_utils.py, CBDP_config.py, HPC_SVM_launcher.sh,
 # requirements.txt, ./env/eli5/permutation_importance.py and ./env/mlxtend/evaluate/feature_importance_permutation.py
 # and ./env/mlxtend/evaluate/__init__.py adapted for parallelization, shuffle_me.py for explanation of shuffle numbers
 
