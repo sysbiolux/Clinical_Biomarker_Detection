@@ -83,16 +83,18 @@ from sklearn.svm import SVC
 # Starting the script and try to load the dependent files
 print(f"\n################################################\n################################################")
 # Pipeline logo
-logo = '  _________________  ________         ______\n'\
-       ' /  ______/   ___  \/  ____  \       /  ___  \\\n'\
+logo = '\n  _________________  ________         ______\n'\
+       ' /  ______/   ___  \\/  ____  \\       /  ___  \\\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
-       '| |      /  __   <   /    /  / /__//   _____/\n'\
-       '\  \____/  /_/    \ /____/  /     /  /\n'\
-       ' \_____/__________/________/     /__/ v.3/21/2022\n'\
+       '| |      /  ___  <   /    /  / /__//   _____/\n'\
+       '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
+       ' \\_____/__________/________/     /__/ v.03/21/2022\n'\
        '---=====================================---\n'\
-       '  CLINICAL BIOMARKER DETECTION - PIPELINE\n'
+       '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
-print(f"\nStarting the Clinical Biomarker Detection Pipeline ...\n")
+print(f"For the documentation see the link below:\n"
+      f"https://github.com/sysbiolux/Clinical_Biomarker_Detection/readme.txt\n\n"
+      f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n")
 # Loading the BASE-II utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
 try:
