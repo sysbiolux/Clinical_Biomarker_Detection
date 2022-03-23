@@ -42,7 +42,7 @@ tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
 # DATA SET RULES: Data should be provided in imputed training and imputed test set, containing mixed structure of
 # continuous, binary and ordinal features
 curr_dir = os.getcwd()  # Pathway to current directory, str (dir)
-folder_prefix = 'results/CBDP'  # Prefix of folder name for results can be a folder in folder, str (suffixed in code)
+folder_prefix = 'results/CBD-P'  # Prefix of folder name for results can be a folder in folder, str (suffixed in code)
 # Please adapt the following variables to your data set and research topic, e.g. Frailty in BASE-II
 train_path = curr_dir + '/' + 'data/train_imputed.csv'  # Path to imputed training set, str (file)
 test_path = curr_dir + '/' + 'data/test_imputed.csv'  # Path to imputed training set, str (file)
