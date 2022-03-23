@@ -79,6 +79,9 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
 
+# Control output printing destination (original = console)
+orig_stdout = sys.stdout
+
 # Starting the script and try to load the dependent files
 print(f"\n################################################\n################################################")
 # Pipeline logo
@@ -387,6 +390,7 @@ else:
 # Enable only if running with ipyparallel on HPC
 if parallel_method != 'ipyparallel':
     client = None
+    # Open output file to redirect output prints if running on local machine
     file_path = curr_dir + '/' + folder_name + '/' + 'CBD-P_output_raw.txt'
     sys.stdout = open(file_path, "w")
 else:
@@ -1913,6 +1917,10 @@ if client:
     print('\nHPC client hub shut down!')
 
 print('\n################################################\n################################################\n')
+
+# close writeable output file and reset to console
+sys.stdout.close()
+sys.stdout = orig_stdout
 
 ########################################################################################################################
 # END OF CLINICAL BIOMARKER DETECTION PIPELINE #########################################################################
