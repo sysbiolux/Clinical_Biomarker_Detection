@@ -93,7 +93,7 @@ logo = '\n  _________________  ________         ______\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
-      f"https://github.com/sysbiolux/Clinical_Biomarker_Detection/readme.txt\n\n"
+      f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
       f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n")
 # Loading the BASE-II utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the BASE-II utils file ...")
