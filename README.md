@@ -97,9 +97,9 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
 | curr_dir | os.getcwd() | Pathway to current directory | str, directory |
-| folder_prefix | 'results/CBD-P' | Prefix of folder name for results can be a folder in folder | str |
-| train_path | curr_dir + '/' + 'data/train_imputed.csv' | Path to imputed training set | str, file |
-| test_path | curr_dir + '/' + 'data/test_imputed.csv' | Path to imputed training set | str, file |
+| folder_prefix | 'results/' | Folder name for results can be a folder in folder or prefix | str |
+| train_path | curr_dir + '/data/train_imputed.csv' | Path to imputed training set | str, file |
+| test_path | curr_dir + '/data/test_imputed.csv' | Path to imputed training set | str, file |
 | output_feature | 'PM-Frailty_Index' | Target output feature | str, binary feature |
 | positive_class | 'frail' | Name to give the positive class of the output feature | str |
 | negative_class | 'non-frail' | Name to give the negative class of the output feature | str |
@@ -202,7 +202,7 @@ If everything is set and ready, run the pipeline with the configured experimenta
 
 ---
 ## Results
-The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `BASE-II-DS-REI-RHCF-ST-PCA-FT-RUS-FI-BBP-SVM-HPC` for a pipeline applied on BASE-II with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
+The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `<possible_prefix>-DS-REI-RHCF-ST-PCA-FT-RUS-FI-BBP-SVM-HPC` for a pipeline deployed with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
 
 Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA to save computational time).  
 
