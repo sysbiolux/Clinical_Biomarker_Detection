@@ -356,7 +356,10 @@ folder_suffix = '-SVM'
 if parallel_method == 'ipyparallel':
     folder_suffix += '-HPC'
 # Final results folder will be a combination of given prefix, intermediate name, and HPC and classifier dependent suffix
-folder_name = folder_prefix + folder_intermediate + folder_suffix
+folder_name = folder_prefix\
+              + folder_intermediate\
+              + folder_suffix\
+              if not folder_prefix.endswith(('/', '\\')) else folder_prefix + folder_intermediate[1:] + folder_suffix
 
 # Create the folder or clear the content of the final folder (if multiple) if already existing
 if folder_prefix.__contains__('/'):
