@@ -1,10 +1,10 @@
 ########################################################################################################################
-# BASE-II MACHINE LEARNING PIPELINE CONFIGURATION FILE #################################################################
+# CLINICAL BIOMARKER DETECTION - PIPELINE (CBD-P) CONFIGURATION FILE ###################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
 # November 2021 - March 2022, University of Luxembourg #################################################################
 ########################################################################################################################
 
-# Configure up to 69 variables specific for the BASE-II-SVM-PIPELINE-HPC.py script. Configured variables will undergo
+# Configure up to 69 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file /!\
