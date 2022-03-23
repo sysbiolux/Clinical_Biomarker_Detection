@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#SBATCH -J BASE-2-parallel
+#SBATCH -J short-parallel-job
 #SBATCH -N 3
 #SBATCH -c 4
 #SBATCH --ntasks 96
