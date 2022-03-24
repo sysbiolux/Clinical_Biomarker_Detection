@@ -330,7 +330,7 @@ if enable_ft:
 # Data split DS, Subgroups SG, Remove Engineered Input REI, Remove Highly Correlated Features RHCF
 # Random Under Sampler RUS/Synthetic Minority Over-sampling Technique SMOTE -> 1 step
 # Standard Scaler ST/Robust Scaler RO/Min-max Scaler MI, PCA/Kernel PCA KPCA, Feature Transformation FT -> 1 step
-# Feature Importance FI, Support Vector Machines SVM, High Performance Computing HPC
+# Feature Importance FI, Box Bar Plotting (BBP), Support Vector Machines SVM, High Performance Computing HPC
 intermediate_dict = {'SG': enable_subgroups, 'DS': enable_data_split, 'REI': enable_engineered_input_removal,
                      'RHCF': enable_rhcf, 'RUS_SMOTE': enable_resampling, 'PCA-FT_KPCA-FT': enable_ft,
                      'FI': enable_feature_importance, 'BBP': enable_box_bar_plots}
