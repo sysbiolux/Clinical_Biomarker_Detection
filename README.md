@@ -198,7 +198,7 @@ When the environment is set up, packages installed and files in eli5 and mlxtend
 On the HPC node, the files should be accessible and stored in the same way as found in this repository, and verify the path to the cleaned imputed training and test data set and the path where results should be stored so that it matches the variables in the configuration file.  
 
 If everything is set and ready, run the pipeline with the configured experimental settings on HPC clusters using the below command:  
-`sbatch HPC_SVM_launcher.sh base_II_pipeline_SVM_HPC.py`
+`sbatch HPC_SVM_launcher.sh CBD_pipeline_SVM_HPC.py`
 
 ---
 ## Results
