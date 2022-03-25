@@ -190,6 +190,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     c_map : matplotlib.colors.Colormap
         matplotlib color map for the confusion matrix plot
     """
+    true_matrix = c_matrix
     if normalize:
         c_matrix = c_matrix.astype('float') / c_matrix.sum(axis=1)[:, np.newaxis]
         print("Normalized confusion matrix")
@@ -205,12 +206,13 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.xticks(tick_marks, classes, rotation=45, size=14)
     plt.yticks(tick_marks, classes, size=14)
     fmt = '.2f' if normalize else 'd'
-    thresh = c_matrix.max() / 1.65
+    thresh = np.nanpercentile(c_matrix, 50)
     # Labeling the plot
     for i, j in itertools.product(range(c_matrix.shape[0]), range(c_matrix.shape[1])):
-        plt.text(j, i, format(c_matrix[i, j], fmt), fontsize=20,
-                 horizontalalignment="center",
-                 color="white" if c_matrix[i, j] > thresh else "black")
+        plt.text(j, i, format(c_matrix[i, j], fmt) + '%' + '\n\n' +
+                 format(true_matrix[i, j], 'd') if normalize else format(c_matrix[i, j], fmt), fontsize=20,
+                 horizontalalignment="center", verticalalignment="center",
+                 color="white" if c_matrix[i, j] >= thresh else "black")
     plt.grid(None)
     plt.tight_layout()
     plt.ylabel('True label', size=18)
