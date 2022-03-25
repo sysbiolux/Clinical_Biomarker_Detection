@@ -43,6 +43,7 @@ tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
 # continuous, binary and ordinal features
 curr_dir = os.getcwd()  # Pathway to current directory, str (dir)
 folder_prefix = 'results/'  # Folder name for results can be a folder in folder or prefix, str (suffixed in code)
+# It is recommended to set a folder prefix that refers to the experimental configuration of interest
 # Please adapt the following variables to your data set and research topic, e.g. Frailty in BASE-II
 train_path = curr_dir + '/data/train_imputed.csv'  # Path to imputed training set, str (file)
 test_path = curr_dir + '/data/test_imputed.csv'  # Path to imputed training set, str (file)
