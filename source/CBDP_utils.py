@@ -1695,7 +1695,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         fig, axe = plt.subplots(nrows=rows, ncols=cols, figsize=(3*cols, 3*rows), sharex='none', sharey='none')
         for k in range(rows):
             for p in range(cols):
-                if (p + k * cols) < len(sorted_top_feature):
+                if (p + k) < features_above_zero:
                     # Create truncated feature name for the subplot titles and the feature to look for
                     trunc_name = trunc_feature(feature_names[sorted_top_feature[-features_above_zero:][p + k * cols]],
                                                20, True)
