@@ -96,7 +96,7 @@ logo = '\n  _________________  ________         ______\n'\
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
