@@ -1688,7 +1688,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         cols = int(np.round(np.median(poss_cols)))
         rows = int(np.ceil(len(sorted_top_feature) / cols))
         # In case of a prime number
-        if len(poss_cols) == 2:
+        if len(poss_cols) == 2 and np.max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
         # Start combined box and bar plot figure
