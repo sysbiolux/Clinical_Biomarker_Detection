@@ -1697,7 +1697,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             for p in range(cols):
                 if (p + k * cols) < len(sorted_top_feature):
                     # Create truncated feature name for the subplot titles and the feature to look for
-                    trunc_name = trunc_feature(feature_names[sorted_top_feature[-features_above_zero:][p + k * cols]],
+                    trunc_name = trunc_feature(feature_names[sorted_top_feature[:-features_above_zero-1:-1][p + k * cols]],
                                                20, True)
                     axe[k, p].set_title(f'{trunc_name}', fontsize=8)
                     # If the next most important feature is continuous
