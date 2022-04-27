@@ -1489,7 +1489,7 @@ def sorted_above_zero(importance_mean, bar_cap=20):
         number of important features with importance mean above zero
     """
     sorted_idx = importance_mean.__abs__().argsort()
-    above_zero = int(sum(importance_mean > 0) if sum(importance_mean > 0) < bar_cap else bar_cap)
+    above_zero = int(sum(abs(importance_mean) > 0) if sum(abs(importance_mean) > 0) < bar_cap else bar_cap)
     return sorted_idx, above_zero
 
 
@@ -1594,13 +1594,13 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
     data_frame.columns = truncated_feature_names
     data_frame[target_feature] = tmp
     # Get the continuous and categorical indices of the most important features
-    cont, cat = get_cat_and_cont(x_features[:, sorted_top_feature[-features_above_zero:]],
-                                 y_features[:, sorted_top_feature[-features_above_zero:]])
+    cont, cat = get_cat_and_cont(x_features[:, sorted_top_feature[-features_above_zero:][::-1]],
+                                 y_features[:, sorted_top_feature[-features_above_zero:][::-1]])
     # Separate box and bar plot figures if graphs is set to 2 and if continuous features are present
     sns.set_style("whitegrid")  # Set seaborn plot style with grid
     if len(cont) > 0:
         # Merging only the data of continuous features for box plotting
-        melted_cont_data_frame = pd.melt(data_frame.iloc[:, [sorted_top_feature[k] for k in cont] + [-1]],
+        melted_cont_data_frame = pd.melt(data_frame.iloc[:, [sorted_top_feature[-features_above_zero:][::-1][k] for k in cont] + [-1]],
                                          id_vars=[target_feature], var_name=['Most important cont feature'])
         # Starting box plot
         if graphs == 'separated':
@@ -1635,7 +1635,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         # Categorical features among the most important ones (melt by feature, group by feature and target, normalize
         # value counts, multiply by 100, call it percent and reset the index of the pandas frame in one line)
         melted_cat_data_frame = \
-            pd.melt(data_frame.iloc[:, [sorted_top_feature[k] for k in cat] + [-1]],
+            pd.melt(data_frame.iloc[:, [sorted_top_feature[-features_above_zero:][::-1][k] for k in cat] + [-1]],
                     id_vars=[target_feature], var_name=['Most important cat feature']).groupby(
                 ['Most important cat feature',
                  target_feature])['value'].value_counts(normalize=True).mul(100).rename('percent').reset_index()
@@ -1695,10 +1695,11 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         fig, axe = plt.subplots(nrows=rows, ncols=cols, figsize=(3*cols, 3*rows), sharex='none', sharey='none')
         for k in range(rows):
             for p in range(cols):
-                if (p + k * cols) < len(sorted_top_feature):
+                if (p + k * cols) < features_above_zero:
                     # Create truncated feature name for the subplot titles and the feature to look for
-                    trunc_name = trunc_feature(feature_names[sorted_top_feature[:-features_above_zero-1:-1][p + k * cols]],
-                                               20, True)
+                    trunc_name = \
+                        trunc_feature(feature_names[sorted_top_feature[-features_above_zero:][::-1]][p + k * cols],
+                                      20, True)
                     axe[k, p].set_title(f'{trunc_name}', fontsize=8)
                     # If the next most important feature is continuous
                     if (p + k * cols) in cont:
