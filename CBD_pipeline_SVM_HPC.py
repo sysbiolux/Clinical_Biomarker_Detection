@@ -80,7 +80,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
 
 # Control output printing destination (original = console)
-orig_stdout = sys.stdout
+orig_stdout = sys.__stdout__
 
 # Starting the script and try to load the dependent files
 print(f"\n################################################\n################################################")
@@ -190,7 +190,7 @@ if scaler_tech not in ('standard', 'minmax', 'robust'):
     raise Warning("Scaler technique was not set in the configuration file. Default 'standard' is loaded.")
 # Reset splitting feature if disabled
 if not enable_data_split:
-    split_feature = [None]
+    split_feature = ''
 else:
     split_feature = split_feature
 # Reset subgroups to keep if disabled
@@ -578,9 +578,9 @@ if enable_data_split and split_feature in train.columns:
         feature_list_wo_gender = separate_full_data(full_train=train, full_test=test,
                                                     target_feature=output_feature, splitting_feature=split_feature)
 else:  # Continue with full data only, split feature will be turned to None
-    print('\nFull data analysis without data splitting, either because this step is disabled or because the feature to '
-          'be split is no longer among the subgroups to keep. Subgroup activation: %s, selected subgroups: %s.'
-          % enable_subgroups, subgroups_to_keep)
+    print(f'\nFull data analysis without data splitting, either because this step is disabled or because the feature '
+          f'to be split is no longer among the subgroups to keep. Subgroup activation: {enable_subgroups},'
+          f'selected subgroups: {subgroups_to_keep}.')
     train_features, test_features, train_labels, test_labels, feature_list = separate_full_data(
         full_train=train, full_test=test, target_feature=output_feature, splitting_feature=split_feature)
     # Pseudo call the below variables to be None to avoid IDE warnings
@@ -1843,7 +1843,9 @@ for kern in kernels:
     # Baseline, training and test precision, recall and roc are displayed with evaluate_model()
     # Confusion matrix is displayed with plot_confusion_matrix()
     print(f"******************************************\nFull data performance summary for {kern.upper()} kernel:\n")
-    print("Mean CV (F-beta-2) score:", round(grid_imba.best_score_, 5) * 100, '%.')
+    print(f"Mean CV ({scorer}) train score:", round(grid_imba.best_score_, 5) * 100, '%.')
+    print(f"Mean ({scorer}) test score:", round(scoring(grid_imba.best_estimator_,
+                                                        test_features, test_labels), 5) * 100, '%')
     print('Accuracy:', round(accuracy, 4) * 100, '%.')
     print('F1 test score:', round(f1_test, 4) * 100, '%.')
     print('F1 train score:', round(f1_train, 4) * 100, '%.')
@@ -1854,7 +1856,9 @@ for kern in kernels:
 
     if enable_data_split:
         print(f"Male data performance summary for {kern.upper()} kernel:\n")
-        print("Mean CV (F-beta-2) score:", round(grid_imba_male.best_score_, 5) * 100, '%.')
+        print(f"Mean CV ({scorer}) train score:", round(grid_imba_male.best_score_, 5) * 100, '%.')
+        print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_male.best_estimator_,
+                                                            test_men_features, test_men_labels), 5) * 100, '%')
         print('Accuracy:', round(accuracy_male, 4) * 100, '%.')
         print('F1 test score:', round(f1_test_male, 4) * 100, '%.')
         print('F1 train score:', round(f1_train_male, 4) * 100, '%.')
@@ -1864,7 +1868,9 @@ for kern in kernels:
 
         print(f"******************************************\nFemale data performance summary "
               f"for {kern.upper()} kernel:\n")
-        print("Mean CV (F-beta-2) score:", round(grid_imba_female.best_score_, 5) * 100, '%.')
+        print(f"Mean CV ({scorer}) train score:", round(grid_imba_female.best_score_, 5) * 100, '%.')
+        print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_female.best_estimator_,
+                                                            test_female_features, test_female_labels), 5) * 100, '%')
         print('Accuracy:', round(accuracy_female, 4) * 100, '%.')
         print('F1 test score:', round(f1_test_female, 4) * 100, '%.')
         print('F1 train score:', round(f1_train_female, 4) * 100, '%.')
