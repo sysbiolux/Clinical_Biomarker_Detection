@@ -1843,7 +1843,9 @@ for kern in kernels:
     # Baseline, training and test precision, recall and roc are displayed with evaluate_model()
     # Confusion matrix is displayed with plot_confusion_matrix()
     print(f"******************************************\nFull data performance summary for {kern.upper()} kernel:\n")
-    print(f"Mean CV ({scorer}) train score:", round(grid_imba.best_score_, 5) * 100, '%.')
+    print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba.best_score_, 5) * 100, '%.')
+    print(f"Mean ({scorer}) train score:", round(scoring(grid_imba.best_estimator_,
+                                                         train_features, train_labels), 5) * 100, '%')
     print(f"Mean ({scorer}) test score:", round(scoring(grid_imba.best_estimator_,
                                                         test_features, test_labels), 5) * 100, '%')
     print('Accuracy:', round(accuracy, 4) * 100, '%.')
@@ -1856,7 +1858,9 @@ for kern in kernels:
 
     if enable_data_split:
         print(f"Male data performance summary for {kern.upper()} kernel:\n")
-        print(f"Mean CV ({scorer}) train score:", round(grid_imba_male.best_score_, 5) * 100, '%.')
+        print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba_male.best_score_, 5) * 100, '%.')
+        print(f"Mean ({scorer}) train score:", round(scoring(grid_imba_male.best_estimator_,
+                                                             train_men_features, train_men_labels), 5) * 100, '%')
         print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_male.best_estimator_,
                                                             test_men_features, test_men_labels), 5) * 100, '%')
         print('Accuracy:', round(accuracy_male, 4) * 100, '%.')
@@ -1868,7 +1872,9 @@ for kern in kernels:
 
         print(f"******************************************\nFemale data performance summary "
               f"for {kern.upper()} kernel:\n")
-        print(f"Mean CV ({scorer}) train score:", round(grid_imba_female.best_score_, 5) * 100, '%.')
+        print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba_female.best_score_, 5) * 100, '%.')
+        print(f"Mean ({scorer}) train score:", round(scoring(grid_imba_female.best_estimator_,
+                                                             train_female_features, train_female_labels), 5) * 100, '%')
         print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_female.best_estimator_,
                                                             test_female_features, test_female_labels), 5) * 100, '%')
         print('Accuracy:', round(accuracy_female, 4) * 100, '%.')
