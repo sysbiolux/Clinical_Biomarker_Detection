@@ -1590,7 +1590,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
     data_frame = pd.DataFrame({key: train_value for (key, train_value) in zip(feature_names,
                                                                               full_data.transpose())})
     # Truncate feature name for plot titles
-    truncated_feature_names = [trunc_feature(k, 20, True) for k in feature_names]
+    truncated_feature_names = [trunc_feature(k, 30, True) for k in feature_names]
     data_frame.columns = truncated_feature_names
     data_frame[target_feature] = tmp
     # Get the continuous and categorical indices of the most important features
@@ -1600,7 +1600,8 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
     sns.set_style("whitegrid")  # Set seaborn plot style with grid
     if len(cont) > 0:
         # Merging only the data of continuous features for box plotting
-        melted_cont_data_frame = pd.melt(data_frame.iloc[:, [sorted_top_feature[-features_above_zero:][::-1][k] for k in cont] + [-1]],
+        melted_cont_data_frame = pd.melt(data_frame.iloc[:,
+                                         [sorted_top_feature[-features_above_zero:][::-1][k] for k in cont] + [-1]],
                                          id_vars=[target_feature], var_name=['Most important cont feature'])
         # Starting box plot
         if graphs == 'separated':
@@ -1687,7 +1688,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         poss_cols = [i for i in range(1, len(sorted_top_feature) + 1) if len(sorted_top_feature) % i == 0]
         cols = int(np.round(np.median(poss_cols)))
         rows = int(np.ceil(len(sorted_top_feature) / cols))
-        # In case of a prime number
+        # In case of a prime number above 3
         if len(poss_cols) == 2 and np.max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
@@ -1701,7 +1702,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
                     # Create truncated feature name for the subplot titles and the feature to look for
                     trunc_name = \
                         trunc_feature(feature_names[sorted_top_feature[-features_above_zero:][::-1]][p + k * cols],
-                                      20, True)
+                                      30, True)
                     axe[k, p].set_title(f'{trunc_name}', fontsize=8)
                     # If the next most important feature is continuous
                     if (p + k * cols) in cont:
@@ -1817,6 +1818,66 @@ class CustomUnpickler(pickle.Unpickler):
             return super().find_class(module, name)
 
 
+def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, input_features):
+    """
+    Function to find the correct feature names in case of linear SVM coef_ applied after ColumnTransformer.
+    We know that ColumnTransformer is going step by step and concatenating the resulting transformation in our feature
+    transformation case, continuous transformation are called before categorical transformation. Thus, in case of
+    linear SVM (e.g. in combination with normal_pca at least) we can try to get the most important features back
+    (at least the k best selected features,...)
+
+    Parameters
+    ----------
+    best_estimator : GridSearchCV.best_estimator_
+        previously fitted GridSearchCV estimator
+    lin_idx : np.array
+        array of sorted linear importance by SVM.coef_
+    categorical_trans_idx : np.array
+        array of input feature indices that undergo the categorical column transformation if present as the feature
+        names can be directly retrieved by the way its implementation is working (SelectKBest), in contrast to PCA and
+        kernelPCA where it is not directly possible to retrieve the feature names, but rather the number of most
+        important principal component. With this information it could then be possible to get the most important
+        features that affected each of the important principal component
+    input_features : np.array
+        array of total input features that were loaded to the GridSearchCV pipeline
+
+    Returns
+    -------
+    important_feature_names : np.array
+        array of names for the most important features after column transformation and using linear SVM with its coef_
+    """
+    if 'features' not in best_estimator.named_steps:
+        print('No feature transformation step found in the estimator pipeline, unable to retrieve most important '
+              'feature names. Please note that for the reason this might be intended, the full feature list is returned'
+              'assuming that no feature transformation takes place and n_input_features equal n_output_features.')
+        return input_features
+    else:
+        if 'categorical' not in best_estimator.named_steps['features'].named_transformers_:
+            print('No categorical transformer found inside the feature transformation step of the estimator pipeline, '
+                  'unable to retrieve most important feature names. If a continuous transformation is present and it '
+                  'is linear pca, than we can at least attribute the most important number of component')
+            if 'continuous' not in best_estimator.named_steps['features'].named_transformers_:
+                print('No categorical nor continuous feature transformation step found despite the presence of a step '
+                      'called features. This assumes that no feature transformation takes place and returns the full '
+                      'feature list. If this is not the case, the function will be passed and there might be an issue '
+                      'with the step names, please revise.')
+                return input_features
+            else:
+                pass
+        else:
+            feat_k_best = best_estimator.named_steps['features'].named_transformers_[
+                'categorical'].get_support()
+            most_important_cat = np.where(feat_k_best == 1)[0]
+            # these features are added after the pca transformation, so most_important_cat last features can be known
+            best_cat_feat_appended = input_features[np.array(categorical_trans_idx)[most_important_cat]]
+            # so the feat_k_best last values of lin_imp or arranged lin_idx are the best_cat_feat_appended in same order
+            # The remaining len(lin_idx) - feat_k_best must then be the ordered n_components selected by pca
+            remaining_features = len(lin_idx) - len(most_important_cat)
+            remaining_feature_tmp_names = [f'pca_component_{i}' for i in range(1, remaining_features + 1)]
+            important_feature_names = remaining_feature_tmp_names + list(best_cat_feat_appended)
+            return np.array(important_feature_names)[lin_idx]
+        
+        
 ########################################################################################################################
 # END OF CBD-P UTILS ###################################################################################################
 ########################################################################################################################
