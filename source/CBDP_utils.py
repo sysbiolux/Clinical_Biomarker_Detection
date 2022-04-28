@@ -1691,6 +1691,8 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         if len(poss_cols) == 2 and np.max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
+        if rows > cols:
+            rows, cols = cols, rows
         # Start combined box and bar plot figure
         fig, axe = plt.subplots(nrows=rows, ncols=cols, figsize=(3*cols, 3*rows), sharex='none', sharey='none')
         for k in range(rows):
