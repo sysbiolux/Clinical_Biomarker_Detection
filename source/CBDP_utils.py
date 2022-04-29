@@ -1818,7 +1818,21 @@ class CustomUnpickler(pickle.Unpickler):
             return super().find_class(module, name)
 
 
-def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, input_features):
+def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_trans_name, pca_step_name, input_features, cont_idx):
+    # get access to the pca meta data
+    enter_pca = best_estimator.named_steps[
+        feature_step_name].named_transformers_[cont_trans_name].named_steps[pca_step_name]
+    # get the number of selected components
+    n_pca = enter_pca.components_.shape[0]
+    sum_of_explained_variance = format(sum(enter_pca.explained_variance_), '.2f') + '%'
+    pca_loadings = pd.DataFrame(enter_pca.components_.T, columns=[f'pca_component_{i}' for i in range(1, n_pca + 1)],
+                                index=input_features[cont_idx])
+    pca_loadings['mean'] = np.mean(abs(pca_loadings), axis=1)
+    sorted_loadings = pca_loadings.sort_values(by=f'mean', ascending=False)
+    return sorted_loadings, sum_of_explained_variance
+
+
+def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, continuous_trans_idx, input_features):
     """
     Function to find the correct feature names in case of linear SVM coef_ applied after ColumnTransformer.
     We know that ColumnTransformer is going step by step and concatenating the resulting transformation in our feature
@@ -1837,7 +1851,10 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, inpu
         names can be directly retrieved by the way its implementation is working (SelectKBest), in contrast to PCA and
         kernelPCA where it is not directly possible to retrieve the feature names, but rather the number of most
         important principal component. With this information it could then be possible to get the most important
-        features that affected each of the important principal component
+        features that affected each of the important principal component by looking at the sorted average loading of
+        each feature across the selected PCA components
+    continuous_trans_idx : np.array
+        array of input feature indices that undergo the continuous column transformation if present
     input_features : np.array
         array of total input features that were loaded to the GridSearchCV pipeline
 
@@ -1871,13 +1888,18 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, inpu
             # these features are added after the pca transformation, so most_important_cat last features can be known
             best_cat_feat_appended = input_features[np.array(categorical_trans_idx)[most_important_cat]]
             # so the feat_k_best last values of lin_imp or arranged lin_idx are the best_cat_feat_appended in same order
-            # The remaining len(lin_idx) - feat_k_best must then be the ordered n_components selected by pca
-            remaining_features = len(lin_idx) - len(most_important_cat)
-            remaining_feature_tmp_names = [f'pca_component_{i}' for i in range(1, remaining_features + 1)]
-            important_feature_names = remaining_feature_tmp_names + list(best_cat_feat_appended)
+            # The remaining len(lin_idx) - feat_k_best should then represent top n_components descending averaged
+            # importance for each feature, as yielded by the above function linear_pca_avg_features_loadings
+            remaining_cont_features = len(lin_idx) - len(most_important_cat)
+            remaining_cont_features_sorted, _ = linear_pca_avg_features_loadings(best_estimator, 'features',
+                                                                                 'continuous', 'pca',
+                                                                                 input_features,
+                                                                                 continuous_trans_idx)
+            important_feature_names = \
+                list(remaining_cont_features_sorted.index[0:remaining_cont_features]) + list(best_cat_feat_appended)
             return np.array(important_feature_names)[lin_idx]
-        
-        
+
+
 ########################################################################################################################
 # END OF CBD-P UTILS ###################################################################################################
 ########################################################################################################################
