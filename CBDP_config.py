@@ -4,7 +4,7 @@
 # November 2021 - April 2022, University of Luxembourg #################################################################
 ########################################################################################################################
 
-# Configure up to 69 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 70 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file /!\
@@ -76,6 +76,7 @@ shuffle_all = 1000  # Proven 1000 for a set of 1200 samples that each sample rec
 shuffle_male = 500  # Proven 500 for a set of 600 samples
 shuffle_female = 500  # Proven 500 for a set of 600 samples
 # See shuffle_me.py file in detail for proof
+linear_shuffle = True  # In case of linear SVM combined with linear pca, get feature importance by shuffling, True, bool
 
 ######################################################################################
 # ## Select parallel method and enabling various pipeline steps with given techniques
