@@ -63,6 +63,8 @@ import logging
 import math
 import random
 import sys
+
+import pandas as pd
 from eli5.permutation_importance import get_score_importances
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
@@ -1326,7 +1328,7 @@ for kern in kernels:
     # ## Non linear feature importance (FI)
     ########################################
     # Readjust font size for feature importance figures
-    if enable_feature_importance and (kern in non_linear_kernels):
+    if enable_feature_importance and (kern in non_linear_kernels or pca_tech=='kernel_pca'):
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
@@ -1768,7 +1770,8 @@ for kern in kernels:
     # ## Linear feature importance (FI)
     ####################################
     # Readjust font size for importance figure of linear kernel
-    if enable_feature_importance and kern == 'linear':  # In case of linear SVM kernel because of non-linear pca
+    if enable_feature_importance and kern == 'linear' and pca_tech in ('normal_pca', ''):
+       # In case of linear SVM kernel with normal pca or no pca
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
@@ -1776,63 +1779,130 @@ for kern in kernels:
         # Full data
         lin_imp = grid_imba.best_estimator_.named_steps['clf'].coef_[0]
         lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=40)
+        lin_out_features = linear_svm_get_features(grid_imba.best_estimator_, lin_idx,
+                                                   categorical_idx, features) if pca_tech == 'normal_pca' else features
+        # replace the best components by the best feature in that particular component
+        new_features_full = update_features(predict_method=grid_imba, named_step='features',
+                                            cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
+                                            features_list=feature_list, cat_list=categorical_idx,
+                                            cont_list=continuous_idx, pca_tech=pca_tech)
+
+        for k in range(len(lin_out_features)):
+            if 'component' in lin_out_features[k]:
+                # if a component is found, say component_2, then select the appropriate name of most important feature
+                # of that component, e.g. component_2 = second pca and second value in new_features_full, thus n_comp -1
+                tmp = lin_out_features[k]
+                lin_out_features[k] = new_features_full[int(lin_out_features[k][-1]) - 1]
+                new_features_full[int(tmp[-1]) - 1] = \
+                    new_features_full[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
+        # Use list comprehension to get the correct index
+        lin_out_real_idx_for_bbp = [list(features).index(x) for x in lin_out_features if x in features]
+        # Already include the component information into the feature list for box bar plot
+        bbp_lin_features = features
+        bbp_lin_features[lin_out_real_idx_for_bbp] = np.array(new_features_full)[lin_idx]
         # Figure of most important features
-        importance_plot(datatype='full', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx, features_list=features,
+        importance_plot(datatype='full', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx, features_list=np.array(new_features_full),
                         importance_mean=lin_imp, importance_above_zero=lin_above_zero_imp, importance_std=None)
         plt.savefig(folder_name + f'/{kern}_full_feature_importance.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
         print('Full data top important features with linear kernel:\n',
-              features[lin_idx[-lin_above_zero_imp:]][::-1], '\n')
+              lin_out_features[::-1], '\n')
 
         # male data
         if enable_data_split:
             lin_imp_male = grid_imba_male.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_male, lin_above_zero_imp_male = sorted_above_zero(importance_mean=lin_imp_male, bar_cap=40)
+            lin_out_features_male = \
+                linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male,
+                                        categorical_idx_male,
+                                        features_male) if pca_tech == 'normal_pca' else features_male
+            # replace the best components by the best feature in that particular component
+            new_features_male = update_features(predict_method=grid_imba_male, named_step='features',
+                                                cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
+                                                features_list=feature_list_male, cat_list=categorical_idx_male,
+                                                cont_list=continuous_idx_male, pca_tech=pca_tech)
+            for k in range(len(lin_out_features_male)):
+                if 'component' in lin_out_features_male[k]:
+                    tmp = lin_out_features_male[k]
+                    lin_out_features_male[k] = new_features_male[int(lin_out_features_male[k][-1]) - 1]
+                    new_features_male[int(tmp[-1]) - 1] = \
+                        new_features_male[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
+            # Use list comprehension to get the correct index
+            lin_out_real_idx_for_bbp_male = \
+                [list(features_male).index(x) for x in lin_out_features_male if x in features_male]
+            # Already include the component information into the feature list for box bar plot
+            bbp_lin_features_male = features_male
+            bbp_lin_features_male[lin_out_real_idx_for_bbp_male] = np.array(new_features_male)[lin_idx_male]
             # Figure of most important features
             importance_plot(datatype='male', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_male,
-                            features_list=features_male, importance_mean=lin_imp_male,
+                            features_list=np.array(new_features_male), importance_mean=lin_imp_male,
                             importance_above_zero=lin_above_zero_imp_male, importance_std=None)
             plt.savefig(folder_name + f'/{kern}_male_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             print('Male data top important features with linear kernel:\n',
-                  features_male[lin_idx_male[-lin_above_zero_imp_male:]][::-1], '\n')
+                 lin_out_features_male[::-1], '\n')
 
             # Female data
             lin_imp_female = grid_imba_female.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_female, lin_above_zero_imp_female = sorted_above_zero(importance_mean=lin_imp_female, bar_cap=40)
+            lin_out_features_female = \
+                linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female,
+                                        categorical_idx_female,
+                                        features_female) if pca_tech == 'normal_pca' else features_female
+            # replace the best components by the best feature in that particular component
+            new_features_female = update_features(predict_method=grid_imba_female, named_step='features',
+                                                  cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
+                                                  features_list=feature_list_female, cat_list=categorical_idx_female,
+                                                  cont_list=continuous_idx_female, pca_tech=pca_tech)
+            for k in range(len(lin_out_features_female)):
+                if 'component' in lin_out_features_female[k]:
+                    tmp = lin_out_features_female[k]
+                    lin_out_features_female[k] = new_features_female[int(lin_out_features_female[k][-1]) - 1]
+                    new_features_female[int(tmp[-1]) - 1] = \
+                        new_features_female[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
+            # Use list comprehension to get the correct index
+            lin_out_real_idx_for_bbp_female = \
+                [list(features_female).index(x) for x in lin_out_features_female if x in features_female]
+            # Already include the component information into the feature list for box bar plot
+            bbp_lin_features_female = features_female
+            bbp_lin_features_female[lin_out_real_idx_for_bbp_female] = np.array(new_features_female)[lin_idx_female]
             # Figure of most important features
             importance_plot(datatype='female', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_female,
-                            features_list=features_female, importance_mean=lin_imp_female,
+                            features_list=np.array(new_features_female), importance_mean=lin_imp_female,
                             importance_above_zero=lin_above_zero_imp_female, importance_std=None)
             plt.savefig(folder_name + f'/{kern}_female_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             print('Female data top important features with linear kernel:\n',
-                  features_female[lin_idx_female[-lin_above_zero_imp_female:]][::-1], '\n')
+                  lin_out_features_female[::-1], '\n')
         else:
-            lin_idx_male, lin_above_zero_imp_male, lin_idx_female, lin_above_zero_imp_female = [None] * 4
-
+            lin_idx_male, lin_above_zero_imp_male,\
+                lin_idx_female, lin_above_zero_imp_female,\
+                lin_out_features_male, lin_out_features_female,\
+                lin_out_real_idx_for_bbp_male, lin_out_real_idx_for_bbp_female,\
+                bbp_lin_features_male, bbp_lin_features_female = [None] * 10
+       
         ############################################################
         # ## Box and bar plots in case of linear feature importance
         ############################################################
         if enable_box_bar_plots:
             # Full data
-            box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_idx,
-                             features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
+            box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_out_real_idx_for_bbp,
+                             bbp_lin_features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
                              positive_class.capitalize(), 'full', kern, folder_name, importance_method='',
                              tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
             if enable_data_split:
                 # Male data
                 box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                 lin_idx_male, features_male, lin_above_zero_imp_male, output_feature,
+                                 lin_out_real_idx_for_bbp_male, bbp_lin_features_male, lin_above_zero_imp_male, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'male', kern, folder_name,
                                  importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
                                  fontsize=fix_font)
                 # Female data
                 box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
-                                 lin_idx_female, features_female, lin_above_zero_imp_female, output_feature,
+                                 lin_out_real_idx_for_bbp_female, bbp_lin_features_female, lin_above_zero_imp_female, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'female', kern, folder_name,
                                  importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
                                  fontsize=fix_font)
