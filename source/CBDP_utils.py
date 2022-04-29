@@ -1818,7 +1818,8 @@ class CustomUnpickler(pickle.Unpickler):
             return super().find_class(module, name)
 
 
-def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_trans_name, pca_step_name, input_features, cont_idx):
+def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_trans_name, pca_step_name, input_features,
+                                     cont_idx):
     # get access to the pca meta data
     enter_pca = best_estimator.named_steps[
         feature_step_name].named_transformers_[cont_trans_name].named_steps[pca_step_name]
