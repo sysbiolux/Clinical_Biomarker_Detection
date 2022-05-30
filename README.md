@@ -74,7 +74,7 @@ Step to visualize the most important features in a ranked order between the nega
 Classification model of the selected output-target, model evaluation summaries and plots, e.g. confusion matrices, ROC-AUC curves, performance metrics, summary plots for the various enabled steps like heatmaps of the highly correlated features, venn diagrams of removed features if data is split, comparison plots of feature importance methods if all enabled, list of features ranked by their importancy, ...
 
 ---
-## Usage
+## Usage (FROM HERE ALL UP TO DATE)
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
