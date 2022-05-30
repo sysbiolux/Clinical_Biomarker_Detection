@@ -63,7 +63,7 @@ output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion'
 ###################################################################################################################
 # /!\ SUPPORTED KERNELS: linear, poly, rbf, sigmoid
 # Classification variables
-kernels = ['linear', 'rbf']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
+kernels = ['linear', 'poly', 'rbf', 'sigmoid']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
 # Will be replaced by 'linear' only if kernelPCA is activated
 non_linear_kernels = ['poly', 'rbf', 'sigmoid']  # Repeat with the above kernels that are non_linear, str (can be list)
 cache_size = 200  # Cache size of SVM classifier, 200 (HPC), 2000 (local), int
@@ -127,23 +127,23 @@ box_bar_figures = 'combined'  # Whether the box and bar plots should be separate
 # /!\ VARIABLE RULES: in the form of 'name_abbr' with abbr being the first letter of the corresponding kernel
 # E.g. poly=p, rbf=r, sigmoid=s, the abbreviation must be preceded by an underscore '_', name shall be parameter name
 # SVM classifier specific variables
-regularization_lpsr = [x for x in np.logspace(-2, 6, 1)]  # Regularization parameter, default 1, int
+regularization_lpsr = [x for x in np.logspace(-2, 6, 9)]  # Regularization parameter, default 1, int
 shrinking_lpsr = [True, False]  # Shrinking heuristic, default True, bool
-tolerance_lpsr = [x for x in np.logspace(-4, -2, 1)]  # Stopping criterion tolerance, default 0.001, float
+tolerance_lpsr = [x for x in np.logspace(-4, -2, 3)]  # Stopping criterion tolerance, default 0.001, float
 gamma_psr = ['scale', 'auto', 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]  # Single training influence, default 'scale'
 degree_p = [2, 3, 4, 5]  # Polynomial degree, default 3, int
 coef0_ps = [0.0, 0.01, 0.1, 0.5]  # Independent term in kernel function, default 0.0, float
 
 # Pipeline step specific variables
 # With resampling enabled and resampling_tech='smote'
-k_neighbors_smote_lpsr = [3]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
+k_neighbors_smote_lpsr = [2, 3, 5]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
 # With FT enabled regarding categorical features
-k_best_lpsr = [5]  # , 10, 20, 30, 45]  # Number of k best features to select, default 10, int
+k_best_lpsr = [1, 2, 5, 10, 15]  # Number of k best features to select, default 10, int
 # With FT enabled and pca_tech='normal_pca', regarding continuous features
-pca_lpsr = [5]  # , 10, 20, 30, 45]  # Number of PCA components, default None, int
+pca_lpsr = [2, 5, 10, 15, 20]  # Number of PCA components, default None, int
 # With FT enabled and pca_tech='kernel_pca', regarding continuous features
 kernel_pca_kernel_lpsr = ['poly', 'rbf', 'sigmoid']  # kernels for kernelPCA, default 'linear', str
-kernel_pca_lpsr = [5, 10, 20, 30, 45]  # Number of components, default None, int
+kernel_pca_lpsr = [2, 5, 10, 15, 20]  # Number of components, default None, int
 kernel_pca_tol_lpsr = [0.0, 0.001, 0.01]  # Tolerance, default 0, float
 kernel_pca_gamma_lpsr = [None, 0.1, 1.0, 10.0]  # Gamma, default None, float
 kernel_pca_degree_lpsr = [2, 3, 4, 5]  # Degree, default 3, int
