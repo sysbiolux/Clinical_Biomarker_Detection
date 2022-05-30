@@ -1164,7 +1164,7 @@ elif scorer == 'F1':
 else:
     scoring = make_scorer(accuracy_score)  # Accuracy as default if none is selected
 
-# stratified k fold split of train, shuffle=F to avoid duplicates
+# stratified k fold split of train, shuffle=F to avoid duplicates, no random seed needed if shuffle=False
 skf = StratifiedKFold(n_splits=splits, shuffle=False)
 
 # Setting up shared param dictionary between the selected kernels for grid search cross-validation
