@@ -761,7 +761,7 @@ else:  # If engineered features removal is disabled, male and female feature lis
 ##############################################
 # ## Checking for remaining constant features
 ##############################################
-print("Checking and removing constant features in the training set ...\n")
+print("\nChecking and removing constant features in the training set ...\n")
 # Full data
 constant_all = check_constant_features(feature_list, train_features, 'full', nbr_splits=splits,
                                        near_constant_thresh=thresh_near_constant)
@@ -773,8 +773,10 @@ test_features = np.delete(test_features, constant_all, axis=1)
 
 # Male and female data
 if enable_data_split:
+    print("\nChecking and removing constant features in the male training set ...\n")
     constant_male = check_constant_features(feature_list_male, train_men_features, 'male', nbr_splits=splits,
                                             near_constant_thresh=thresh_near_constant)
+    print("\nChecking and removing constant features in the female training set ...\n")
     constant_female = check_constant_features(feature_list_female, train_female_features, 'female', nbr_splits=splits,
                                               near_constant_thresh=thresh_near_constant)
     # Update gender feature list
@@ -1937,6 +1939,7 @@ for kern in kernels:
 
         print("\n******************************************\nProcessing feature importance with linear kernel...\n")
         # Full data
+        print("In the full data...\n")
         lin_imp = grid_imba.best_estimator_.named_steps['clf'].coef_[0]
         lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=40)
         # linear output features
@@ -1984,6 +1987,7 @@ for kern in kernels:
 
         # male data
         if enable_data_split:
+            print("In the male data...\n")
             lin_imp_male = grid_imba_male.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_male, lin_above_zero_imp_male = sorted_above_zero(importance_mean=lin_imp_male, bar_cap=40)
             lin_out_features_male, sum_of_variance_male = \
@@ -2031,6 +2035,7 @@ for kern in kernels:
                   lin_out_features_male[lin_idx_male][::-1][:40], '\n')
 
             # Female data
+            print("In the female data...\n")
             lin_imp_female = grid_imba_female.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_female, lin_above_zero_imp_female = sorted_above_zero(importance_mean=lin_imp_female, bar_cap=40)
             lin_out_features_female, sum_of_variance_female = \
