@@ -63,7 +63,7 @@ output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion'
 ###################################################################################################################
 # /!\ SUPPORTED KERNELS: linear, poly, rbf, sigmoid
 # Classification variables
-kernels = ['linear', 'poly', 'rbf', 'sigmoid']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
+kernels = ['linear', 'poly', 'rbf', 'sigmoid']  # Kernel to use for the Support Vector Machine classifier, str (or list)
 # Will be replaced by 'linear' only if kernelPCA is activated
 non_linear_kernels = ['poly', 'rbf', 'sigmoid']  # Repeat with the above kernels that are non_linear, str (can be list)
 cache_size = 200  # Cache size of SVM classifier, 200 (HPC), 2000 (local), int
