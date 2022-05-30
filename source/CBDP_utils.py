@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - April 2022, University of Luxembourg #################################################################
+# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pingouin as pg
-import scipy.stats as ss
 import seaborn as sns
+import scipy.stats as ss
 from joblib import parallel_backend, Parallel, delayed
 from matplotlib_venn import venn3, venn3_unweighted
 from sklearn.metrics import *
@@ -223,7 +223,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
 # ## Feature update after feature selection by fitted pipeline
 ###############################################################
 def update_features(predict_method, named_step, cat_transformer, cont_transformer,
-                    features_list, cat_list, cont_list, pca_tech):
+                    features_list, cat_list, cont_list, pca_tech, cat_tech):
     """
     Function to update the feature lists according to the feature transformation step of the best prediction method for
     categorical and continuous features. The best components are selected for normal PCA and select k best and are
@@ -248,6 +248,8 @@ def update_features(predict_method, named_step, cat_transformer, cont_transforme
     pca_tech : str
         the PCA technique used by the prediction pipeline (if normal_pca, continuous features can be updated, else only
         categorical features can be)
+    cat_tech : str
+        the select k best technique used by the prediction pipeline
 
     Returns
     -------
@@ -256,10 +258,15 @@ def update_features(predict_method, named_step, cat_transformer, cont_transforme
     """
     if hasattr(predict_method, 'best_estimator_'):
         # Get feature index of k best selected features among categorical idx
-        feat_k_best = predict_method.best_estimator_.named_steps[named_step].named_transformers_[
-            cat_transformer].get_support()
-        most_important_cat = np.where(feat_k_best == 1)[0]
-        most_important_con = []
+        if cat_tech != '':
+            feat_k_best = \
+                predict_method.best_estimator_.named_steps[named_step].named_transformers_[
+                    cat_transformer].get_support() if hasattr(predict_method.best_estimator_.named_steps[
+                                                                            named_step].named_transformers_[
+                                                                            cat_transformer], 'get_support') else []
+            most_important_cat = np.where(feat_k_best == 1)[0] if len(feat_k_best) > 0 else []
+        else:
+            most_important_cat = []
         if pca_tech == 'normal_pca':
             # Get feature index of n components pca selected features among continuous idx
             n_pcs = predict_method.best_estimator_.named_steps[named_step].named_transformers_[
@@ -270,12 +277,16 @@ def update_features(predict_method, named_step, cat_transformer, cont_transforme
                     cont_transformer[0]].named_steps[
                         cont_transformer[1]].components_[i]).argmax() for i in range(n_pcs)])
         elif pca_tech == 'kernel_pca':
+            most_important_con = []
             print('Kernel PCA best component feature ranking can not be tracked down. '
                   'Important continuous idx set to zero.')
+        else:
+            most_important_con = []
+
         # Fetch the real feature index in the original feature_list using the categorical and continuous indices
-        feat_imp_cat = [cat_list[x] for x in np.sort(most_important_cat)]
+        feat_imp_cat = [cat_list[x] for x in np.sort(most_important_cat)] if len(most_important_cat) > 0 else []
         feat_imp_con = [cont_list[x] for x in np.sort(most_important_con)]
-        feat_cat_names = [features_list[x] for x in feat_imp_cat]
+        feat_cat_names = [features_list[x] for x in feat_imp_cat] if len(feat_imp_cat) > 0 else []
         feat_con_names = [features_list[x] for x in feat_imp_con]
         # Create the final feature list after feature transformation and combine according to the combination strategy
         end_feature_list = feat_con_names + feat_cat_names
@@ -625,9 +636,13 @@ def plot_violin(kernel, datatype, top_all, top_feat, fontsize):
 # ## Removing highly correlated features functions
 ###################################################
 # Check for constant features in the training set before applying RHCF
-def check_constant_features(features_list, training_features, datatype):
+def check_constant_features(features_list, training_features, datatype, nbr_splits, near_constant_thresh=0.01):
     """
-    Function to collect and print the constant features detected in the training data set.
+    Function to collect and print the constant features detected in the training data set. Beside strictly constant
+    features, the function also scans for near constant features measured by the variance-to-mean ratio of the values
+    in that feature. Features which variance of unique values does not surpass the near_constant_thresh will be added
+    to the list of constant feature. Specific messages will be displayed for strictly constant and near constant
+    features.
 
     Parameters
     ----------
@@ -637,6 +652,10 @@ def check_constant_features(features_list, training_features, datatype):
         array of the training features data set
     datatype : str
         string referring to the data set being analyzed (e.g. full, male, female)
+    nbr_splits : int
+        number of stratified k fold splits to use as threshold for categorical features
+    near_constant_thresh : float
+        variance threshold for near constant continuous feature, default 0.01
 
     Returns
     -------
@@ -644,16 +663,42 @@ def check_constant_features(features_list, training_features, datatype):
         list of constant features detected in the training data set
     """
     constants = []
+    near_constants_cont = []
+    near_constants_cat = []
+    cont, cat = get_cat_and_cont(training_features, None)
     for col in range(len(features_list)):
         if len(np.unique(training_features[:, col])) == 1:
             constants.append(col)
-    print(f'Found {len(constants)} constant features in the {datatype} training data set: '
+        # check for near-constant features in cont and cat separately
+        elif len(np.unique(training_features[:, col])) > 1 and col in cont:
+            # if variance divided by mean is below threshold: near-constant cont feature
+            if abs(np.var(training_features[:, col],
+                   dtype=np.float64) / np.mean(training_features[:, col],
+                                               dtype=np.float64)) < near_constant_thresh:
+                constants.append(col)
+                near_constants_cont.append(col)
+        elif len(np.unique(training_features[:, col])) == 2 and col in cat:  # only necessary if two categorical factors
+            # if the minority class is below the number of stratified k fold split: near-constant cat feature
+            _, counts = np.unique(training_features[:, col], return_counts=True)
+            if min(counts) < nbr_splits:
+                constants.append(col)
+                near_constants_cat.append(col)
+
+    if len(near_constants_cont) > 0:
+        print(f'Found {len(near_constants_cont)} near-constant continuous feature(s) where the variance-to-mean ratio '
+              f'is below the {near_constant_thresh} threshold, thus we assume them as being constant features, '
+              f'namely:\n{[features_list[var] for var in near_constants_cont]}.\n')
+    if len(near_constants_cat) > 0:
+        print(f'Found {len(near_constants_cat)} near-constant categorical feature(s) where the number of the minority '
+              f'class is below the number of stratified k fold splits {nbr_splits} , thus we assume them as being '
+              f'constant features, namely:\n{[features_list[var] for var in near_constants_cat]}.\n')
+    print(f'In total, found {len(constants)} constant and near-constant features in the {datatype} training data set:\n'
           f'{[features_list[var] for var in constants]}.')
     return constants
 
 
 # Get the indices of continuous and categorical features
-def get_cat_and_cont(training_features, testing_features):
+def get_cat_and_cont(training_features, testing_features=None):
     """
     Function to separately collect the indices of categorical and continuous features.
 
@@ -673,7 +718,10 @@ def get_cat_and_cont(training_features, testing_features):
     """
     cont_list = []
     cat_list = []
-    data = np.concatenate((training_features, testing_features), axis=0)
+    if testing_features is None:
+        data = training_features
+    else:
+        data = np.concatenate((training_features, testing_features), axis=0)
     for col in range(training_features.shape[1]):
         if any(np.array(data[:, col].round() != data[:, col])):
             cont_list.append(col)
@@ -720,6 +768,54 @@ def cramers_corrected_stat(x, y):
         k_corr = k - ((k - 1) ** 2) / (n - 1)
         result = np.sqrt(phi2corr / min((k_corr - 1), (r_corr - 1)))
     return round(result, 6)
+
+
+def corr_cramer_kbest(x, y):
+    """
+    Function to calculate corrected Cramers V statistic for categorical-categorical association and adapted for
+    the use within Sklearn SelectKBest Feature selection technique. Uses correction from Bergsma and Wicher,
+    Journal of the Korean Statistical Society 42 (2013): 323-328.
+
+    Parameters
+    ----------
+    x : np.array
+        training features data set
+    y : np.array
+        array of target output vector to be compared with the categorical features from X
+
+    Returns
+    -------
+    cramer_list : list
+        list of cramer V coefficient for each of the training features compared to the target
+    cramer_pv_list : list
+        list of cramer V p-values for each of the training features compared to the target
+    """
+    if len(np.unique(y)) == 1:
+        print("Second variable is constant")
+
+    cramer_list = []
+    cramer_pv_list = []
+    cat = get_cat_and_cont(x, None)[1]
+    for col in cat:
+        if len(np.unique(x[:, col])) == 1:
+            print("First variable is constant")
+        else:
+            conf_matrix = pd.crosstab(x[:, col], y)
+            if conf_matrix.shape[0] == 2:
+                correct = False
+            else:
+                correct = True
+            chi_2, p = ss.chi2_contingency(conf_matrix, correction=correct)[0:2]  # first two outputs are chi2 and p-v
+            n = sum(conf_matrix.sum())
+            phi2 = chi_2 / n
+            r, k = conf_matrix.shape
+            phi2corr = max(0, phi2 - ((k - 1) * (r - 1)) / (n - 1))
+            r_corr = r - ((r - 1) ** 2) / (n - 1)
+            k_corr = k - ((k - 1) ** 2) / (n - 1)
+            result = np.sqrt(phi2corr / min((k_corr - 1), (r_corr - 1)))
+            cramer_list.append(result)
+            cramer_pv_list.append(p)
+    return cramer_list, cramer_pv_list
 
 
 def applied_cramer(train_features, categorical_idx, col_idx):
@@ -774,7 +870,7 @@ def parallel_cramer(train_features, categorical_idx, n_jobs):
     return np.array(result)
 
 
-def cramer_threshold_to_drop(cramer_matrix, thresh, categorical):
+def cramer_threshold_to_drop(cramer_matrix, thresh, categorical, feats, directory, folder, datatype, verbosity=False):
     """
     Function to identify the categorical features in the unitriangular correlation matrix that show correlations with
     other categorical features above a given threshold.
@@ -788,6 +884,16 @@ def cramer_threshold_to_drop(cramer_matrix, thresh, categorical):
         (value, 'decimal')
     categorical : list
         list of categorical indices in the data set
+    feats : np.array
+        list of feature names if verbosity output is desired
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
+    verbosity : bool
+        whether or not the information about who is correlated with whom should be displayed. Could be a very long list.
 
     Returns
     -------
@@ -799,18 +905,45 @@ def cramer_threshold_to_drop(cramer_matrix, thresh, categorical):
     if thresh[1] == 'decimal':
         categorical_to_drop = [categorical[col] for col in upper.columns if any(np.array(upper[col] > thresh[0]))]
         message = f"surpassing the threshold of {thresh[0]}"
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Corrected Cramer's V Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Cramer_correlation_states.txt', 'w')
+            f.write("Corrected Cramer's V Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(cramer_matrix)):
+                tmp = np.where(np.array(upper[col]) > thresh[0])
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(categorical)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(categorical)][tmp]}\ncorrelation: '
+                            f'{np.array(upper)[tmp, col][0]}\n\n')
+            f.close()
+            print("Writing done!")
     else:  # If thresh[1] == 'percentile'
         thresh_percentile = np.nanpercentile(upper, thresh[0])
         categorical_to_drop = \
             [categorical[col] for col in upper.columns if any(upper[col] > thresh_percentile)]
         message = f"surpassing the {thresh[0]}th percentile threshold of {round(thresh_percentile, 4)}"
-    print(f"Corrected Cramer's V correlation of {len(categorical)} categorical features identified "
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Corrected Cramer's V Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Cramer_correlation_states.txt', 'w')
+            f.write("Corrected Cramer's V Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(cramer_matrix)):
+                tmp = np.where(np.array(upper[col]) > thresh_percentile)
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(categorical)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(categorical)][tmp]}\ncorrelation: '
+                            f'{np.array(upper)[tmp, col][0]}\n\n')
+            f.close()
+            print("Writing done!")
+    print(f"\nCorrected Cramer's V correlation of {len(categorical)} categorical features identified "
           f"{len(categorical_to_drop)} features that are correlated, {message}.\nThose features are "
           f"indexed {categorical_to_drop} in the original feature list.")
     return categorical_to_drop
 
 
-def applied_cat_rhcf(parallel_meth, training_features, features_list, categorical, n_job, cramer_threshold):
+def applied_cat_rhcf(parallel_meth, training_features, features_list, categorical, n_job, cramer_threshold,
+                     directory, folder, datatype):
     """
     Function to deploy the parallelized analysis of highly correlated categorical features with corrected Cramers V
     method, adapted for parallelization.
@@ -830,6 +963,12 @@ def applied_cat_rhcf(parallel_meth, training_features, features_list, categorica
     cramer_threshold : tuple
         defined threshold to identify correlated features, either percentile value or decimal value e.g.
         (value, 'decimal')
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
 
     Returns
     -------
@@ -842,7 +981,9 @@ def applied_cat_rhcf(parallel_meth, training_features, features_list, categorica
     """
     with parallel_backend(parallel_meth):
         cat_matrix = parallel_cramer(train_features=training_features, categorical_idx=categorical, n_jobs=n_job)
-    cat_drop = cramer_threshold_to_drop(cramer_matrix=cat_matrix, thresh=cramer_threshold, categorical=categorical)
+    cat_drop = cramer_threshold_to_drop(cramer_matrix=cat_matrix, thresh=cramer_threshold, categorical=categorical,
+                                        feats=features_list, verbosity=True, directory=directory, folder=folder,
+                                        datatype=datatype)
     cat_set = set([features_list[idx] for idx in cat_drop])
     print(list(cat_set), '\n')
     return cat_matrix, cat_drop, cat_set
@@ -873,7 +1014,8 @@ def applied_spearman(training_features, continuous):
     return np.array(scc.abs())
 
 
-def spearman_x_threshold_to_drop(spearman_matrix, thresh, continuous):
+def spearman_threshold_to_drop(spearman_matrix, thresh, continuous, feats, directory, folder, datatype,
+                               verbosity=False):
     """
     Function to identify the continuous features in the unitriangular correlation matrix that show correlations with
     other continuous features above a given threshold.
@@ -887,6 +1029,16 @@ def spearman_x_threshold_to_drop(spearman_matrix, thresh, continuous):
         (value, 'decimal')
     continuous : list
         list of continuous indices in the data set
+    feats : np.array
+        list of feature names if verbosity output is desired
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
+    verbosity : bool
+        whether or not the information about who is correlated with whom should be displayed. Could be a very long list.
 
     Returns
     -------
@@ -898,17 +1050,44 @@ def spearman_x_threshold_to_drop(spearman_matrix, thresh, continuous):
     if thresh[1] == 'decimal':
         continuous_to_drop = [continuous[col] for col in upper.columns if any(np.array(upper[col] > thresh[0]))]
         message = f"surpassing the threshold of {thresh[0]}"
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Spearman's Rank Order Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Spearman_correlation_states.txt', 'w')
+            f.write("Spearman's Rank Order Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(spearman_matrix)):
+                tmp = np.where(np.array(upper[col]) > thresh[0])
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(continuous)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(continuous)][tmp]}\ncorrelation: '
+                            f'{np.array(upper)[tmp, col][0]}\n\n')
+            f.close()
+            print("Writing done!")
     else:  # If thresh[1] == 'percentile'
         thresh_percentile = np.nanpercentile(upper, thresh[0])
         continuous_to_drop = [continuous[col] for col in upper.columns if any(upper[col] > thresh_percentile)]
         message = f"surpassing the {thresh[0]}th percentile threshold of {round(thresh_percentile, 4)}"
-    print(f"Spearman correlation of {len(continuous)} continuous features identified "
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Spearman's Rank Order Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Spearman_correlation_states.txt', 'w')
+            f.write("Spearman's Rank Order Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(spearman_matrix)):
+                tmp = np.where(np.array(upper[col]) > thresh_percentile)
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(continuous)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(continuous)][tmp]}\ncorrelation: '
+                            f'{np.array(upper)[tmp, col][0]}\n\n')
+            f.close()
+            print("Writing done!")
+    print(f"\nSpearman correlation of {len(continuous)} continuous features identified "
           f"{len(continuous_to_drop)} features that are correlated, {message}.\nThose features are "
           f"indexed {continuous_to_drop} in the original feature list.")
     return continuous_to_drop
 
 
-def applied_cont_rhcf(training_features, features_list, continuous, spearman_threshold):
+def applied_cont_rhcf(training_features, features_list, continuous, spearman_threshold,
+                      directory, folder, datatype):
     """
     Function to deploy the analysis of highly correlated continuous features with Spearman's Rank Order method.
 
@@ -923,6 +1102,12 @@ def applied_cont_rhcf(training_features, features_list, continuous, spearman_thr
     spearman_threshold : tuple
         defined threshold to identify correlated features, either percentile value or decimal value e.g.
         (value, 'decimal')
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
 
     Returns
     -------
@@ -934,8 +1119,9 @@ def applied_cont_rhcf(training_features, features_list, continuous, spearman_thr
         set of the feature names that can be dropped
     """
     cont_matrix = applied_spearman(training_features=training_features, continuous=continuous)
-    cont_drop = spearman_x_threshold_to_drop(spearman_matrix=cont_matrix, thresh=spearman_threshold,
-                                             continuous=continuous)
+    cont_drop = spearman_threshold_to_drop(spearman_matrix=cont_matrix, thresh=spearman_threshold,
+                                           continuous=continuous, feats=features_list, directory=directory,
+                                           folder=folder, datatype=datatype, verbosity=True)
     cont_set = set([features_list[idx] for idx in cont_drop])
     print(list(cont_set), '\n')
     return cont_matrix, cont_drop, cont_set
@@ -1052,7 +1238,8 @@ def parallel_point_bs(train_features, longest, short, n_jobs):
     return np.array(res_pb_r), np.array(res_pb_pv)
 
 
-def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, remaining_feature_idx):
+def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, shorter, remaining_feature_idx, feats,
+                               directory, folder, datatype, verbosity=False):
     """
     Function to identify the categorical and continuous features in the unitriangular correlation matrix that show
     correlations with the other type of features above a given threshold.
@@ -1066,9 +1253,21 @@ def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, remaining_featur
         (value, 'decimal')
     longer : list
         list of feature indices corresponding to the longer type of features (continuous or categorical)
+    shorter : list
+        list of feature indices corresponding to the shorter type of features (continuous or categorical)
     remaining_feature_idx : list
         list of feature indices remaining in the original data set after the highly correlated continuous and
         categorical features were removed
+    feats : np.array
+        list of feature names if verbosity output is desired
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
+    verbosity : bool
+        whether or not the information about who is correlated with whom should be displayed. Could be a very long list.
 
     Returns
     -------
@@ -1082,15 +1281,41 @@ def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, remaining_featur
         pbs_cols_to_drop_from_train = [longer[col] for col in point_bs_panda.T.columns if
                                        any(np.array(point_bs_panda.T[col] > thresh[0]))]
         message = f"surpassing the threshold of {thresh[0]}"
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Point Bi-Serial Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Point_biserial_correlation_states.txt', 'w')
+            f.write("Point Bi-Serial Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(point_bs_matrix)):
+                tmp = np.where(np.array(point_bs_matrix[col, :]) > thresh[0])
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(longer)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(shorter)][tmp]}\ncorrelation: '
+                            f'{np.array(point_bs_matrix)[col, tmp][0]}\n\n')
+            f.close()
+            print("Writing done!")
     else:  # If thresh[1] == 'percentile'
         thresh_percentile = np.nanpercentile(point_bs_panda, thresh[0])
         pbs_cols_to_drop_from_train = [longer[col] for col in point_bs_panda.T.columns if
                                        any(point_bs_panda.T[col] > thresh_percentile)]
         message = f"surpassing the {thresh[0]}th percentile threshold of {round(thresh_percentile, 4)}"
+        # print who is correlated with whom
+        if verbosity:
+            print("Writing the Point Bi-Serial Correlation States into a separate file...")
+            f = open(directory + '/' + folder + '/' + f'{datatype}_Point_biserial_correlation_states.txt', 'w')
+            f.write("Point Bi-Serial Correlation States for the removed highly correlated features\n\n\n")
+            for col in range(len(point_bs_matrix)):
+                tmp = np.where(np.array(point_bs_matrix[col, :]) > thresh_percentile)
+                if len(tmp[0]) > 0:
+                    f.write(f'* {[np.array(feats)[np.array(longer)][col]]} is highly correlated with '
+                            f'{np.array(feats)[np.array(shorter)][tmp]}\ncorrelation: '
+                            f'{np.array(point_bs_matrix)[col, tmp][0]}\n\n')
+            f.close()
+            print("Writing done!")
     # Find the real cols to drop from the retained features after updating for Cramer and spearman
     real_cols_to_drop = [col for col in range(len(remaining_feature_idx)) if
                          remaining_feature_idx[col] in pbs_cols_to_drop_from_train]
-    print(f"Point bi-serial correlation between the remaining continuous and categorical features identified "
+    print(f"\nPoint bi-serial correlation between the remaining continuous and categorical features identified "
           f"{len(real_cols_to_drop)} features that are correlated, {message}.\nThose features are indexed "
           f"{pbs_cols_to_drop_from_train} in the original feature list and {real_cols_to_drop} in the retained "
           f"feature list after the two previous correlation checks.")
@@ -1098,7 +1323,7 @@ def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, remaining_featur
 
 
 def applied_cat_cont_rhcf(parallel_meth, training_features, cont_before_rhcf, cat_before_rhcf, features_list,
-                          feat_after_rhcf, feat_idx_after_rhcf, n_job, pbs_threshold):
+                          feat_after_rhcf, feat_idx_after_rhcf, n_job, pbs_threshold, directory, folder, datatype):
     """
     Function to deploy the analysis of highly correlated features with Point Bi-serial method, adapted for
     parallelization. The function decides which is the longest of both feature types and distributes the tasks
@@ -1125,6 +1350,12 @@ def applied_cat_cont_rhcf(parallel_meth, training_features, cont_before_rhcf, ca
     pbs_threshold : tuple
         defined threshold to identify correlated features, either percentile value or decimal value e.g.
         (value, 'decimal')
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    datatype : str
+        type of data being analysed, will be added as prefix
 
     Returns
     -------
@@ -1158,7 +1389,8 @@ def applied_cat_cont_rhcf(parallel_meth, training_features, cont_before_rhcf, ca
     with parallel_backend(parallel_meth):
         pb_corr, pb_pv = parallel_point_bs(train_features=training_features, longest=longer, short=shorter,
                                            n_jobs=n_job)
-    pbs_drop = point_bs_threshold_to_drop(pb_corr, pbs_threshold, longer, feat_idx_after_rhcf)
+    pbs_drop = point_bs_threshold_to_drop(pb_corr, pbs_threshold, longer, shorter,
+                                          feat_idx_after_rhcf, features_list, directory, folder, datatype, True)
     cat_cont_set = set([feat_after_rhcf[idx] for idx in pbs_drop])
     print(list(cat_cont_set), '\n')
     return longer, pb_corr, pb_pv, pbs_drop, cat_cont_set, remaining_cont, remaining_cat
@@ -1279,7 +1511,7 @@ def rhcf_update_summary(training_features, testing_features, features_list, fin_
     testing_features = fin_test
     features_list = fin_feat
     # Print the results
-    print(f"Removing highly correlated features done in the {datatype} data with corrected Cramer's V,"
+    print(f"Removing highly correlated features done in the {datatype} data with corrected Cramer's V, "
           f"Spearman's Rank Order Correlation, and Point Bi-Serial Correlation.\n"
           f"\n{datatype.capitalize()} data RHCF Summary:\n"
           f"******************************************\n"
@@ -1300,8 +1532,11 @@ def rhcf_update_summary(training_features, testing_features, features_list, fin_
           f"to drop from the longest list.\n\n"
           f"The longest remaining data type was "
           f"'{'categorical' if len(remain_cat) >= len(remain_cont) else 'continuous'}':\n"
-          f"Length remaining continuous={len(remain_cont)}\n"
-          f"Length remaining categorical={len(remain_cat)}.\n******************************************\n")
+          f"Length remaining continuous="
+          f"{len(remain_cont)- len(pbs_drop) if len(remain_cont) >= len(remain_cat) else len(remain_cont)}\n"
+          f"Length remaining categorical="
+          f"{len(remain_cat)- len(pbs_drop) if len(remain_cat) >= len(remain_cont) else len(remain_cat)}."
+          f"\n******************************************\n")
     return origin_train, origin_test, origin_feat, training_features, testing_features, features_list
 
 
@@ -1526,9 +1761,9 @@ def importance_plot(datatype, method, kern, idx_sorted, features_list, importanc
         plt.barh(features_list[idx_sorted[-importance_above_zero:]],
                  importance_mean[idx_sorted[-importance_above_zero:]],
                  xerr=importance_std[idx_sorted[-importance_above_zero:]])
-    plt.setp(ax.get_yticklabels(), rotation=30, ha='right', fontsize=7)  # to avoid labels overlapping
-    plt.title(f'{datatype.capitalize()} feature importance {kern} {method.capitalize()}')
-    plt.xlabel("Permutation Importance")
+    plt.setp(ax.get_yticklabels(), rotation=30, ha='right', fontsize=6)  # to avoid labels overlapping
+    plt.title(f'{datatype.capitalize()} feature importance {kern} {method}')
+    plt.xlabel("Permuted Feature Importance" if method in ('mlxtend', 'sklearn', 'eli5') else "Feature Importance")
     plt.tight_layout()
 
 
@@ -1626,7 +1861,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             sns.move_legend(ax, bbox_to_anchor=(0.99, 0.95), loc='upper right')
             # Layout, save and close
             ax.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=4)
-            plt.savefig(folder_dir + f"/{datatype}_continuous_boxplot_{kernel}_{importance_method}.tiff",
+            plt.savefig(folder_dir + f"/{datatype}_{kernel}_continuous_boxplot_{importance_method}.tiff",
                         dpi=tiff_size, bbox_inches='tight')
             plt.close(ax.figure)
     else:
@@ -1677,7 +1912,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             sns.move_legend(ax, loc='upper right', title=f'{target_feature} classes', bbox_to_anchor=(0.99, 0.95))
             # Layout, save and close
             ax.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=2)
-            plt.savefig(folder_dir + f"/{datatype}_categorical_barplot_{kernel}_{importance_method}.tiff",
+            plt.savefig(folder_dir + f"/{datatype}_{kernel}_categorical_barplot_{importance_method}.tiff",
                         dpi=tiff_size, bbox_inches='tight')
             plt.close(ax.figure)
     else:
@@ -1689,7 +1924,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         cols = int(np.round(np.median(poss_cols)))
         rows = int(np.ceil(len(sorted_top_feature) / cols))
         # In case of a prime number above 3
-        if len(poss_cols) == 2 and np.max(poss_cols) > 3:
+        if len(poss_cols) == 2 and max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
         if rows > cols:
@@ -1757,7 +1992,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         fig.supxlabel('Feature categories in bar plots; target classes in box plots', fontsize=int(3/4 * fontsize))
         # Layout, save and close
         fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=4)
-        plt.savefig(folder_dir + f"/{datatype}_combined_box_and_barplot_{kernel}_{importance_method}.tiff",
+        plt.savefig(folder_dir + f"/{datatype}_{kernel}_combined_box_and_barplot_{importance_method}.tiff",
                     dpi=tiff_size, bbox_inches='tight')
         plt.close(fig)
 
@@ -1819,7 +2054,34 @@ class CustomUnpickler(pickle.Unpickler):
 
 
 def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_trans_name, pca_step_name, input_features,
-                                     cont_idx):
+                                     cont_idx, lin_importance_by_svm):
+    """
+    Function to retrieve and calculate the summed weighted pca loadings after linear PCA application.
+
+    Parameters
+    ----------
+    best_estimator : GridSearchCV.best_estimator_
+        previously fitted GridSearchCV estimator
+    feature_step_name : str
+        name of the feature transforming step inside the pipeline
+    cont_trans_name : str
+        name of the continuous transformer inside the column transformer of the pipeline
+    pca_step_name : str
+        name of the pca specific step inside the continuous transformer of the column transformer of that pipeline
+    input_features : np.array
+        array of total input features that were loaded to the GridSearchCV pipeline
+    lin_importance_by_svm : np.array
+        array of importance coefficient as returned by the .coef_ attribute of linear SVM classifier
+    cont_idx : list
+        list of continuous feature indices
+
+    Returns
+    -------
+    sorted_summed_weighted_loadings : pd.DataFrame
+        data frame of the sorted and summed weighted pca loadings including the corresponding feature names
+    sum_of_explained_variance : str
+        string in xx.xx% format informing about the sum of explained variance by the selected n_components of pca
+    """
     # get access to the pca meta data
     enter_pca = best_estimator.named_steps[
         feature_step_name].named_transformers_[cont_trans_name].named_steps[pca_step_name]
@@ -1828,12 +2090,20 @@ def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_tra
     sum_of_explained_variance = format(sum(enter_pca.explained_variance_), '.2f') + '%'
     pca_loadings = pd.DataFrame(enter_pca.components_.T, columns=[f'pca_component_{i}' for i in range(1, n_pca + 1)],
                                 index=input_features[cont_idx])
-    pca_loadings['mean'] = np.mean(abs(pca_loadings), axis=1)
-    sorted_loadings = pca_loadings.sort_values(by=f'mean', ascending=False)
-    return sorted_loadings, sum_of_explained_variance
+    importance_of_continuous_features = abs(lin_importance_by_svm[0:n_pca])
+    weighted_pca_loadings = pd.DataFrame()
+    for k in pca_loadings.columns:
+        imp_coef_position = 0
+        weighted_pca_loadings[k] = abs(pca_loadings[k]) * importance_of_continuous_features[imp_coef_position]
+        imp_coef_position += 1
+
+    weighted_pca_loadings['sum'] = np.sum(weighted_pca_loadings, axis=1)
+    sorted_summed_weighted_loadings = weighted_pca_loadings.sort_values(by='sum', ascending=False)
+    return sorted_summed_weighted_loadings, sum_of_explained_variance
 
 
-def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, continuous_trans_idx, input_features):
+def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, continuous_trans_idx, input_features,
+                            lin_importance_by_svm, ft_tech):
     """
     Function to find the correct feature names in case of linear SVM coef_ applied after ColumnTransformer.
     We know that ColumnTransformer is going step by step and concatenating the resulting transformation in our feature
@@ -1858,6 +2128,10 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
         array of input feature indices that undergo the continuous column transformation if present
     input_features : np.array
         array of total input features that were loaded to the GridSearchCV pipeline
+    lin_importance_by_svm : np.array
+        array of importance coefficient as returned by the .coef_ attribute of linear SVM classifier
+    ft_tech : str
+        feature transformation tech from where to gather the coefficients, e.g. pca or lda
 
     Returns
     -------
@@ -1884,21 +2158,242 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
                 pass
         else:
             feat_k_best = best_estimator.named_steps['features'].named_transformers_[
-                'categorical'].get_support()
-            most_important_cat = np.where(feat_k_best == 1)[0]
+                'categorical'].get_support() if hasattr(best_estimator.named_steps['features'].named_transformers_[
+                    'categorical'], 'get_support') else input_features[np.array(categorical_trans_idx)]
+            most_important_cat = \
+                np.where(feat_k_best == 1)[0] if feat_k_best.dtype == 'bool' else np.arange(len(feat_k_best))
             # these features are added after the pca transformation, so most_important_cat last features can be known
             best_cat_feat_appended = input_features[np.array(categorical_trans_idx)[most_important_cat]]
             # so the feat_k_best last values of lin_imp or arranged lin_idx are the best_cat_feat_appended in same order
             # The remaining len(lin_idx) - feat_k_best should then represent top n_components descending averaged
             # importance for each feature, as yielded by the above function linear_pca_avg_features_loadings
             remaining_cont_features = len(lin_idx) - len(most_important_cat)
-            remaining_cont_features_sorted, _ = linear_pca_avg_features_loadings(best_estimator, 'features',
-                                                                                 'continuous', 'pca',
-                                                                                 input_features,
-                                                                                 continuous_trans_idx)
-            important_feature_names = \
-                list(remaining_cont_features_sorted.index[0:remaining_cont_features]) + list(best_cat_feat_appended)
-            return np.array(important_feature_names)[lin_idx]
+            remaining_cont_features_sorted, sum_of_variance = \
+                linear_pca_avg_features_loadings(best_estimator, 'features', 'continuous', ft_tech, input_features,
+                                                 continuous_trans_idx, lin_importance_by_svm) if ft_tech == 'pca' else \
+                (linear_lda_features_loadings(best_estimator, 'features', 'continuous', ft_tech,
+                                              continuous_trans_idx, lin_importance_by_svm, input_features),
+                 [None]) if ft_tech == 'lda' else (input_features[continuous_trans_idx], [None])
+            # append 'PC contribution #_' to the remaining_cont_features_sorted if pca
+            if ft_tech == 'pca':
+                best_pc_feats = list(remaining_cont_features_sorted.index[0:remaining_cont_features])
+                for pos in range(len(best_pc_feats)):
+                    best_pc_feats[pos] = best_pc_feats[pos] + f' (PC #{pos + 1})'
+                important_feature_names = best_pc_feats + list(best_cat_feat_appended)
+                return np.array(important_feature_names), sum_of_variance
+            elif ft_tech == 'lda':
+                if len(remaining_cont_features_sorted) == 1:
+                    best_ld_feats = input_features[tuple(remaining_cont_features_sorted)]
+                else:
+                    best_ld_feats = input_features[np.array(remaining_cont_features_sorted)]
+                for pos in range(len(best_ld_feats)):
+                    best_ld_feats[pos] = best_ld_feats[pos] + f' (LD #1, pos.{pos + 1})'
+                important_feature_names = list(best_ld_feats) + list(best_cat_feat_appended)
+                return np.array(important_feature_names)
+            elif ft_tech == 'kernel_pca':
+                kernel_components = best_estimator.get_params()['features__continuous__pca__n_components']
+                best_kpc_feats = []
+                for pos in range(kernel_components):
+                    best_kpc_feats.append(f'Kernel PCA component #{pos + 1}')
+                important_feature_names = list(best_kpc_feats) + list(best_cat_feat_appended)
+                return np.array(important_feature_names)
+            elif ft_tech == 'none':
+                important_feature_names = list(input_features[continuous_trans_idx]) + list(best_cat_feat_appended)
+                return np.array(important_feature_names)
+
+
+def linear_lda_features_loadings(best_estimator, feature_step_name, cont_trans_name, lda_step_name, cont_idx,
+                                 lin_importance_by_svm, input_features):
+    """
+    Function to retrieve and calculate the summed weighted lda loadings after LDA application in case of multiple
+    n_components. If LDA components is 1 (e.g. if classification problem has only 2 classes), only the index of the most
+    important feature will be returned. In that case of LDA components equal 1, the LDA coefficients will be normalized
+    to 1 and expressed in percent for each feature. Then we can select the number of top features that explain over 95%
+    of LDA, which might not always be just one feature.
+
+    Parameters
+    ----------
+    best_estimator : GridSearchCV.best_estimator_
+        previously fitted GridSearchCV estimator
+    feature_step_name : str
+        name of the feature transforming step inside the pipeline
+    cont_trans_name : str
+        name of the continuous transformer inside the column transformer of the pipeline
+    lda_step_name : str
+        name of the pca specific step inside the continuous transformer of the column transformer of that pipeline
+    cont_idx : list
+        list of continuous feature indices
+    lin_importance_by_svm : np.array
+        array of importance coefficient as returned by the .coef_ attribute of linear SVM classifier
+    input_features : np.array
+        array of total input features that were loaded to the GridSearchCV pipeline
+
+    Returns
+    -------
+    most_important_feature_idx : list
+        list of the most important features indices as found in the input features
+    """
+    # get access to the lda meta data
+    enter_lda = best_estimator.named_steps[
+        feature_step_name].named_transformers_[cont_trans_name].named_steps[lda_step_name]
+    # get the number of selected components
+    n_lda = enter_lda.n_components
+    lda_loadings = enter_lda.coef_
+    if n_lda > 1:
+        importance_of_continuous_features = abs(lin_importance_by_svm[0:n_lda])
+        weighted_lda_loadings = pd.DataFrame()
+        for k in pd.DataFrame(lda_loadings).columns:
+            imp_coef_position = 0
+            weighted_lda_loadings[k] = abs(lda_loadings[k]) * importance_of_continuous_features[imp_coef_position]
+            imp_coef_position += 1
+
+        weighted_lda_loadings['sum'] = np.sum(weighted_lda_loadings, axis=1)
+        sorted_summed_weighted_loadings = weighted_lda_loadings.sort_values(by='sum', ascending=False)
+        return sorted_summed_weighted_loadings
+    else:
+        # If LDA only results in 1 linear discriminant dimension, we need to make sure that not only the first feature
+        # is reported, but also those that may have similar loading scores (c.f. PCA summed weights). As we only have
+        # one weight from the linear importance .coef_ by SVM, the summed weights in LDA only make sense if dimensions
+        # are higher than 1. Thus, to still capture the most important feature in a single linear discriminant
+        # dimension, we will first normalize the LDA loads and scan for features which sum explains 95% of LD1.
+        normalized_lda_loading = abs(lda_loadings[0]) / sum(abs(lda_loadings[0]))
+        sorted_normalized_idx = np.argsort(normalized_lda_loading)[::-1]
+        tmp_score = float()
+        counter = 0
+        for pos in sorted_normalized_idx:
+            if tmp_score < 0.95:
+                tmp_score += normalized_lda_loading[pos]
+                counter += 1
+                if tmp_score >= 0.95:  # if above selection surpasses 95, remove last one
+                    counter -= 1
+        most_important_feature_idx = np.array(cont_idx)[sorted_normalized_idx[0:counter if counter < 5 else 3]]
+        if len(most_important_feature_idx) > 1:
+            print(f'\nLDA feature transformation resulted in one single dimension with more than one feature\nthat '
+                  f'together explain 95% of the variance. In total, {counter} features are necessary to explain these '
+                  f'95%. For better visualization, we select only the top 3 to top 5 features.\nThose features are: '
+                  f'{input_features[most_important_feature_idx]}.\nAs it is currently not clear how to bypass this for '
+                  f'the importance plot and box-bar-plot visualization,\nwe will stick with the most important one '
+                  f'for the box and bar plot.\n')
+        else:
+            print(f'\nLDA feature transformation resulted in one single dimension with one single feature\nthat '
+                  f'explains 95% of the variance. That feature is: {input_features[most_important_feature_idx]}.\n')
+        return [most_important_feature_idx]
+
+
+def scatter_plot_importance_technique(kernel, datatype, mean1, mean2, mean3, mean4,
+                                      tuple_of_names, fontsize, permutation_technique, lin_out_real_idx):
+    """
+    Function to scatter plot and compare one method against the other and show the linear equation and r squared
+    coefficient in case of multiple feature importance techniques, e.g. by permutation and linear SVM .coef_ attribute.
+
+    Parameters
+    ----------
+    kernel : str
+        name of current Support Vector Machines Classifier kernel
+    datatype : str
+        string referring to the data set being analyzed (e.g. full, male, female)
+    mean1 : np.array
+        first array of means to be compared with the other methods
+    mean2 : np.array
+        second array of means to be compared
+    mean3 : np.array
+        third array of means to be compared
+    mean4 : np.array
+        Fourth array of means to be compared
+    tuple_of_names : tuple
+        tuple of names to attribute to the three methods
+    fontsize : int
+        fontsize of the legend to be plotted
+    permutation_technique : str
+        name of selected permutation technique to know which means were produced
+    lin_out_real_idx : np.array
+        array of real indices of linear SVM_coef importance inside the full feature list
+    """
+    # In case where mean1 is not equal to the length of the other means that came from permutation importance, we need
+    # to add zeros at the right position for mean1 as well as the other means
+    if len(mean1) not in {len(mean2), len(mean3), len(mean4)}:
+        mean1_tmp = mean1.copy()
+        # as the first mean (lin_imp) is reduced, we fill the missing positions with 0
+        mean1 = np.array([0.] * len(mean2))
+        mean1[lin_out_real_idx] = mean1_tmp
+        # as the other 3 means have all input features, we replace the surpluses with 0
+        index_to_zero = [x for x in range(len(mean2)) if x not in lin_out_real_idx]
+        mean2[index_to_zero] = 0.
+        mean3[index_to_zero] = 0.
+        mean4[index_to_zero] = 0.
+
+    if permutation_technique == 'sklearn':  # only first case
+        dicts = {f'{tuple_of_names[0]}': [mean1, mean2]}
+    elif permutation_technique == 'eli5':  # only second case
+        dicts = {f'{tuple_of_names[1]}': [mean1, mean3]}
+    elif permutation_technique == 'mlxtend':  # only third case
+        dicts = {f'{tuple_of_names[2]}': [mean1, mean4]}
+    else:  # if all permutation techniques are selected
+        dicts = {f'{tuple_of_names[0]}': [mean1, mean2],
+                 f'{tuple_of_names[1]}': [mean1, mean3],
+                 f'{tuple_of_names[2]}': [mean1, mean4]}
+
+    figs, axes = plt.subplots(1, len(dicts), sharey='row', figsize=(16, 9))
+    figs.suptitle(f'{datatype} {kernel} pairwise feature importance scatter plots between {len(lin_out_real_idx)} '
+                  f'retained features limited by linear SVM (SVM_coef vs permutation)', size=18)
+    figs.supylabel('Feature Importance by permutation', fontsize=12)
+    figs.supxlabel('Feature Importance by SVM_coef', fontsize=12)
+    # Define the axis content and plot
+    if len(dicts) > 1:
+        for axx, _ in zip(axes, range(len(dicts))):
+            # Uncomment next line if you wish to calculate trend line equation
+            [m, b] = np.polyfit(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1], 1)
+            axx.scatter(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1], s=8, label=f'{tuple_of_names[_]}')
+            # Uncomment next 2 lines if you wish to display the linear trend line
+            axx.plot(dicts[tuple_of_names[_]][0], m * dicts[tuple_of_names[_]][0] + b,
+                     linestyle=':', linewidth=1, color='m')
+            # Define axis text, uncomment next 3 lines if you wish to have r squared and equation displayed
+            text = r"$r^2$ = " \
+                + f'{round(pg.corr(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1])["r"].values[0] ** 2, 4)}' \
+                + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
+            axx.plot([], label=text)
+            axx.legend(handlelength=0, loc='upper left', fontsize=fontsize)
+        figs.tight_layout()
+    else:
+        for key in dicts.keys():
+            # Uncomment next line if you wish to calculate trend line equation
+            [m, b] = np.polyfit(dicts[key][0], dicts[key][1], 1)
+            axes.scatter(dicts[key][0], dicts[key][1], s=8, label=f'{key}')
+            # Uncomment next 2 lines if you wish to display the linear trend line
+            axes.plot(dicts[key][0], m * dicts[key][0] + b,
+                      linestyle=':', linewidth=1, color='m')
+            # Define axis text, uncomment next 3 lines if you wish to have r squared and equation displayed
+            text = r"$r^2$ = " \
+                + f'{round(pg.corr(dicts[key][0], dicts[key][1])["r"].values[0] ** 2, 4)}' \
+                + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
+            axes.plot([], label=text)
+            axes.legend(handlelength=0, loc='upper left', fontsize=fontsize)
+        figs.tight_layout()
+
+
+def swap_words(string, first_to_swap, second_to_swap):
+    """
+    Function used during folder-name generator mechanism to swap KBEST and PCA/kPCA/LDA names if both are present in
+    order to mimic the same order as is being applied inside the column transformer pipeline, where the continuous
+    features are transformed first before the categorical features.
+
+    Parameters
+    ----------
+    string : str
+        string referring to the intermediate folder name
+    first_to_swap : str
+        first substring to be swapped with the one below (usually KBEST)
+    second_to_swap : str
+        second substring to be swapped with the one above (usually PCA, kPCA or LDA)
+
+    Returns
+    -------
+    new_string : str
+        resulting string where two substrings have been swapped
+    """
+    new_string = \
+        second_to_swap.join(part.replace(second_to_swap, first_to_swap) for part in string.split(first_to_swap))
+    return new_string
 
 
 ########################################################################################################################
