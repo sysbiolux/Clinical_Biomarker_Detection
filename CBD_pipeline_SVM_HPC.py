@@ -1982,7 +1982,7 @@ for kern in kernels:
         plt.savefig(folder_name + f'/full_{kern}_feature_importance.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
-        print('Full data top important features with linear kernel (limited to top 40):\n',
+        print('Full data top important features with linear kernel (limited to top 40):\n\n',
               lin_out_features[lin_idx][::-1][:40], '\n')
 
         # male data
@@ -2031,7 +2031,7 @@ for kern in kernels:
             plt.savefig(folder_name + f'/male_{kern}_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Male data top important features with linear kernel (limited to top 40):\n',
+            print('Male data top important features with linear kernel (limited to top 40):\n\n',
                   lin_out_features_male[lin_idx_male][::-1][:40], '\n')
 
             # Female data
@@ -2079,7 +2079,7 @@ for kern in kernels:
             plt.savefig(folder_name + f'/female_{kern}_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Female data top important features with linear kernel (limited to top 40):\n',
+            print('Female data top important features with linear kernel (limited to top 40):\n\n',
                   lin_out_features_female[lin_idx_female][::-1][:40], '\n')
         else:
             lin_idx_male, lin_above_zero_imp_male,\
