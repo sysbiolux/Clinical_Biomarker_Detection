@@ -184,6 +184,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | :--- | :--- | :--- | :--- |
 | total_params_and_splits | {'regularization_lpsr': regularization_lpsr, 'shrinking_lpsr': shrinking_lpsr, 'tolerance_lpsr': tolerance_lpsr, 'gamma_psr': gamma_psr, 'coef0_ps': coef0_ps, 'degree_p': degree_p, 'pca_lpsr': pca_lpsr, 'k_best_lpsr': k_best_lpsr, 'k_neighbors_smote_lpsr': k_neighbors_smote_lpsr, 'splits': splits} | Dictionary of parameters for SVC and normal PCA | dict |
 | pca_kernel_dict | {'kpca_components_lpsr': kernel_pca_lpsr, 'kpca_kernel_lpsr': kernel_pca_kernel_lpsr, 'kpca_gamma_lpsr': kernel_pca_gamma_lpsr, 'kpca_tol_lpsr': kernel_pca_tol_lpsr, 'kpca_degree_lpsr': kernel_pca_degree_lpsr, 'kpca_coef0_lpsr': kernel_pca_coef0_lpsr} | Dictionary of parameters specific to the kernel PCA technique | dict |
+| lda_dict | {'lda_shrinkage_lpsr': lda_shrinkage_lpsr, 'lda_priors_lpsr': lda_priors_lpsr, 'lda_components_lpsr': lda_components_lpsr, 'lda_tol_lpsr': lda_tol_lpsr} | Dictionary of parameters specific to the DA technique (currently only LDA) | dict |
 | additional_params | False | Change to True if additional non pre-supported parameters are added | bool |
 | additional_kernel_params | {} | Add additional kernel parameter to introduce here if not supported already | dict |
 | additional_technique_params | {} | Add additional technique parameter to introduce here if not supported already | dict |
