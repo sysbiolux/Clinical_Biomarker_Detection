@@ -19,7 +19,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - In *mlxtend*: The files *feature_importance.py* and *\__init__.py* in the ***./env/lib/.../mlxtend/evaluate/*** folder must be replaced by the two files [feature_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod) and [\__init__.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod).
 
 ---
-## The Pipeline Flow
+## ~The Pipeline Flow~ (NOT UP TO DATE YET)
 ![pipeline_flowchart_legend](https://user-images.githubusercontent.com/38098941/159273463-e41be6e8-d8d8-41d3-96d9-89216e5d5c55.svg)
 * Step (#8): Refers to the configurable processing steps
 * Technique (#14): Point where a technique must be selected
@@ -39,7 +39,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - Only one possibility of pipe-order is shown in detail in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier. The two mentioned cases are depicted as black dashed lines. The green dashed line is a visual separator of the two kinds of feature transformation that can be applied, namely the *scaler_tech* on the left-hand side and the *feature_tech* on the right-hand side.
 
 ---
-## The Pipeline Steps and Relevant Techniques Briefly Explained
+## ~The Pipeline Steps and Relevant Techniques Briefly Explained~ (NOT UP TO DATE YET)
 
 * **Input:**  
 Entry of the pipeline. The pipeline is desinged to take as input a preferrably cleaned and imputed version of the data, which is already split into training and test sets.  
@@ -211,9 +211,9 @@ If everything is set and ready, run the pipeline with the configured experimenta
 
 ---
 ## Results
-The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `<possible_prefix>-DS-REI-RHCF-ST-PCA-FT-RUS-FI-BBP-SVM-HPC` for a pipeline deployed with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
+The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `<possible_prefix>-DS-REI-RHCF-ST-chi2KBEST-PCA-FT-RUS-FI-BBP-SVM-both-lin-and-non-lin-HPC` for a pipeline deployed with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), chi2 SelectKBest (chi2KBEST) normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) with linear and non-linear kernels (both-lin-and-non-lin) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
 
-Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA to save computational time).  
+Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA to save computational time). 
 
 The results will consist of confusion matrices, roc_auc curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
 
