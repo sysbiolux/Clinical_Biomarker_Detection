@@ -78,7 +78,7 @@ Classification model of the selected output-target, model evaluation summaries a
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 70 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 78 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
 #### General Settings
 
@@ -109,7 +109,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 
 | Variable | Example | Description | Type |
 | :--- | :--- | :--- | :--- |
-| kernels | \['poly', 'rbf', 'sigmoid'] | Kernels to use for the Support Vector Machine classifier | str, list |
+| kernels | \['linear', 'poly', 'rbf', 'sigmoid'] | Kernels to use for the Support Vector Machine classifier | str, list |
 | non_linear_kernels | \['poly', 'rbf', 'sigmoid'] | Repeat with the above kernels that are non_linear | str, list |
 | cache_size | 200 | Cache size of SVM classifier, 200 (HPC) - 2000 (local) | int |
 | decision_func_shape | 'ovr' | Decision function shape of classifier, one vs rest 'ovr' or one vs one 'ovo' | str |
@@ -129,6 +129,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | :--- | :--- | :--- | :--- |
 | parallel_method | 'ipyparallel' | Parallel backend agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local) | str |
 | n_jobs | -1 | Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled | int |
+| thresh_near_constant | 0.001 | Thresh for a continuous feature near-constance by variance-mean-ratio | float |
 | enable_data_split | True | True if data should be split based on the binary split feature below | bool |
 | split_feature | 'PM-sex' | Feature based on which data is split | str |
 | enable_subgroups | False | True if data shall be limited to subgroups, else full feature input | bool |
@@ -144,6 +145,8 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | enable_ft | True | Change to True to enable & False to disable feature transformation | bool |
 | scaler_tech | 'standard' | Change scaler function to 'standard', 'minmax' or 'robust' scaler | str |
 | pca_tech | 'normal_pca' | Select pca technique to choose between 'normal_pca' and 'kernel_pca' | str |
+| da_tech | 'lda' | Select discriminant analysis tech for continuous features, 'lda' (LDA, later QDA) | str |
+| kbest_tech | 'cramer' | Select score function for kbest technique, 'chi2', 'cramer', or callable score func | str or callable |
 | pipeline_order | 'samples->features' | Order of the steps either 'samples->features' or 'features->samples' | str |
 | enable_feature_importance | True | Change to True to enable & False to disable feature importance | bool |
 | feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all' | str |
@@ -160,15 +163,20 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | gamma_psr | \['scale', 'auto', 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10] | Single training influence, default | 'scale' |
 | degree_p | \[2, 3, 4, 5] | Polynomial degree, default 3 | int |
 | coef0_ps | \[0.0, 0.01, 0.1, 0.5] | Independent term in kernel function, default 0.0 | float |
-| k_neighbors_smote_lpsr | \[3, 5] | K nearest neighbor for smote resampling, default 5 | int or a kneighborsmixin func |
-| k_best_lpsr | \[5, 10, 20, 30, 45] | Number of k best features to select by chi squared, default 10 | int |
-| pca_lpsr | \[5, 10, 20, 30, 45] | Number of PCA components, default None | int |
+| k_neighbors_smote_lpsr | \[2, 3, 5] | K nearest neighbor for smote resampling, default 5 | int or a kneighborsmixin func |
+| k_best_lpsr | \[1, 2, 5, 10, 15] | Number of k best features to select by chi squared, default 10 | int |
+| pca_lpsr | \[2, 5, 10, 15, 20] | Number of PCA components, default None | int |
 | kernel_pca_kernel_lpsr | \['poly', 'rbf', 'sigmoid'] | kernels for kernelPCA, default 'linear' | str |
-| kernel_pca_lpsr | \[5, 10, 20, 30, 45] | Number of components, default None | int |
+| kernel_pca_lpsr | \[2, 5, 10, 15, 20] | Number of components, default None | int |
 | kernel_pca_tol_lpsr | \[0.0, 0.001, 0.01] | Tolerance, default 0 | float |
 | kernel_pca_gamma_lpsr | \[None, 0.1, 1.0, 10.0] | Gamma parameter, default None | float |
 | kernel_pca_degree_lpsr | \[2, 3, 4, 5] | Polynomial degree, default 3 | int |
 | kernel_pca_coef0_lpsr | \[0.1, 0.5, 1.0] | Coef0 parameter, default 1 | float |
+| lda_shrinkage_lpsr | \[None] | This should be left to None if no covariance estimator is used, default None | float |
+| lda_priors_lpsr | \[None] | Class prior prob., proportions are inferred from train data if def, default, None | np.array |
+| lda_components_lpsr | \[1] | LDA components, if None, will be set to min(n_classes-1, n_features), default, None | int |
+| lda_tol_lpsr | \[0.0001, 0.001, 0.01] | Tolerance for singular value x to be considered significant, default, 0.0001 | float |
+
 
 #### Dictionaries Based on the Above Configuration For Summaries
 
@@ -214,7 +222,11 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [x] ~Continue editing this README file~ 03/14/2022
 - [x] ~Add boxplot of most important features in Original data~ 03/18/2022
 - [x] ~Make pipeline generate a similar .out file of the code execution when running locally compared to HPC .out~ 03/23/2022
-- [ ] In case of linear SVM kernel combined with linear PCA, enable extraction of feature importance by shuffling and by the `.coef_` attribute of the linear classifier
+- [x] ~In case of linear SVM kernel combined with linear PCA, enable extraction of feature importance by shuffling and by the `.coef_` attribute of the linear classifier~ 05/30/2022
+- [x] ~Near-constancy check added for continuous and binary features~ 05/30/2022
+- [x] ~Enable launching analysis with any combination of the supported techniques, including single or double feature transformation~ 05/30/2022
+- [x] ~Generate detailed list of highly correlated features during that pre processing step~ 05/30/2022
+- [x] ~Added corrected Cramer's V correlation as a possible score function for selectKBest~ 05/30/2022    
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
