@@ -97,16 +97,14 @@ print(f"For the documentation see the link below:\n"
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
-    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.CBDP_utils import *  # On local
-    # from source.CBDP_utils import *  # On github
+    from source.CBDP_utils import *  # On github
     print("CBD-P utils file loaded successfully!\n")
 except ImportError('CBD-P utils file could not be found or loaded correctly.'):
     exit()
 # Loading the CBD-P configuration file
 print(f"Loading the CBD-P configuration file ...")
 try:
-    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.CBDP_config import *  # On local
-    # from CBDP_config import *  # On github
+    from CBDP_config import *  # On github
     print("CBD-P configuration file loaded successfully!\n")
 except ImportError('CBD-P configuration file could not be found or loaded correctly.'):
     exit()
