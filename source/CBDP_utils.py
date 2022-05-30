@@ -812,7 +812,7 @@ def corr_cramer_kbest(x, y):
     cat = get_cat_and_cont(x, None)[1]
     for col in cat:
         if len(np.unique(x[:, col])) == 1:
-            print("First variable is constant")
+            print(f"First variable is constant, feature position: {cat[col]}")
         else:
             conf_matrix = pd.crosstab(x[:, col], y)
             if conf_matrix.shape[0] == 2:
