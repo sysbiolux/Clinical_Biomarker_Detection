@@ -664,6 +664,7 @@ def check_constant_features(features_list, training_features, datatype, nbr_spli
     """
     constants = []
     near_constants_cont = []
+    near_constants_bool = []
     near_constants_cat = []
     cont, cat = get_cat_and_cont(training_features, None)
     for col in range(len(features_list)):
@@ -677,20 +678,33 @@ def check_constant_features(features_list, training_features, datatype, nbr_spli
                                                dtype=np.float64)) < near_constant_thresh:
                 constants.append(col)
                 near_constants_cont.append(col)
-        elif len(np.unique(training_features[:, col])) == 2 and col in cat:  # only necessary if two categorical factors
-            # if the minority class is below the number of stratified k fold split: near-constant cat feature
+        elif len(np.unique(training_features[:, col])) == 2 and col in cat:  # only for binary factors
+            # if the minority class is below the number of stratified k fold split: near-constant bool feature
             _, counts = np.unique(training_features[:, col], return_counts=True)
             if min(counts) < nbr_splits:
                 constants.append(col)
+                near_constants_bool.append(col)
+        elif len(np.unique(training_features[:, col])) > 2 and col in cat:  # only for categorical features
+            array, counts = np.unique(training_features[:, col], return_counts=True)
+            tmp = 0
+            for k in range(len(array)):
+                if k != 0:
+                    tmp += counts[k]
+            if tmp < nbr_splits:
+                constants.append(col)
                 near_constants_cat.append(col)
-
+                
     if len(near_constants_cont) > 0:
         print(f'Found {len(near_constants_cont)} near-constant continuous feature(s) where the variance-to-mean ratio '
               f'is below the {near_constant_thresh} threshold, thus we assume them as being constant features, '
               f'namely:\n{[features_list[var] for var in near_constants_cont]}.\n')
-    if len(near_constants_cat) > 0:
-        print(f'Found {len(near_constants_cat)} near-constant categorical feature(s) where the number of the minority '
+    if len(near_constants_bool) > 0:
+        print(f'Found {len(near_constants_bool)} near-constant boolean feature(s) where the number of the minority '
               f'class is below the number of stratified k fold splits {nbr_splits} , thus we assume them as being '
+              f'constant features, namely:\n{[features_list[var] for var in near_constants_bool]}.\n')
+    if len(near_constants_cat) > 0:
+        print(f'Found {len(near_constants_cat)} near-constant categorical feature(s) where the number of the non-zero '
+              f'classes is below the number of stratified k fold splits {nbr_splits} , thus we assume them as being '
               f'constant features, namely:\n{[features_list[var] for var in near_constants_cat]}.\n')
     print(f'In total, found {len(constants)} constant and near-constant features in the {datatype} training data set:\n'
           f'{[features_list[var] for var in constants]}.\n')
