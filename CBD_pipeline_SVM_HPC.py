@@ -1257,8 +1257,8 @@ for kern in kernels:
     k_m = 'only with select k best' if kbest_tech in ('chi2', 'cramer') or hasattr(kbest_tech, '__call__') else 'no'
     tech_m = f"{pca_tech if pca_tech !='' and enable_ft else da_tech if da_tech != '' and enable_ft else k_m}"
 
-    print(f"******************************************\n{kern.capitalize()} SVM grid search parameter summary with "
-          f"{tech_m if enable_ft else 'no enabled'} feature transformation technique:\n\n"
+    print(f"******************************************\n{kern.capitalize()} SVM grid search parameter summary "
+          f"{k_m + ' and ' + tech_m if enable_ft else 'with no enabled'} feature transformation technique:\n\n"
           f"{newline.join(f'{key}: {value}' for key, value in final_params.items())}\n\n"
           f"The full classification pipeline is set up as follows:\n\n{pipeline.named_steps}\n")
     if enable_data_split:
