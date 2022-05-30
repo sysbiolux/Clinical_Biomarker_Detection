@@ -2,15 +2,15 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - April 2022, University of Luxembourg #################################################################
+# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
 # split pipeline and grid search, adopted prints, save figures path, performance summary for all 3 data type cases,
-# removing constant features, feature importance, removing highly correlated features, removing features used for
-# engineering, added visualizations for highly correlated features and feature importance evaluation, select subgroups,
-# transformed everything into functions, added a configuration script, enable and disable several steps, high
-# reproducibility
+# removing constant and near-constant features, feature importance, removing highly correlated features, removing
+# features used for engineering, added visualizations for highly correlated features and feature importance evaluation,
+# select subgroups, transformed everything into functions, added a configuration script, enable and disable several
+# steps, high reproducibility
 
 # /!\ TO CONSIDER DEPENDING IF RUNNING ON HPC OR LOCAL MACHINES: /!\ #
 # ------------------------------------------------------------------ #
@@ -38,17 +38,11 @@
 # (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory.
 # (To control this warning, see the rcParam `figure.max_open_warning`). SOLVED, WITH PLT.CLOSE() AND CHANGE PARAM TO 0
 
-# PearsonRNearConstantInputWarning: An input array is nearly constant; the computed correlation coefficient may
-# be inaccurate. warnings.warn(PearsonRNearConstantInputWarning()). IGNORED, ONLY SEEN ONCE IN MALE DATA
-
 # OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.1.
 # Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. IGNORED, MINOR CHANGE NOT WORTH UPDATING
 
 # ConvergenceWarning: Solver terminated early (max_iter=150000).  Consider pre-processing your data with StandardScaler
-# or MinMaxScaler. IGNORED, HAPPENS WHEN USING ROBUST SCALER OR MAX ITER IS REACHED
-
-# FitFailedWarning: X fits failed out of a total of Y. The score on these train-test partitions for these
-# parameters will be set to nan. IGNORED, OCCURS WHEN LINEAR SVC IS APPLIED TOGETHER WITH KERNEL PCA, HAPPENS IN 3 CASES
+# or MinMaxScaler. IGNORED, HAPPENS WHEN USING ROBUST SCALER OR MAX ITER OF THE CLASSIFIER IS REACHED (SEE CONFIG)
 
 
 ########################################################################################################################
@@ -80,6 +74,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 # Control output printing destination (original = console)
 orig_stdout = sys.__stdout__
@@ -90,26 +85,28 @@ print(f"\n################################################\n####################
 logo = '\n  _________________  ________         ______\n'\
        ' /  ______/   ___  \\/  ____  \\       /  ___  \\\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
-       '|  |     /  ___  <   /    /  / /__//   _____/\n'\
+       '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.04/27/2022\n'\
+       ' \\_____/__________/________/     /__/ v.05/30/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.03/21/2022.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.05/30/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
-    from source.CBDP_utils import *
+    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.CBDP_utils import *  # On local
+    # from source.CBDP_utils import *  # On github
     print("CBD-P utils file loaded successfully!\n")
 except ImportError('CBD-P utils file could not be found or loaded correctly.'):
     exit()
 # Loading the CBD-P configuration file
 print(f"Loading the CBD-P configuration file ...")
 try:
-    from CBDP_config import *
+    from machine_learning.Remastered_pipeline_with_utils_and_config_210222.CBDP_config import *  # On local
+    # from CBDP_config import *  # On github
     print("CBD-P configuration file loaded successfully!\n")
 except ImportError('CBD-P configuration file could not be found or loaded correctly.'):
     exit()
@@ -121,22 +118,54 @@ except ImportError('CBD-P configuration file could not be found or loaded correc
 ###################################################################################
 # ## Safety measures for disabled parameters and total parameter dictionary update
 ###################################################################################
+# TODO CLEAN SAFETY RESETS AND VARIABLE CHECKS
 # Safety measure to surely reset removing highly correlated feature parameters if disabled, else restore
 if not enable_rhcf:
     thresh_cramer, thresh_spearman, thresh_pbs = [None] * 3
 else:
     thresh_cramer, thresh_spearman, thresh_pbs = thresh_cramer, thresh_spearman, thresh_pbs
+# Safety measure for PCA versus LDA (currently only one can be selected)
+if pca_tech in ('normal_pca', 'kernel_pca') and da_tech == 'lda' and enable_ft:
+    # prioritize pca_tech over da_tech if both are given (currently only one allowed)
+    pca_tech = pca_tech
+    da_tech = ''
+elif da_tech == 'lda' and enable_ft:
+    pca_tech = ''
+    da_tech = da_tech
+elif da_tech == '' and pca_tech in ('normal_pca', 'kernel_pca') and enable_ft:
+    pca_tech = pca_tech
+    da_tech = da_tech
+else:
+    pca_tech = ''
+    da_tech = ''
+    print(f'**No continuous feature transformation technique selected or feature transformation is completely '
+          f'disabled.\nStatus of feature transformation step: {enable_ft}**')
+# Safety measure for kbest technique, reset to chi2 if not among recommendations or callable function
+if kbest_tech not in ('chi2', '', 'cramer'):
+    print('**Kbest select technique not among the recommended settings. '
+          'Check if a callable score function was given.**')
+    if not hasattr(kbest_tech, '__call__'):
+        kbest_tech = 'chi2'
+        print('**No callable score function given. K best is reset to chi2. Check config is this is not desired.**')
+# Safety measure to destroy kbest_tech if ft is not enabled
+if enable_ft:
+    kbest_tech = kbest_tech
+else:
+    kbest_tech = ''
+    print(f'**No categorical feature transformation technique selected or feature transformation is completely '
+          f'disabled.\nStatus of feature transformation step: {enable_ft}**')
 # Safety measure to surely reset feature transformation parameters  and dictionary if disabled, else restore
 if not (enable_ft and pca_tech == 'normal_pca'):
     pca_lpsr = [None]
-    k_best_lpsr = k_best_lpsr
     # Update dictionary depending on enabled pipeline steps
     total_params_and_splits.update({'pca_lpsr': pca_lpsr})
-elif not enable_ft:
+else:
+    pca_lpsr = pca_lpsr
+if not (enable_ft and kbest_tech != ''):
     k_best_lpsr = [None]
     total_params_and_splits.update({'k_best_lpsr': k_best_lpsr})
 else:
-    pca_lpsr, k_best_lpsr = pca_lpsr, k_best_lpsr
+    k_best_lpsr = k_best_lpsr
 # Safety measure to surely reset resampling technique if disabled, else restore
 if not enable_resampling:
     resampling_tech = ''
@@ -150,7 +179,7 @@ if resampling_tech != 'smote':
 else:
     k_neighbors_smote_lpsr = k_neighbors_smote_lpsr
 # Safety measure to surely reset pipeline order if resampling and feature transformation are disabled
-if not (enable_ft & enable_resampling):
+if not (enable_ft or enable_resampling):
     pipeline_order = 'FT and resampling disabled, only standardization applies'
 else:
     pipeline_order = pipeline_order
@@ -189,7 +218,10 @@ else:
 # Be sure that scaler tech is set, cannot be empty, thus reset to default if not set
 if scaler_tech not in ('standard', 'minmax', 'robust'):
     scaler_tech = 'standard'
-    raise Warning("Scaler technique was not set in the configuration file. Default 'standard' is loaded.")
+    raise Warning("**Scaler technique was not set in the configuration file. Default 'standard' is loaded.**")
+# If da_tech is set to 'lda', update total_params_and_splits
+if enable_ft and da_tech == 'lda' and pca_tech == '':
+    total_params_and_splits.update(lda_dict)
 # Reset splitting feature if disabled
 if not enable_data_split:
     split_feature = ''
@@ -203,14 +235,14 @@ else:
 # Reset scorer if not among implemented possibilities
 if scorer not in ('F.5', 'F1', 'F2'):
     scorer = 'accuracy'
-    raise Warning("Scorer was not among the possible scores. Default 'accuracy' is loaded.")
+    raise Warning("**Scorer was not among the possible scores. Default 'accuracy' is loaded.**")
 # Reset feature importance method settings
 if not enable_feature_importance:
     feature_importance_method = ''
     enable_box_bar_plots = False
 elif feature_importance_method not in ('sklearn', 'mlxtend', 'eli5', 'all'):
     feature_importance_method = 'all'
-    raise Warning("Feature importance method not set correctly. Default 'all' is loaded.")
+    raise Warning("**Feature importance method not set correctly. Default 'all' is loaded.**")
 else:
     enable_box_bar_plots, feature_importance_method = enable_box_bar_plots, feature_importance_method
 # Reset box and bar plot settings dependent on the feature importance
@@ -218,14 +250,27 @@ if not enable_box_bar_plots:
     box_bar_figures = ''
 elif box_bar_figures not in ('separated', 'combined'):
     box_bar_figures = 'combined'
-    raise Warning("Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.")
+    raise Warning("**Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.**")
 else:
     box_bar_figures = box_bar_figures
 # check if target feature and positive/negative classes are given
 for string in (output_feature, positive_class, negative_class):
     if len(string) == 0:
-        raise TypeError("One or more of the following information is missing in the configuration file to start the "
-                        "pipeline: output_feature, positive_class, or negative_class. Got %s instead." % string)
+        raise TypeError("**One or more of the following information is missing in the configuration file to start the "
+                        "pipeline: output_feature, positive_class, or negative_class. Got %s instead.**" % string)
+
+# check if kernels and non linear kernels are properly defined
+possible_non_linear_svm_kernels = ['poly', 'rbf', 'sigmoid']
+tmp = []
+for kern in kernels:
+    if kern in possible_non_linear_svm_kernels:
+        tmp.append(kern)
+
+
+if set(non_linear_kernels) != set(tmp):
+    non_linear_kernels = tmp if len(tmp) > 0 else [None]
+else:
+    non_linear_kernels = non_linear_kernels
 
 ##################################
 # ## Configuration variable check
@@ -237,6 +282,11 @@ if not all(isinstance(i, int) for i in config_int):
     raise TypeError('The following configured variables must be integers: seed, fix_font, imp_font, '
                     'fig_max_open_warning, pandas_col_display_option, cache_size, grid_verbose, hard_iter_cap, splits, '
                     'shuffle_all, shuffle_male, shuffle_female, n_jobs, tiff_figure_dpi. Got %s instead.' % config_int)
+# Variables check that should strictly be floating values
+config_float = [thresh_near_constant]
+if not all(isinstance(i, float) for i in config_float):
+    raise TypeError('The following configured variables must be float: thresh_near_constant. Got %s instead.'
+                    % config_int)
 # Variables check that should strictly be a directory or path
 if not os.path.isdir(curr_dir):
     raise IOError('The current directory is not set or recognized as such. Got current directory: %s.' % curr_dir)
@@ -245,13 +295,14 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
                             "Got train: %s and test: %s." % (train_path, test_path))
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
-              resampling_tech, folder_prefix, pca_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures,
-              negative_class, positive_class]
-if not all(isinstance(i, str) for i in config_str):
-    raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
-                    'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
-                    'scaler_tech, scorer, feature_importance_method, box_bar_figures, negative_class, positive_class. '
-                    'Got %s instead.' % config_str)
+              resampling_tech, folder_prefix, pca_tech, da_tech, scaler_tech, scorer, feature_importance_method,
+              box_bar_figures, negative_class, positive_class, kbest_tech]
+if not (all(isinstance(i, str) for i in config_str)):
+    if not hasattr(kbest_tech, '__call__'):
+        raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
+                        'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
+                        'da_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures, negative_class, '
+                        'positive_class, kbest_tech. Got %s instead.' % config_str)
 # Variables check that should strictly be a list of strings or str
 if not (all(isinstance(i, str) for i in output_related) or isinstance(output_related, list)):
     raise TypeError('One or multiple of the configured output features were not recognized as str or list of str: '
@@ -262,11 +313,13 @@ if not (all(isinstance(i, list) for i in kernel_info) or all(isinstance(i, str) 
                     'non_linear_kernels, kernel_pca_kernel_lpsr. Got %s.' % kernel_info)
 # Variables check that should strictly be a boolean
 config_bool = [enable_rhcf, enable_resampling, enable_ft, clf_verbose, additional_params, enable_feature_importance,
-               enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots]
+               enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots,
+               linear_shuffle]
 if not all(isinstance(i, bool) for i in config_bool):
     raise TypeError('The following configured variables must be boolean: enable_rhcf, enable_resampling, '
                     'enable_ft, clf_verbose, additional_params, enable_feature_importance, '
-                    'enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots. '
+                    'enable_engineered_input_removal, enable_data_split, enable_subgroups, enable_box_bar_plots, '
+                    'linear_shuffle. '
                     'Got %s instead.' % config_bool)
 # Variables that could be str or tuple of str
 if not (isinstance(engineered_input_prefix, tuple) or all(isinstance(i, str) for i in engineered_input_prefix)):
@@ -294,11 +347,12 @@ if enable_rhcf:
             raise TypeError("One of the following threshold variable specifications is missing in the configured "
                             "variable: 'decimal' or 'percentile'. Got %s." % i)
 # Check for the kernel params and split dict
-config_dict = [additional_technique_params, additional_kernel_params, total_params_and_splits, pca_kernel_dict]
+config_dict = [additional_technique_params, additional_kernel_params, total_params_and_splits, pca_kernel_dict,
+               lda_dict]
 if not all(isinstance(i, dict) for i in config_dict) and not len(total_params_and_splits) > 0:
     raise TypeError('The following configured variable must be a dictionary (and above zero length if total_params..): '
-                    'additional_technique_params, additional_kernel_params total_params_and_splits, pca_kernel_dict. '
-                    'Got %s instead.' % config_dict)
+                    'additional_technique_params, additional_kernel_params total_params_and_splits, pca_kernel_dict, '
+                    'lda_dict. Got %s instead.' % config_dict)
 # Check if all grid search parameters are legal
 # Pipeline parameters
 grid_search_clf_params = [regularization_lpsr, shrinking_lpsr, tolerance_lpsr, gamma_psr, degree_p, coef0_ps]
@@ -314,11 +368,13 @@ if enable_resampling:
 # Feature transformation parameters
 if enable_ft:
     grid_search_features_params = [pca_lpsr, k_best_lpsr, kernel_pca_lpsr, kernel_pca_gamma_lpsr,
-                                   kernel_pca_tol_lpsr, kernel_pca_degree_lpsr, kernel_pca_coef0_lpsr]
+                                   kernel_pca_tol_lpsr, kernel_pca_degree_lpsr, kernel_pca_coef0_lpsr,
+                                   lda_shrinkage_lpsr, lda_priors_lpsr, lda_components_lpsr, lda_tol_lpsr]
     if not all(isinstance(i, list) for i in grid_search_features_params):
         raise TypeError('The following configured variables must be lists of values or strings: '
                         'pca_lpsr, k_best_lpsr, kernel_pca_lpsr, kernel_pca_gamma_lpsr, kernel_pca_tol_lpsr, '
-                        'kernel_pca_degree_lpsr, kernel_pca_coef0_lpsr. Got %s' % grid_search_features_params)
+                        'kernel_pca_degree_lpsr, kernel_pca_coef0_lpsr, lda_shrinkage_lpsr, lda_priors_lpsr, '
+                        'lda_components_lpsr, lda_tol_lpsr. Got %s' % grid_search_features_params)
 
 
 ########################################################################################################################
@@ -331,11 +387,12 @@ if enable_ft:
 # Name of fully enabled pipeline would be:
 # Data split DS, Subgroups SG, Remove Engineered Input REI, Remove Highly Correlated Features RHCF
 # Random Under Sampler RUS/Synthetic Minority Over-sampling Technique SMOTE -> 1 step
-# Standard Scaler ST/Robust Scaler RO/Min-max Scaler MI, PCA/Kernel PCA KPCA, Feature Transformation FT -> 1 step
+# Standard Scaler ST/Robust Scaler RO/Min-max Scaler MI, PCA/Kernel PCA kPCA, Feature Transformation FT -> 1 step
 # Feature Importance FI, Box Bar Plotting (BBP), Support Vector Machines SVM, High Performance Computing HPC
 intermediate_dict = {'SG': enable_subgroups, 'DS': enable_data_split, 'REI': enable_engineered_input_removal,
-                     'RHCF': enable_rhcf, 'RUS_SMOTE': enable_resampling, 'PCA-FT_KPCA-FT': enable_ft,
+                     'RHCF': enable_rhcf, 'RUS_SMOTE': enable_resampling, 'PCA-FT_kPCA-FT_LDA-FT': enable_ft,
                      'FI': enable_feature_importance, 'BBP': enable_box_bar_plots}
+
 # Generating the folder intermediate name depending on enabled pipeline steps
 folder_intermediate, tmp, tmp1 = '', '', ''
 for key, items in intermediate_dict.items():
@@ -344,22 +401,43 @@ for key, items in intermediate_dict.items():
             tmp = (key.split('_')[0] if resampling_tech == 'rus' else key.split('_')[1])  # Get first or second tech
             folder_intermediate += ('-' + tmp if pipeline_order == 'samples->features' else '')  # Add if order allow it
         elif key.__contains__('_') and key.endswith('FT'):  # Next underscore bearing is FT
-            tmp1 = (key.split('_')[0] if pca_tech == 'normal_pca' else key.split('_')[1])  # Get first or second tech
+            tmp1 = f'{kbest_tech}KBEST-FT' if (kbest_tech in ('chi2',
+                                                              'cramer') or hasattr(kbest_tech, '__call__')) else ''
+            # Get first, second, or third tech (lda in case of third tech)
+            tmp1 += ('-' + key.split('_')[0] if pca_tech == 'normal_pca' else
+                     '-' + key.split('_')[1] if pca_tech == 'kernel_pca' else
+                     '-' + key.split('_')[2] if da_tech == 'lda' else '')
             if pca_tech == 'kernel_pca' and len(kernel_pca_kernel_lpsr) < 3:
                 for pca_kern in kernel_pca_kernel_lpsr:
-                    tmp1 = pca_kern + tmp1
+                    tmp1 = pca_kern + (tmp1 if tmp1 != '' else tmp1)
             folder_intermediate += '-' + scaler_tech[0:2].upper()  # Before adding the FT tech, define & add scaler tech
-            folder_intermediate += '-' + tmp1  # Add FT after scaler
+            folder_intermediate += ('-' + tmp1 if tmp1 != '' and not tmp1.startswith('-') else tmp1)  # FT after scaler
         # Delay resampling tech insertion after FT if pipeline order allows it
         elif folder_intermediate.endswith('FT') and pipeline_order == 'features->samples':
             # As this happens in the following step 'FI' after FT, tmp must be placed in between
-            folder_intermediate += '-' + tmp + '-' + key
-        else:
-            folder_intermediate += '-' + key  # For each true item if not yet called above
+            folder_intermediate += (tmp + '-' + key if folder_intermediate.endswith('-') else '-' + tmp + '-' + key)
+        else:  # For each true item if not yet called above
+            folder_intermediate += '-' + key
+    if key == 'PCA-FT_kPCA-FT_LDA-FT' and not enable_ft and pipeline_order == 'samples->features':
+        # In case of disabled FT, standard scaler is applied and should also appear in the folder name relative to order
+        folder_intermediate += '-' + scaler_tech[0:2].upper()
+    elif key == 'PCA-FT_kPCA-FT_LDA-FT' and not enable_ft and pipeline_order == 'features->samples':
+        folder_intermediate += '-' + scaler_tech[0:2].upper() + '-' + tmp + ('-' + tmp1 if tmp1 != '' else tmp1)
+    # Swap Kbest with PCA/lda if both are used (no need to consider case of kPCA, will be detected with 'PCA' anyhow
+    if sum([True for match in ['KBEST', 'PCA', 'LDA'] if match in folder_intermediate]) == 2:
+        folder_intermediate = swap_words(folder_intermediate, f'{kbest_tech}KBEST',
+                                         'kPCA' if pca_tech == 'kernel_pca' else 'PCA' if pca_tech == 'normal_pca' else
+                                         'LDA' if da_tech == 'lda' else '')
+    # -FT- might occur twice in the name if double transformation is selected, in that case remove the first -FT-
+    if folder_intermediate.count('-FT-') > 1:
+        folder_intermediate = folder_intermediate.replace('-FT', '', 1)
+
 # Define the results folder name suffix based on if ipyparallel is activated (HPC-based)
-folder_suffix = '-SVM'
+folder_suffix = '-SVM' + ('-lin' if 'linear' in kernels and len(kernels) == 1
+                          else '-non-lin' if 'linear' not in kernels else '-both-lin-and-non-lin')
 if parallel_method == 'ipyparallel':
     folder_suffix += '-HPC'
+
 # Final results folder will be a combination of given prefix, intermediate name, and HPC and classifier dependent suffix
 folder_name = folder_prefix\
               + folder_intermediate\
@@ -394,6 +472,10 @@ if parallel_method != 'ipyparallel':
     client = None
     # Open output file to redirect output prints if running on local machine
     file_path = curr_dir + '/' + folder_name + '/' + 'CBD-P_output_raw.txt'
+    print(f"As parallel method is not set to ipyparallel, it is assumed that you are running the experiment on "
+          f"a local machine.\nTherefore, the raw output results of the pipeline will be flushed to the output file "
+          f"at the following location:\n** {file_path.replace(chr(92), '/')} **")  # with chr(92) being a backslash
+    print("\n******************************************")
     sys.stdout = open(file_path, "w")
 else:
     # To know the location of the python script
@@ -442,6 +524,8 @@ for kern in kernels:
         # all param lengths with underscore and containing the first letter of the corresponding kernel in the last part
         tmp.append(len(items) if key.__contains__('_') and key.split('_')[-1].__contains__(kern[0])
                    else 1 if key.__contains__('_') or items == [None] else items)
+        if key.__contains__('_') and not key.split('_')[-1].__contains__(kern[0]):
+            total_params_and_splits.update({key: [None]})
     kernel_param_lengths[kern] = tmp
 # Number of total fits for each selected kernel
 total_fits = {}
@@ -466,6 +550,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Target output feature: {output_feature}\n"
       f"Names selected for the positive and negative classes respectively: {positive_class, negative_class}\n"
       f"Features directly linked to the target: {output_related}\n\n"
+      f"Near-constant feature threshold: {thresh_near_constant}\n"
       f"Data set splitting enabled based on splitting feature: {enable_data_split, split_feature}\n"
       f"Prefix of engineered input features: {engineered_input_prefix}\n"
       f"Enabled analysis of data subgroups: {enable_subgroups}\n"
@@ -478,17 +563,20 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Number of stratified k fold CV split: {splits}\n"
       f"Scorer selected for the analysis: {scorer}\n"
       f"Feature importance shuffles for all, male and female data: {shuffle_all, shuffle_male, shuffle_female}\n"
+      f"Feature importance by permutation in case of linear classification: {linear_shuffle}\n"
       f"Selected parallel backend method and number of jobs: {parallel_method, n_jobs}\n"
       f"Removing features used for feature engineering enabled and selected feature prefixes: "
       f"{enable_engineered_input_removal, engineered_input_prefix}\n"
       f"Removing highly correlated features (RHCF) step enabled: {enable_rhcf}\n"
-      f"Correlation specification for Cramer: {thresh_cramer}\n"
-      f"Correlation specification for Point Bi-serial: {thresh_pbs}\n"
-      f"Correlation specification for Spearman: {thresh_spearman}\n"
+      f"Correlation threshold for Cramer: {thresh_cramer}\n"
+      f"Correlation threshold for Point Bi-serial: {thresh_pbs}\n"
+      f"Correlation threshold for Spearman: {thresh_spearman}\n"
       f"Resampling strategy and selected technique enabled: {enable_resampling, resampling_tech}\n"
       f"Feature transformation (FT) step enabled: {enable_ft}\n"
+      f"Select k best technique for categorical features: {kbest_tech if kbest_tech != '' and enable_ft else None}\n"
       f"Scaler technique for continuous variables selected: {scaler_tech + ' scaler'}\n"
-      f"PCA technique selected: {pca_tech.replace('_', ' ')}\n"
+      f"PCA technique selected: {pca_tech.replace('_', ' ') if pca_tech != '' and enable_ft else None}\n"
+      f"If PCA is disabled, DA technique selected: {da_tech if da_tech != '' and enable_ft else None}\n"
       f"Feature importance methods and visualizations enabled: {enable_feature_importance, feature_importance_method}\n"
       f"Box and bar plotting enabled and selected method: {enable_box_bar_plots, box_bar_figures}\n"
       f"Order of steps in the pipeline if FT or resampling are enabled: {pipeline_order}\n"
@@ -501,11 +589,16 @@ elif resampling_tech == 'smote':
     with_or_without_sampling = 'with smote'
 else:
     with_or_without_sampling = 'without'
-scale_only = 'including '+scaler_tech+' scaling,\n'
+scale_only = 'including ' + scaler_tech + ' scaling, '
+info_pca = \
+    (scale_only + (pca_tech.replace('_', ' ') + ', ' if pca_tech != '' else '') +
+     (str(kbest_tech)+' select k best, ' if kbest_tech != '' else ''))
+info_da = (scale_only + (da_tech if da_tech != '' else '') +
+           (str(kbest_tech)+' select k best, ' if kbest_tech != '' else ''))
 for kern in kernels:
     print(f"Total fitting for {kern} kernel, with {splits} fold cross-validation, {'with' if enable_ft else 'without'} "
           f"feature transformation, "
-          f"{(scale_only + pca_tech.replace('_', ' ') + ', select k best' if enable_ft else scale_only)}, "
+          f"{info_pca if pca_tech != '' else info_da if da_tech != '' else scale_only}\n"
           f"{with_or_without_sampling} resampling, {'with' if enable_feature_importance else 'without'} feature "
           f"importance, and {'with' if additional_params else 'without'} additional\nnon-supported grid search "
           f"parameters: {total_fits[kern]}")
@@ -516,12 +609,10 @@ for kern in kernels:
         print(f"With kernelPCA enabled, the above calculated fits are masking the fact that each PCA kernel accepts "
               f"different parameters.\nFor real, as 3 kernels are tested, only a third of above mentioned fits is "
               f"tested for the poly kernelPCA.\nThe rbf and sigmoid kernels do accept less parameters, and therefore "
-              f"undergo less number of fits.\nThus, the total fits of this experiment are: "
-              f"{int(poly_fits + rbf_fits + sigmoid_fits)}, with {int(poly_fits)} poly fits, {int(rbf_fits)} rbf fits, "
-              f"and {int(sigmoid_fits)} sigmoid fits.")
-print(f"\nOverview of enabled grid search parameters "
-      f"{'without' if pca_tech == 'normal_pca' else 'with' if pca_tech == 'kernel_pca' else ''} "
-      f"additional kernel pca parameters:\n"
+              f"undergo less number of fits.\nThus, the total fits of this experiment are:\n"
+              f"{int(poly_fits + rbf_fits + sigmoid_fits)} total fits, with {int(poly_fits)} poly fits, {int(rbf_fits)}"
+              f" rbf fits, and {int(sigmoid_fits)} sigmoid fits.")
+print(f"\nOverview of enabled grid search parameters parameters:\n"
       f"{newline.join(f'{key}: {value}' for key, value in total_params_and_splits.items())}\n\n"
       f"Results folder pathway:\n{curr_dir.replace(backslash, '/') + '/' + folder_name}\n\n"
       f"******************************************\n")
@@ -568,8 +659,8 @@ if enable_subgroups and subgroups_to_keep != 'all':
         [tmp_feats[col] for col in range(len(tmp_feats)) if tmp_feats[col].startswith(subgroups_to_keep)]
     train = train.drop(columns=[group for group in tmp_feats if group not in feats_to_keep])
     test = test.drop(columns=[group for group in tmp_feats if group not in feats_to_keep])
-    print('\nThe shape of the train set with selected subgroups is:\n', train.shape)
-    print('The shape of the test set with selected subgroups is:\n', test.shape)
+    print('\nThe shape of the train set with selected subgroups including output feature is:\n', train.shape)
+    print('The shape of the test set with selected subgroups including output feature is:\n', test.shape)
 
 # Split the data based on the given split feature
 if enable_data_split and split_feature in train.columns:
@@ -580,8 +671,8 @@ if enable_data_split and split_feature in train.columns:
         feature_list_wo_gender = separate_full_data(full_train=train, full_test=test,
                                                     target_feature=output_feature, splitting_feature=split_feature)
 else:  # Continue with full data only, split feature will be turned to None
-    print(f'\nFull data analysis without data splitting, either because this step is disabled or because the feature '
-          f'to be split is no longer among the subgroups to keep. Subgroup activation: {enable_subgroups},'
+    print(f'\nFull data analysis without data splitting, either because this step is disabled or\nbecause the feature '
+          f'to be split is no longer among the subgroups to keep.\nSubgroup activation: {enable_subgroups}, '
           f'selected subgroups: {subgroups_to_keep}.')
     train_features, test_features, train_labels, test_labels, feature_list = separate_full_data(
         full_train=train, full_test=test, target_feature=output_feature, splitting_feature=split_feature)
@@ -613,13 +704,17 @@ if enable_data_split:
 # ## Removing engineered input (REI)
 #####################################
 # Print the starting shapes
-print('\nThe shape of the full train set before pre-processing is:\n', train_features.shape)
-print('The shape of the full test set before pre-processing is:\n', test_features.shape)
+print('\nThe shape of the full train set before pre-processing and without output feature is:\n', train_features.shape)
+print('The shape of the full test set before pre-processing and without output feature is:\n', test_features.shape)
 if enable_data_split:
-    print('\nThe shape of the male train set before pre-processing is:\n', train_men_features.shape)
-    print('The shape of the male test set before pre-processing is:\n', test_men_features.shape)
-    print('\nThe shape of the female train set before pre-processing is:\n', train_female_features.shape)
-    print('The shape of the female test set before pre-processing is:\n', test_female_features.shape)
+    print('\nThe shape of the male train set before pre-processing and without output feature is:\n',
+          train_men_features.shape)
+    print('The shape of the male test set before pre-processing and without output feature is:\n',
+          test_men_features.shape)
+    print('\nThe shape of the female train set before pre-processing and without output feature is:\n',
+          train_female_features.shape)
+    print('The shape of the female test set before pre-processing and without output feature is:\n',
+          test_female_features.shape)
 
 if enable_engineered_input_removal:
     print("\nRemoving features that were used for feature engineering ...")
@@ -651,6 +746,10 @@ if enable_engineered_input_removal:
     # Print summary
     print(f'The total of {len(engineered_input_feat)} sources of engineered features are removed to avoid high '
           f'correlation.\n')
+    if len(engineered_input_feat) == 0:
+        print(f'If this step is enabled ({enable_engineered_input_removal}) and 0 sources were removed, '
+              f'this means that either no engineered prefix\nwas defined in the config script, '
+              f'or the considered features were not among the subgroups defined to keep.\n')
 
 else:  # If engineered features removal is disabled, male and female feature lists are still identical
     feature_list = feature_list
@@ -666,7 +765,8 @@ else:  # If engineered features removal is disabled, male and female feature lis
 ##############################################
 print("Checking and removing constant features in the training set ...\n")
 # Full data
-constant_all = check_constant_features(feature_list, train_features, 'full')
+constant_all = check_constant_features(feature_list, train_features, 'full', nbr_splits=splits,
+                                       near_constant_thresh=thresh_near_constant)
 # Update the feature lists
 feature_list = [feature_list[x] for x in range(len(feature_list)) if x not in constant_all]
 # Remove those features
@@ -675,8 +775,10 @@ test_features = np.delete(test_features, constant_all, axis=1)
 
 # Male and female data
 if enable_data_split:
-    constant_male = check_constant_features(feature_list_male, train_men_features, 'male')
-    constant_female = check_constant_features(feature_list_female, train_female_features, 'female')
+    constant_male = check_constant_features(feature_list_male, train_men_features, 'male', nbr_splits=splits,
+                                            near_constant_thresh=thresh_near_constant)
+    constant_female = check_constant_features(feature_list_female, train_female_features, 'female', nbr_splits=splits,
+                                              near_constant_thresh=thresh_near_constant)
     # Update gender feature list
     feature_list_male = [feature_list_male[x] for x in range(len(feature_list_male)) if x not in constant_male]
     feature_list_female = [feature_list_female[x] for x in range(len(feature_list_female)) if x not in constant_female]
@@ -723,7 +825,8 @@ if enable_rhcf:
     if len(categorical_idx) > 1:
         cramer_res, cat_to_drop, cramer_set = applied_cat_rhcf(
             parallel_meth=parallel_method, training_features=train_features, features_list=feature_list,
-            categorical=categorical_idx, n_job=n_jobs, cramer_threshold=thresh_cramer)
+            categorical=categorical_idx, n_job=n_jobs, cramer_threshold=thresh_cramer, directory=curr_dir,
+            folder=folder_name, datatype='full')
         # Heatmap of the cramer matrix (saving process inside function)
         cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name, tiff_figure_dpi)
     else:
@@ -734,7 +837,9 @@ if enable_rhcf:
         spearman_res, cont_to_drop, spearman_set = applied_cont_rhcf(training_features=train_features,
                                                                      features_list=feature_list,
                                                                      continuous=continuous_idx,
-                                                                     spearman_threshold=thresh_spearman)
+                                                                     spearman_threshold=thresh_spearman,
+                                                                     directory=curr_dir, folder=folder_name,
+                                                                     datatype='full')
         # Heatmap of the spearman matrix (saving process inside function)
         spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name, tiff_figure_dpi)
     else:
@@ -749,7 +854,8 @@ if enable_rhcf:
         longest, res_pb_r, res_pb_pv, pbs_to_drop, pbs_set, rem_cont, rem_cat = applied_cat_cont_rhcf(
             parallel_meth=parallel_method, training_features=train_features, cont_before_rhcf=continuous_idx,
             cat_before_rhcf=categorical_idx, features_list=feature_list, feat_after_rhcf=rem_feat,
-            feat_idx_after_rhcf=rem_idx, n_job=n_jobs, pbs_threshold=thresh_pbs)
+            feat_idx_after_rhcf=rem_idx, n_job=n_jobs, pbs_threshold=thresh_pbs, directory=curr_dir, folder=folder_name,
+            datatype='full')
         # Heatmap of the point bi-serial matrix (saving process inside function)
         pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name, tiff_figure_dpi)
     else:
@@ -787,7 +893,8 @@ if enable_rhcf:
         if len(categorical_idx_male) > 1:
             cramer_res_male, cat_to_drop_male, cramer_set_male = applied_cat_rhcf(
                 parallel_meth=parallel_method, training_features=train_men_features, features_list=feature_list_male,
-                categorical=categorical_idx_male, n_job=n_jobs, cramer_threshold=thresh_cramer)
+                categorical=categorical_idx_male, n_job=n_jobs, cramer_threshold=thresh_cramer, directory=curr_dir,
+                folder=folder_name, datatype='male')
             # Heatmap of the male cramer matrix (saving process inside function)
             cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name, tiff_figure_dpi)
         else:
@@ -797,7 +904,7 @@ if enable_rhcf:
         if len(continuous_idx_male) > 1:
             spearman_res_male, cont_to_drop_male, spearman_set_male = applied_cont_rhcf(
                 training_features=train_men_features, features_list=feature_list_male, continuous=continuous_idx_male,
-                spearman_threshold=thresh_spearman)
+                spearman_threshold=thresh_spearman, directory=curr_dir, folder=folder_name, datatype='male')
             # Heatmap of the male spearman matrix (saving process inside function)
             spearman_heatmap(spearman_res_male, thresh_spearman, 'male', continuous_idx_male, folder_name,
                              tiff_figure_dpi)
@@ -815,7 +922,7 @@ if enable_rhcf:
                     parallel_meth=parallel_method, training_features=train_men_features,
                     cont_before_rhcf=continuous_idx_male, cat_before_rhcf=categorical_idx_male,
                     features_list=feature_list_male, feat_after_rhcf=rem_feat_male, feat_idx_after_rhcf=rem_idx_male,
-                    n_job=n_jobs, pbs_threshold=thresh_pbs)
+                    n_job=n_jobs, pbs_threshold=thresh_pbs, directory=curr_dir, folder=folder_name, datatype='male')
             # Heatmap of the male point bi-serial matrix (saving process inside function)
             pbs_heatmap(res_pb_r_male, thresh_pbs, 'male', rem_cat_male, rem_cont_male, longest_male, folder_name,
                         tiff_figure_dpi)
@@ -856,7 +963,7 @@ if enable_rhcf:
             cramer_res_female, cat_to_drop_female, cramer_set_female = applied_cat_rhcf(
                 parallel_meth=parallel_method, training_features=train_female_features,
                 features_list=feature_list_female, categorical=categorical_idx_female, n_job=n_jobs,
-                cramer_threshold=thresh_cramer)
+                cramer_threshold=thresh_cramer, directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female cramer matrix (saving process inside function)
             cramer_heatmap(cramer_res_female, thresh_cramer, 'female', categorical_idx_female, folder_name,
                            tiff_figure_dpi)
@@ -867,7 +974,8 @@ if enable_rhcf:
         if len(continuous_idx_female) > 1:
             spearman_res_female, cont_to_drop_female, spearman_set_female = applied_cont_rhcf(
                 training_features=train_female_features, features_list=feature_list_female,
-                continuous=continuous_idx_female, spearman_threshold=thresh_spearman)
+                continuous=continuous_idx_female, spearman_threshold=thresh_spearman,
+                directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female spearman matrix (saving process inside function)
             spearman_heatmap(spearman_res_female, thresh_spearman, 'female', continuous_idx_female, folder_name,
                              tiff_figure_dpi)
@@ -886,7 +994,8 @@ if enable_rhcf:
                     parallel_meth=parallel_method, training_features=train_female_features,
                     cont_before_rhcf=continuous_idx_female, cat_before_rhcf=categorical_idx_female,
                     features_list=feature_list_female, feat_after_rhcf=rem_feat_female,
-                    feat_idx_after_rhcf=rem_idx_female, n_job=n_jobs, pbs_threshold=thresh_pbs)
+                    feat_idx_after_rhcf=rem_idx_female, n_job=n_jobs, pbs_threshold=thresh_pbs,
+                    directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female point bi-serial matrix (saving process inside function)
             pbs_heatmap(res_pb_r_female, thresh_pbs, 'female', rem_cat_female, rem_cont_female, longest_female,
                         folder_name, tiff_figure_dpi)
@@ -936,7 +1045,7 @@ if enable_rhcf:
 # ## Machine learning preparations including feature transformation (FT)
 #########################################################################
 # Print the definite shapes of data sets entering the classification pipeline
-print('The shape of the full train entering the pipeline is:\n', train_features.shape)
+print('The shape of the full train set entering the pipeline is:\n', train_features.shape)
 print('The shape of the full test set entering the pipeline is:\n', test_features.shape)
 if enable_data_split:
     print('\nThe shape of the male train set entering the pipeline is:\n', train_men_features.shape)
@@ -969,25 +1078,36 @@ if scaler_tech == 'minmax':
 elif scaler_tech == 'robust':
     scaler = RobustScaler()
 else:
-    scaler = StandardScaler()
+    scaler = StandardScaler()  # Default standard scaler for continuous features if none is selected
 
-# Initialize FT step if enabled, pca and select k best are added as column transformer steps to feature_filtration
+# Initialize FT step if enabled, pca/lda and select k best are added as column transformer steps to feature_filtration
 if enable_ft:
     # PCA dimensionality reduction on continuous depending on pca technique
     pca = PCA(random_state=seed) if pca_tech == 'normal_pca' else KernelPCA(random_state=seed,
                                                                             n_jobs=n_jobs,
-                                                                            max_iter=hard_iter_cap)
-    k_filter = SelectKBest(score_func=chi2)  # Chi squared k best selection on categorical
-    continuous_pipeline = Pipeline([('scaler', scaler), ('pca', pca)])
+                                                                            max_iter=hard_iter_cap
+                                                                            ) if pca_tech == 'kernel_pca' else None
+    da = LinearDiscriminantAnalysis(solver='svd',
+                                    store_covariance=True,
+                                    covariance_estimator=None) if pca_tech == '' and da_tech == 'lda' else None
+    # Chi squared k best selection on categorical
+    k_filter = SelectKBest(score_func=chi2) if kbest_tech == 'chi2' else \
+        SelectKBest(score_func=corr_cramer_kbest) if kbest_tech == 'cramer' else \
+        SelectKBest(score_func=kbest_tech) if hasattr(kbest_tech, '__call__') else 'passthrough'
+
+    continuous_pipeline = Pipeline([('scaler', scaler), ('pca', pca)]) if pca_tech != '' else \
+        Pipeline([('scaler', scaler), ('lda', da)]) if da_tech != '' else \
+        Pipeline([('scaler', scaler)])
     # Setting up the feature transformation transformer for the full, male, and female data if lengths are above 1
     if len(continuous_idx) > 1 and len(categorical_idx) > 1:
         feature_trans = ColumnTransformer(transformers=[('continuous', continuous_pipeline, continuous_idx),
                                                         ('categorical', k_filter, categorical_idx)], n_jobs=n_jobs)
     elif len(continuous_idx) > 1:
         feature_trans = ColumnTransformer(transformers=[
-            ('continuous', continuous_pipeline, continuous_idx)], n_jobs=n_jobs)
+            ('continuous', continuous_pipeline, continuous_idx)], remainder='passthrough', n_jobs=n_jobs)
     elif len(categorical_idx) > 1:
-        feature_trans = ColumnTransformer(transformers=[('categorical', k_filter, categorical_idx)], n_jobs=n_jobs)
+        feature_trans = ColumnTransformer(transformers=[('categorical', k_filter, categorical_idx)],
+                                          remainder='passthrough', n_jobs=n_jobs)
     else:
         feature_trans = 'passthrough'
 
@@ -998,10 +1118,10 @@ if enable_ft:
                 ('categorical', k_filter, categorical_idx_male)], n_jobs=n_jobs)
         elif len(continuous_idx_male) > 1:
             feature_trans_male = ColumnTransformer(transformers=[
-                ('continuous', continuous_pipeline, continuous_idx_male)], n_jobs=n_jobs)
+                ('continuous', continuous_pipeline, continuous_idx_male)], remainder='passthrough', n_jobs=n_jobs)
         elif len(categorical_idx_male) > 1:
             feature_trans_male = ColumnTransformer(transformers=[
-                ('categorical', k_filter, categorical_idx_male)], n_jobs=n_jobs)
+                ('categorical', k_filter, categorical_idx_male)], remainder='passthrough', n_jobs=n_jobs)
         else:
             feature_trans_male = 'passthrough'
 
@@ -1011,10 +1131,10 @@ if enable_ft:
                 ('categorical', k_filter, categorical_idx_female)], n_jobs=n_jobs)
         elif len(continuous_idx_female) > 1:
             feature_trans_female = ColumnTransformer(transformers=[
-                ('continuous', continuous_pipeline, continuous_idx_female)], n_jobs=n_jobs)
+                ('continuous', continuous_pipeline, continuous_idx_female)], remainder='passthrough', n_jobs=n_jobs)
         elif len(categorical_idx_male) > 1:
             feature_trans_female = ColumnTransformer(transformers=[
-                ('categorical', k_filter, categorical_idx_female)], n_jobs=n_jobs)
+                ('categorical', k_filter, categorical_idx_female)], remainder='passthrough', n_jobs=n_jobs)
         else:
             feature_trans_female = 'passthrough'
     else:
@@ -1022,11 +1142,14 @@ if enable_ft:
 
 else:  # If FT is disabled, we only stick with the scaler for continuous features if length > 1, else skip
     feature_trans = ColumnTransformer(transformers=[
-        ('continuous', scaler, continuous_idx)], n_jobs=n_jobs) if len(continuous_idx) > 1 else 'passthrough'
+        ('continuous', scaler, continuous_idx)], remainder='passthrough',
+        n_jobs=n_jobs) if len(continuous_idx) > 1 else 'passthrough'
     if enable_data_split:
         feature_trans_male = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_male)],
+                                               remainder='passthrough',
                                                n_jobs=n_jobs) if len(continuous_idx_male) > 1 else 'passthrough'
         feature_trans_female = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_female)],
+                                                 remainder='passthrough',
                                                  n_jobs=n_jobs) if len(continuous_idx_female) > 1 else 'passthrough'
     else:
         feature_trans_male, feature_trans_female = [None] * 2
@@ -1039,14 +1162,18 @@ elif scorer == 'F.5':
 elif scorer == 'F1':
     scoring = make_scorer(fbeta_score, beta=1, average='macro')  # F beta 1
 else:
-    scoring = make_scorer(accuracy_score)  # Accuracy as default
-skf = StratifiedKFold(n_splits=splits, shuffle=False)  # stratified k fold split of train, shuffle=F to avoid duplicates
+    scoring = make_scorer(accuracy_score)  # Accuracy as default if none is selected
+
+# stratified k fold split of train, shuffle=F to avoid duplicates
+skf = StratifiedKFold(n_splits=splits, shuffle=False)
 
 # Setting up shared param dictionary between the selected kernels for grid search cross-validation
+# SVM parameters
 params = {'clf__C': regularization_lpsr,
           'clf__shrinking': shrinking_lpsr,
           'clf__tol': tolerance_lpsr,
           'clf__gamma': gamma_psr}
+# Kernel PCA parameters
 kernel_pca_params = {'pca__n_components': kernel_pca_lpsr,
                      'pca__kernel': kernel_pca_kernel_lpsr,
                      'pca__gamma': kernel_pca_gamma_lpsr,
@@ -1056,19 +1183,30 @@ if 'poly' in kernel_pca_kernel_lpsr:
                               'pca__coef0': kernel_pca_coef0_lpsr})
 if 'sigmoid' in kernel_pca_kernel_lpsr:
     kernel_pca_params.update({'pca__coef0': kernel_pca_coef0_lpsr})
+# LDA parameters
+lda_dict_params = {'lda__shrinkage': lda_shrinkage_lpsr,
+                   'lda__priors': lda_priors_lpsr,
+                   'lda__n_components': lda_components_lpsr,
+                   'lda__tol': lda_tol_lpsr}
 
 # PCA n components and k best features are added to the parameter dict if the feature transformation step is enabled
 # It is enough to check if the one from the complete data is passthrough, features don't change between the three sets
 if enable_ft and pca_tech == 'normal_pca' and feature_trans != 'passthrough':
-    params.update({'features__continuous__pca__n_components': pca_lpsr,
-                   'features__categorical__k': k_best_lpsr})
+    params.update({'features__continuous__pca__n_components': pca_lpsr})
     # Load the corresponding FT parameters if kernel pca is activated
 elif enable_ft and pca_tech == 'kernel_pca' and feature_trans != 'passthrough':
-    params.update({'features__categorical__k': k_best_lpsr})
     params.update({'features__continuous__' + key: items for key, items in kernel_pca_params.items()})
+elif enable_ft and da_tech == 'lda' and feature_trans != 'passthrough':
+    params.update({'features__continuous__' + key: items for key, items in lda_dict_params.items()})
+
+# Kbest related parameters for grid search
+if enable_ft and kbest_tech != '' and feature_trans != 'passthrough':
+    params.update({'features__categorical__k': k_best_lpsr})
+
 # Resampler related parameters for grid search
 if enable_resampling and (resampling_tech == 'smote'):
     params.update({'samples__k_neighbors': k_neighbors_smote_lpsr})
+
 # In case other techniques with specific parameters should be added according to the configuration file
 if additional_params:
     params.update(additional_technique_params)
@@ -1116,8 +1254,11 @@ for kern in kernels:
         final_params = params.copy()
         final_params.update(additional_kernel_params)
 
+    k_m = 'only with select k best' if kbest_tech in ('chi2', 'cramer') or hasattr(kbest_tech, '__call__') else 'no'
+    tech_m = f"{pca_tech if pca_tech !='' and enable_ft else da_tech if da_tech != '' and enable_ft else k_m}"
+
     print(f"******************************************\n{kern.capitalize()} SVM grid search parameter summary with "
-          f"{pca_tech} technique:\n\n"
+          f"{tech_m if enable_ft else 'no enabled'} feature transformation technique:\n\n"
           f"{newline.join(f'{key}: {value}' for key, value in final_params.items())}\n\n"
           f"The full classification pipeline is set up as follows:\n\n{pipeline.named_steps}\n")
     if enable_data_split:
@@ -1220,20 +1361,20 @@ for kern in kernels:
     # ROC_AUC curve full data
     print(f"Full data model evaluation for {kern.upper()} kernel:")
     evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, fontsize=16)
-    plt.savefig(folder_name + f'/{kern}_roc_auc_curve_ALL.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
     if enable_data_split:
         # Male data
         print(f"\nMale data model evaluation for {kern.upper()} kernel:")
         evaluate_model(male_predictions, male_probs, train_male_predictions, train_male_probs, test_men_labels,
                        train_men_labels, fontsize=16)
-        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_male.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # Female data
         print(f"\nFemale data model evaluation for {kern.upper()} kernel:")
         evaluate_model(female_predictions, female_probs, train_female_predictions, train_female_probs,
                        test_female_labels, train_female_labels, fontsize=16)
-        plt.savefig(folder_name + f'/{kern}_roc_auc_curve_female.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
 
     # Confusion matrix full data
@@ -1241,7 +1382,7 @@ for kern in kernels:
     print(f"\nFull data confusion matrix for {kern.upper()} kernel:")
     plot_confusion_matrix(cm, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix', normalize=True)
-    plt.savefig(folder_name + f'/{kern}_cm_ALL.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
     if enable_data_split:
         # Male data
@@ -1249,14 +1390,14 @@ for kern in kernels:
         print(f"\nMale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/{kern}_cm_male.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # Female data
         cm_female = confusion_matrix(test_female_labels, female_predictions)
         print(f"\nFemale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/{kern}_cm_female.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
 
     # Turn the original feature lists into np arrays with technically just shorter names for later use
@@ -1270,25 +1411,27 @@ for kern in kernels:
     ##################################################################################
     # ## Updating feature list for full, male and female after feature transformation
     ##################################################################################
+    # This part will only be printed if pca_tech is normal pca. Will probably be removed later
     # This section is only enabled if feature transformation step is enabled
-    if enable_ft and pca_tech == 'normal_pca' and feature_trans != 'passthrough':
+    if enable_ft and (pca_tech == 'normal_pca' or kbest_tech != '') and feature_trans != 'passthrough':
         # Update feature list with the features that remained after feature transformation by PCA and SelectKBest
         # Full data
         new_features_full = update_features(predict_method=grid_imba, named_step='features',
                                             cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
                                             features_list=feature_list, cat_list=categorical_idx,
-                                            cont_list=continuous_idx, pca_tech=pca_tech)
+                                            cont_list=continuous_idx, pca_tech=pca_tech, cat_tech=kbest_tech)
         if enable_data_split:
             # Male data
             new_features_male = update_features(predict_method=grid_imba_male, named_step='features',
                                                 cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
                                                 features_list=feature_list_male, cat_list=categorical_idx_male,
-                                                cont_list=continuous_idx_male, pca_tech=pca_tech)
+                                                cont_list=continuous_idx_male, pca_tech=pca_tech, cat_tech=kbest_tech)
             # Female data
             new_features_female = update_features(predict_method=grid_imba_female, named_step='features',
                                                   cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
                                                   features_list=feature_list_female, cat_list=categorical_idx_female,
-                                                  cont_list=continuous_idx_female, pca_tech=pca_tech)
+                                                  cont_list=continuous_idx_female, pca_tech=pca_tech,
+                                                  cat_tech=kbest_tech)
         else:
             new_features_male, new_features_female = [None] * 2
 
@@ -1296,45 +1439,54 @@ for kern in kernels:
         # ## Extracting the best selected features for later analysis of feature transformation performance
         ####################################################################################################
         # We retrieve the indices of best selected features to see which one were selected
-        print(f'\nSelect K best and PCA identified the following top features:\n')
+        print(f'\nSelect K best and/or PCA (best feature per component) identified the following top features:\n'
+              f'(Please note that the correct sorted top features by PCA summed weighted are printed afterwards.)\n')
         # Get the top feature of n components selected by the pipeline pca and select k best
         idx_of_best = [idx for idx in range(len(features)) if features[idx] in new_features_full]
         # Print the selected features
-        print(f'Full data:\n{grid_imba.best_params_["features__categorical__k"]} k best and '
-              f'{grid_imba.best_params_["features__continuous__pca__n_components"]} PCA '
-              f'components:\n{features[idx_of_best]}\n')
+        print(f'Full data:\n{grid_imba.best_params_["features__categorical__k"] if kbest_tech != "" else "No"} k best '
+              f'and '
+              f'{grid_imba.best_params_["features__continuous__pca__n_components"] if pca_tech=="normal_pca" else "no"}'
+              f' PCA components:\n{features[idx_of_best]}\n')
         # Inform about possible duplicates in case PCA number 1 top features are extracted for each selected component
-        inform_about_duplicates(new_features_full, idx_of_best, 'full')
+        if pca_tech == 'normal_pca':
+            inform_about_duplicates(new_features_full, idx_of_best, 'full')
 
         # In male and female
         if enable_data_split:
+            cat_string = "features__categorical__k"
+            cont_string = "features__continuous__pca__n_components"
+            # male
             # Get the top feature of n components selected by the pipeline pca and select k best
             idx_of_best_male = [idx for idx in range(len(features_male)) if features_male[idx] in new_features_male]
             idx_of_best_female = \
                 [idx for idx in range(len(features_female)) if features_female[idx] in new_features_female]
             # Print the selected features
-            print(f'Male data:\n{grid_imba_male.best_params_["features__categorical__k"]} k best and '
-                  f'{grid_imba_male.best_params_["features__continuous__pca__n_components"]} PCA '
-                  f'components:\n{features_male[idx_of_best_male]}\n')
+            print(f'Male data:\n{grid_imba_male.best_params_[cat_string] if kbest_tech != "" else "No"} k best and '
+                  f'{grid_imba_male.best_params_[cont_string] if pca_tech=="normal_pca" else "no"}'
+                  f' PCA components:\n{features_male[idx_of_best_male]}\n')
             # Inform about possible duplicates in case the PCA top features are extracted for each selected component
-            inform_about_duplicates(new_features_male, idx_of_best_male, 'male')
-            print(f'Female data:\n{grid_imba_female.best_params_["features__categorical__k"]} k best and '
-                  f'{grid_imba_female.best_params_["features__continuous__pca__n_components"]} PCA '
-                  f'components:\n{features_female[idx_of_best_female]}\n')
+            if pca_tech == 'normal_pca':
+                inform_about_duplicates(new_features_male, idx_of_best_male, 'male')
+            # female
+            print(f'Female data:\n{grid_imba_female.best_params_[cat_string] if kbest_tech != "" else "No"} k best and '
+                  f'{grid_imba_female.best_params_[cont_string] if pca_tech=="normal_pca" else "no"}'
+                  f' PCA components:\n{features_female[idx_of_best_female]}\n')
             # Inform about possible duplicates in case the PCA top features are extracted for each selected component
-            inform_about_duplicates(new_features_female, idx_of_best_female, 'female')
+            if pca_tech == 'normal_pca':
+                inform_about_duplicates(new_features_female, idx_of_best_female, 'female')
 
     ########################################
     # ## Non linear feature importance (FI)
     ########################################
     # Readjust font size for feature importance figures
-    if enable_feature_importance and (kern in non_linear_kernels or pca_tech=='kernel_pca'):
+    if enable_feature_importance and (kern in non_linear_kernels or pca_tech == 'kernel_pca' or linear_shuffle):
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
         # FEATURE IMPORTANCE BY SKLEARN.INSPECTION
         if feature_importance_method in ('all', 'sklearn'):
-            print("Starting feature importance permutation by SKLEARN:")
+            print("\nStarting feature importance permutation by SKLEARN:")
             # Full data
             print("In full data ...")
             with parallel_backend(parallel_method):
@@ -1348,7 +1500,7 @@ for kern in kernels:
                             importance_mean=perm_importance.importances_mean, importance_above_zero=sk_above_zero_imp,
                             importance_std=perm_importance.importances_std)
             plt.savefig(
-                folder_name + f'/{kern}_full_feature_importance_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+                folder_name + f'/full_{kern}_feature_importance_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -1365,7 +1517,7 @@ for kern in kernels:
                                 importance_mean=perm_importance_male.importances_mean,
                                 importance_above_zero=sk_above_zero_imp_male,
                                 importance_std=perm_importance_male.importances_std)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_sklearn.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_sklearn.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
@@ -1383,7 +1535,7 @@ for kern in kernels:
                                 importance_mean=perm_importance_female.importances_mean,
                                 importance_above_zero=sk_above_zero_imp_female,
                                 importance_std=perm_importance_female.importances_std)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_sklearn.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_sklearn.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
             else:
@@ -1407,7 +1559,7 @@ for kern in kernels:
             importance_plot(datatype='full', method='eli5', kern=kern, idx_sorted=sorted_idx_eli,
                             features_list=features, importance_mean=perm_mean, importance_above_zero=el_above_zero_imp,
                             importance_std=std_perm)
-            plt.savefig(folder_name + f'/{kern}_full_feature_importance_eli5.tiff',
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_eli5.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1427,7 +1579,7 @@ for kern in kernels:
                                 importance_mean=perm_mean_male,
                                 importance_above_zero=el_above_zero_imp_male,
                                 importance_std=std_perm_male)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_eli5.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_eli5.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
@@ -1443,7 +1595,7 @@ for kern in kernels:
                 importance_plot(datatype='female', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_female,
                                 features_list=features_female, importance_mean=perm_mean_female,
                                 importance_above_zero=el_above_zero_imp_female, importance_std=std_perm_female)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_eli5.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_eli5.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
             else:
@@ -1467,7 +1619,7 @@ for kern in kernels:
             # Figure of most important features
             importance_plot(datatype='full', method='mlxtend', kern=kern, idx_sorted=indices, features_list=features,
                             importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std)
-            plt.savefig(folder_name + f'/{kern}_full_feature_importance_mlxtend.tiff',
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_mlxtend.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1485,7 +1637,7 @@ for kern in kernels:
                                 importance_mean=imp_vals_male,
                                 importance_above_zero=ml_above_zero_imp_male,
                                 importance_std=std_male)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_mlxtend.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_mlxtend.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
@@ -1503,7 +1655,7 @@ for kern in kernels:
                                 importance_mean=imp_vals_female,
                                 importance_above_zero=ml_above_zero_imp_female,
                                 importance_std=std_female)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_mlxtend.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_mlxtend.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
             else:
@@ -1521,8 +1673,8 @@ for kern in kernels:
                 print('Top important features with eli5:', features[sorted_idx_eli[-el_above_zero_imp:]][::-1], '\n')
             if feature_importance_method in ('all', 'mlxtend'):
                 print('Top important features with mlxtend:', features[indices[-ml_above_zero_imp:]][::-1], '\n')
-            print('******************************************')
             if enable_data_split:
+                print('******************************************')
                 print('Male feature importance summary:\n')
                 if feature_importance_method in ('all', 'sklearn'):
                     print('Top important features with sklearn:',
@@ -1558,7 +1710,7 @@ for kern in kernels:
             plot_venn(kernel=kern, datatype='Full', set1=sklearn, set2=eli5, set3=mlxtend,
                       tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                       feat_info='top important', weighted=True)
-            plt.savefig(folder_name + f'/{kern}_full_feature_importance_venn_diagram.tiff',
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_venn_diagram.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1570,7 +1722,7 @@ for kern in kernels:
                 plot_venn(kernel=kern, datatype='Male', set1=sklearn_male, set2=eli5_male, set3=mlxtend_male,
                           tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                           feat_info='top important', weighted=True)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_venn_diagram.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_venn_diagram.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
@@ -1581,7 +1733,7 @@ for kern in kernels:
                 plot_venn(kernel=kern, datatype='Female', set1=sklearn_female, set2=eli5_female, set3=mlxtend_female,
                           tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                           feat_info='top important', weighted=True)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_venn_diagram.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_venn_diagram.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
 
@@ -1591,7 +1743,7 @@ for kern in kernels:
             scatter_comparison(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
                                mean3=imp_vals,
                                new_feat_idx=range(len(features)), metric_list=metrics)
-            plt.savefig(folder_name + f'/{kern}_full_feature_importance_comparison.tiff',
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_comparison.tiff',
                         bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1599,14 +1751,14 @@ for kern in kernels:
                 scatter_comparison(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
                                    mean2=perm_mean_male, mean3=imp_vals_male,
                                    new_feat_idx=range(len(features_male)), metric_list=metrics)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_comparison.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_comparison.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
                 scatter_comparison(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
                                    mean2=perm_mean_female, mean3=imp_vals_female,
                                    new_feat_idx=range(len(features_female)), metric_list=metrics)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_comparison.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_comparison.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
 
@@ -1616,7 +1768,7 @@ for kern in kernels:
                               mean3=imp_vals,
                               tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                               new_feat_idx=range(len(features)), fontsize=12)
-            plt.savefig(folder_name + f'/{kern}_full_feature_importance_r2.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_r2.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1625,7 +1777,7 @@ for kern in kernels:
                                   mean2=perm_mean_male, mean3=imp_vals_male,
                                   tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                                   new_feat_idx=range(len(features_male)), fontsize=12)
-                plt.savefig(folder_name + f'/{kern}_male_feature_importance_r2.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_r2.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
@@ -1633,7 +1785,7 @@ for kern in kernels:
                                   mean2=perm_mean_female, mean3=imp_vals_female,
                                   tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                                   new_feat_idx=range(len(features_female)), fontsize=12)
-                plt.savefig(folder_name + f'/{kern}_female_feature_importance_r2.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_r2.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
 
@@ -1642,7 +1794,7 @@ for kern in kernels:
         if feature_importance_method in ('all', 'sklearn'):
             plot_violin(kern, 'Full sklearn', perm_importance.importances[sorted_idx[-sk_above_zero_imp:]],
                         features[sorted_idx[-sk_above_zero_imp:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_full_violin_plot_sklearn.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_sklearn.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             # Male data
@@ -1650,33 +1802,33 @@ for kern in kernels:
                 plot_violin(kern, 'Male sklearn',
                             perm_importance_male.importances[sorted_idx_male[-sk_above_zero_imp_male:]],
                             features_male[sorted_idx_male[-sk_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_male_violin_plot_sklearn.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_sklearn.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female sklearn',
                             perm_importance_female.importances[sorted_idx_female[-sk_above_zero_imp_female:]],
                             features_female[sorted_idx_female[-sk_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_female_violin_plot_sklearn.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_sklearn.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
         # ELI5 on full data
         if feature_importance_method in ('all', 'eli5'):
             plot_violin(kern, 'Full eli5', perm_all[sorted_idx_eli[-el_above_zero_imp:]],
                         features[sorted_idx_eli[-el_above_zero_imp:]], fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_full_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 plot_violin(kern, 'Male eli5', perm_all_male[sorted_idx_eli_male[-el_above_zero_imp_male:]],
                             features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_male_violin_plot_eli5.tiff', bbox_inches='tight',
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_eli5.tiff', bbox_inches='tight',
                             dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female eli5', perm_all_female[sorted_idx_eli_female[-el_above_zero_imp_female:]],
                             features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_female_violin_plot_eli5.tiff', bbox_inches='tight',
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_eli5.tiff', bbox_inches='tight',
                             dpi=tiff_figure_dpi)
                 plt.close()
         # MLXTEND on full data
@@ -1684,20 +1836,20 @@ for kern in kernels:
             plot_violin(kern, 'Full mlxtend',
                         imp_all[indices[-ml_above_zero_imp:]], features[indices[-ml_above_zero_imp:]],
                         fontsize=7)
-            plt.savefig(folder_name + f'/{kern}_full_violin_plot_mlxtend.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_mlxtend.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 plot_violin(kern, 'Male mlxtend', imp_all_male[indices_male[-ml_above_zero_imp_male:]],
                             features_male[indices_male[-ml_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_male_violin_plot_mlxtend.tiff',
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_mlxtend.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female mlxtend', imp_all_female[indices_female[-ml_above_zero_imp_female:]],
                             features_female[indices_female[-ml_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/{kern}_female_violin_plot_mlxtend.tiff',
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_mlxtend.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
 
@@ -1708,70 +1860,80 @@ for kern in kernels:
             # Case of sklearn method
             if feature_importance_method in ('all', 'sklearn'):
                 # Full data
-                box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx,
-                                 features, sk_above_zero_imp, output_feature, negative_class.capitalize(),
-                                 positive_class.capitalize(), 'full', kern, folder_name, importance_method='sklearn',
-                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels,
+                                 sorted_idx[-sk_above_zero_imp:], features, sk_above_zero_imp, output_feature,
+                                 negative_class.capitalize(), positive_class.capitalize(), 'full', kern, folder_name,
+                                 importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
+
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     sorted_idx_male, features_male, sk_above_zero_imp_male, output_feature,
-                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
-                                     folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
-                    # Female data
-                    box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
-                                     test_female_labels, sorted_idx_female, features_female, sk_above_zero_imp_female,
-                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'female',
+                                     sorted_idx_male[-sk_above_zero_imp_male:], features_male, sk_above_zero_imp_male,
+                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'male',
                                      kern, folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
                                      graphs=box_bar_figures, fontsize=fix_font)
-            # Case of eli5 method
+                    # Female data
+                    box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
+                                     test_female_labels, sorted_idx_female[-sk_above_zero_imp_female:], features_female,
+                                     sk_above_zero_imp_female, output_feature, negative_class.capitalize(),
+                                     positive_class.capitalize(), 'female', kern, folder_name,
+                                     importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                     fontsize=fix_font)
+
+                    # Case of eli5 method
             if feature_importance_method in ('all', 'eli5'):
                 # Full data
-                box_and_bar_plot(train_features, train_labels, test_features, test_labels, sorted_idx_eli,
-                                 features, el_above_zero_imp, output_feature, negative_class.capitalize(),
-                                 positive_class.capitalize(), 'full', kern, folder_name, importance_method='eli5',
-                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels,
+                                 sorted_idx_eli[-el_above_zero_imp:], features, el_above_zero_imp, output_feature,
+                                 negative_class.capitalize(), positive_class.capitalize(), 'full', kern, folder_name,
+                                 importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     sorted_idx_eli_male, features_male, el_above_zero_imp_male, output_feature,
-                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
-                                     folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
+                                     sorted_idx_eli_male[-el_above_zero_imp_male:], features_male,
+                                     el_above_zero_imp_male, output_feature, negative_class.capitalize(),
+                                     positive_class.capitalize(), 'male', kern, folder_name, importance_method='eli5',
+                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
-                                     test_female_labels, sorted_idx_eli_female, features_female,
-                                     el_above_zero_imp_female, output_feature, negative_class.capitalize(),
-                                     positive_class.capitalize(), 'female', kern, folder_name, importance_method='eli5',
-                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                     test_female_labels, sorted_idx_eli_female[-el_above_zero_imp_female:],
+                                     features_female, el_above_zero_imp_female, output_feature,
+                                     negative_class.capitalize(), positive_class.capitalize(), 'female', kern,
+                                     folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
+                                     graphs=box_bar_figures, fontsize=fix_font)
             # Case of mlxtend method
             if feature_importance_method in ('all', 'mlxtend'):
                 # Full data
-                box_and_bar_plot(train_features, train_labels, test_features, test_labels, indices,
+                box_and_bar_plot(train_features, train_labels, test_features, test_labels, indices[-ml_above_zero_imp:],
                                  features, ml_above_zero_imp, output_feature, negative_class.capitalize(),
                                  positive_class.capitalize(), 'full', kern, folder_name, importance_method='mlxtend',
                                  tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                     indices_male, features_male, ml_above_zero_imp_male, output_feature,
-                                     negative_class.capitalize(), positive_class.capitalize(), 'male', kern,
-                                     folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
+                                     indices_male[-ml_above_zero_imp_male:], features_male, ml_above_zero_imp_male,
+                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'male',
+                                     kern, folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
                                      graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
-                                     test_female_labels, indices_female, features_female, ml_above_zero_imp_female,
-                                     output_feature, negative_class.capitalize(), positive_class.capitalize(), 'female',
-                                     kern, folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
+                                     test_female_labels, indices_female[-ml_above_zero_imp_female:], features_female,
+                                     ml_above_zero_imp_female, output_feature, negative_class.capitalize(),
+                                     positive_class.capitalize(), 'female', kern, folder_name,
+                                     importance_method='mlxtend', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                     fontsize=fix_font)
+
+            # Reset matplotlib style conflict with seaborn for next plots if data split is skipped
+            plt.style.use(plot_style)
 
     ####################################
-    # ## Linear feature importance (FI)
+    # ## Linear feature importance (FI) (Only running when linear PCA, no PCA or LDA is combined with linear SVM kernel)
     ####################################
     # Readjust font size for importance figure of linear kernel
-    if enable_feature_importance and kern == 'linear' and pca_tech in ('normal_pca', ''):
-       # In case of linear SVM kernel with normal pca or no pca
+    if enable_feature_importance and kern == 'linear':
+        # Only in case of linear SVM with normal pca or no pca
         if plt.rcParams['font.size'] != imp_font:
             plt.rcParams['font.size'] = imp_font
 
@@ -1779,133 +1941,275 @@ for kern in kernels:
         # Full data
         lin_imp = grid_imba.best_estimator_.named_steps['clf'].coef_[0]
         lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=40)
-        lin_out_features = linear_svm_get_features(grid_imba.best_estimator_, lin_idx,
-                                                   categorical_idx, features) if pca_tech == 'normal_pca' else features
-        # replace the best components by the best feature in that particular component
-        new_features_full = update_features(predict_method=grid_imba, named_step='features',
-                                            cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
-                                            features_list=feature_list, cat_list=categorical_idx,
-                                            cont_list=continuous_idx, pca_tech=pca_tech)
-
-        for k in range(len(lin_out_features)):
-            if 'component' in lin_out_features[k]:
-                # if a component is found, say component_2, then select the appropriate name of most important feature
-                # of that component, e.g. component_2 = second pca and second value in new_features_full, thus n_comp -1
-                tmp = lin_out_features[k]
-                lin_out_features[k] = new_features_full[int(lin_out_features[k][-1]) - 1]
-                new_features_full[int(tmp[-1]) - 1] = \
-                    new_features_full[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
-        # Use list comprehension to get the correct index
-        lin_out_real_idx_for_bbp = [list(features).index(x) for x in lin_out_features if x in features]
-        # Already include the component information into the feature list for box bar plot
-        bbp_lin_features = features
-        bbp_lin_features[lin_out_real_idx_for_bbp] = np.array(new_features_full)[lin_idx]
+        # linear output features
+        # in case of pca, do it by the function
+        # in case of kernel pca, this step is skipped anyhow
+        # in case of no FT, the .coef_ is only one vector with coefficients for each feature, thus we can combine the
+        # lin_out_features as they enter the pipeline
+        lin_out_features, sum_of_variance = \
+            linear_svm_get_features(grid_imba.best_estimator_, lin_idx, categorical_idx, continuous_idx,
+                                    features, lin_imp, 'pca') if pca_tech == 'normal_pca' else \
+            (linear_svm_get_features(grid_imba.best_estimator_, lin_idx, categorical_idx, continuous_idx,
+                                     features, lin_imp, 'kernel_pca'), [None]) if pca_tech == 'kernel_pca' else \
+            (np.array(list(features[continuous_idx]) + list(features[categorical_idx])),
+             [None]) if (pca_tech == '' and da_tech == '' and kbest_tech == '') or not enable_ft else \
+            (linear_svm_get_features(grid_imba.best_estimator_, lin_idx, categorical_idx, continuous_idx, features,
+                                     lin_imp, 'lda'), [None]) if da_tech == 'lda' else \
+            (linear_svm_get_features(grid_imba.best_estimator_, lin_idx, categorical_idx, continuous_idx, features,
+                                     lin_imp, 'none'), [None])  # should only be triggered if kbest is alone
+        # print sum of variance of selected pca components if enabled
+        if pca_tech == 'normal_pca':
+            print(f"Full data sum of explained variance by the selected pca components equals {sum_of_variance}")
+        # Use list comprehension to get the correct index for later box bar plot
+        lin_out_real_idx_for_bbp = \
+            [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
+        # In case of multiple features extracted from one single lda dimension, concatenate those features to one and
+        # put it as label of the ld1 importance bar, which is usually the first one.
+        if len(lin_out_features) != len(lin_idx):
+            tmp = str()
+            all_selected_lda_features = [s for s in lin_out_features if "LD #" in s]
+            for pos in range(len(all_selected_lda_features)):
+                if pos == len(all_selected_lda_features) - 1:
+                    tmp += all_selected_lda_features[pos]
+                else:
+                    tmp += all_selected_lda_features[pos] + '\n'
+            lin_out_features = np.array([tmp] + list(lin_out_features[len(all_selected_lda_features):]))
         # Figure of most important features
-        importance_plot(datatype='full', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx, features_list=np.array(new_features_full),
-                        importance_mean=lin_imp, importance_above_zero=lin_above_zero_imp, importance_std=None)
-        plt.savefig(folder_name + f'/{kern}_full_feature_importance.tiff', bbox_inches='tight',
+        importance_plot(datatype='full', method='SVM_coef', kern=kern, idx_sorted=lin_idx,
+                        features_list=lin_out_features, importance_mean=lin_imp,
+                        importance_above_zero=lin_above_zero_imp, importance_std=None)
+        plt.savefig(folder_name + f'/full_{kern}_feature_importance.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
-        print('Full data top important features with linear kernel:\n',
-              lin_out_features[::-1], '\n')
+        print('Full data top important features with linear kernel (limited to top 40):\n',
+              lin_out_features[lin_idx][::-1][:40], '\n')
 
         # male data
         if enable_data_split:
             lin_imp_male = grid_imba_male.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_male, lin_above_zero_imp_male = sorted_above_zero(importance_mean=lin_imp_male, bar_cap=40)
-            lin_out_features_male = \
-                linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male,
-                                        categorical_idx_male,
-                                        features_male) if pca_tech == 'normal_pca' else features_male
-            # replace the best components by the best feature in that particular component
-            new_features_male = update_features(predict_method=grid_imba_male, named_step='features',
-                                                cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
-                                                features_list=feature_list_male, cat_list=categorical_idx_male,
-                                                cont_list=continuous_idx_male, pca_tech=pca_tech)
-            for k in range(len(lin_out_features_male)):
-                if 'component' in lin_out_features_male[k]:
-                    tmp = lin_out_features_male[k]
-                    lin_out_features_male[k] = new_features_male[int(lin_out_features_male[k][-1]) - 1]
-                    new_features_male[int(tmp[-1]) - 1] = \
-                        new_features_male[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
+            lin_out_features_male, sum_of_variance_male = \
+                linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male, categorical_idx_male,
+                                        continuous_idx_male, features_male,
+                                        lin_imp_male, 'pca') if pca_tech == 'normal_pca' else \
+                (linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male, categorical_idx_male,
+                                         continuous_idx_male, features_male, lin_imp_male, 'kernel_pca'),
+                 [None]) if pca_tech == 'kernel_pca' else \
+                (np.array(list(features_male[continuous_idx_male]) + list(features_male[categorical_idx_male])),
+                 [None]) if (pca_tech == '' and da_tech == '' and kbest_tech == '') or not enable_ft else \
+                (linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male, categorical_idx_male,
+                                         continuous_idx_male, features_male,
+                                         lin_imp_male, 'lda'), [None]) if da_tech == 'lda' else \
+                (linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male, categorical_idx_male,
+                                         continuous_idx_male, features_male, lin_imp_male, 'none'), [None])
+            # print sum of variance of selected pca components if enabled
+            if pca_tech == 'normal_pca':
+                print(f"Male data sum of explained variance by the selected pca components equals "
+                      f"{sum_of_variance_male}")
             # Use list comprehension to get the correct index
             lin_out_real_idx_for_bbp_male = \
-                [list(features_male).index(x) for x in lin_out_features_male if x in features_male]
-            # Already include the component information into the feature list for box bar plot
-            bbp_lin_features_male = features_male
-            bbp_lin_features_male[lin_out_real_idx_for_bbp_male] = np.array(new_features_male)[lin_idx_male]
+                [list(features_male).index(x.split(' (')[0]) for x in lin_out_features_male
+                 if x.split(' (')[0] in features_male]
+            # In case of multiple features extracted from one single lda dimension, concatenate those features to one
+            # and put it as label of the ld1 importance bar, which is usually the first one.
+            if len(lin_out_features_male) != len(lin_idx_male):
+                tmp = str()
+                all_selected_lda_features_male = [s for s in lin_out_features_male if "LD #" in s]
+                for pos in range(len(all_selected_lda_features_male)):
+                    if pos == len(all_selected_lda_features_male) - 1:
+                        tmp += all_selected_lda_features_male[pos]
+                    else:
+                        tmp += all_selected_lda_features_male[pos] + '\n'
+                lin_out_features_male = np.array([tmp] +
+                                                 list(lin_out_features_male[len(all_selected_lda_features_male):]))
             # Figure of most important features
-            importance_plot(datatype='male', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_male,
-                            features_list=np.array(new_features_male), importance_mean=lin_imp_male,
+            importance_plot(datatype='male', method='SVM_coef', kern=kern, idx_sorted=lin_idx_male,
+                            features_list=lin_out_features_male, importance_mean=lin_imp_male,
                             importance_above_zero=lin_above_zero_imp_male, importance_std=None)
-            plt.savefig(folder_name + f'/{kern}_male_feature_importance.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/male_{kern}_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Male data top important features with linear kernel:\n',
-                 lin_out_features_male[::-1], '\n')
+            print('Male data top important features with linear kernel (limited to top 40):\n',
+                  lin_out_features_male[lin_idx_male][::-1][:40], '\n')
 
             # Female data
             lin_imp_female = grid_imba_female.best_estimator_.named_steps['clf'].coef_[0]
             lin_idx_female, lin_above_zero_imp_female = sorted_above_zero(importance_mean=lin_imp_female, bar_cap=40)
-            lin_out_features_female = \
+            lin_out_features_female, sum_of_variance_female = \
                 linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female,
-                                        categorical_idx_female,
-                                        features_female) if pca_tech == 'normal_pca' else features_female
-            # replace the best components by the best feature in that particular component
-            new_features_female = update_features(predict_method=grid_imba_female, named_step='features',
-                                                  cat_transformer='categorical', cont_transformer=['continuous', 'pca'],
-                                                  features_list=feature_list_female, cat_list=categorical_idx_female,
-                                                  cont_list=continuous_idx_female, pca_tech=pca_tech)
-            for k in range(len(lin_out_features_female)):
-                if 'component' in lin_out_features_female[k]:
-                    tmp = lin_out_features_female[k]
-                    lin_out_features_female[k] = new_features_female[int(lin_out_features_female[k][-1]) - 1]
-                    new_features_female[int(tmp[-1]) - 1] = \
-                        new_features_female[int(tmp[-1]) - 1] + f' (PC {int(tmp[-1])})'
+                                        categorical_idx_female, continuous_idx_female, features_female,
+                                        lin_imp_female, 'pca') if pca_tech == 'normal_pca' else \
+                (linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female, categorical_idx_female,
+                                         continuous_idx_female, features_female, lin_imp_female, 'kernel_pca'),
+                 [None]) if pca_tech == 'kernel_pca' else \
+                (np.array(list(features_female[continuous_idx_female]) + list(features_female[categorical_idx_female])),
+                 [None]) if (pca_tech == '' and da_tech == '' and kbest_tech == '') or not enable_ft else \
+                (linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female, categorical_idx_female,
+                                         continuous_idx_female, features_female,
+                                         lin_imp_female, 'lda'), [None]) if da_tech == 'lda' else \
+                (linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female, categorical_idx_female,
+                                         continuous_idx_female, features_female, lin_imp_female, 'none'), [None])
+            # print sum of variance of selected pca components if enabled
+            if pca_tech == 'normal_pca':
+                print(f"Female data sum of explained variance by the selected pca components equals "
+                      f"{sum_of_variance_female}")
             # Use list comprehension to get the correct index
             lin_out_real_idx_for_bbp_female = \
-                [list(features_female).index(x) for x in lin_out_features_female if x in features_female]
-            # Already include the component information into the feature list for box bar plot
-            bbp_lin_features_female = features_female
-            bbp_lin_features_female[lin_out_real_idx_for_bbp_female] = np.array(new_features_female)[lin_idx_female]
+                [list(features_female).index(x.split(' (')[0]) for x in lin_out_features_female
+                 if x.split(' (')[0] in features_female]
+            # In case of multiple features extracted from one single lda dimension, concatenate those features to one
+            # and put it as label of the ld1 importance bar, which is usually the first one.
+            if len(lin_out_features_female) != len(lin_idx_female):
+                tmp = str()
+                all_selected_lda_features_female = [s for s in lin_out_features_female if "LD #" in s]
+                for pos in range(len(all_selected_lda_features_female)):
+                    if pos == len(all_selected_lda_features_female) - 1:
+                        tmp += all_selected_lda_features_female[pos]
+                    else:
+                        tmp += all_selected_lda_features_female[pos] + '\n'
+                lin_out_features_female = \
+                    np.array([tmp] + list(lin_out_features_female[len(all_selected_lda_features_female):]))
             # Figure of most important features
-            importance_plot(datatype='female', method='LINEAR SVC', kern=kern, idx_sorted=lin_idx_female,
-                            features_list=np.array(new_features_female), importance_mean=lin_imp_female,
+            importance_plot(datatype='female', method='SVM_coef', kern=kern, idx_sorted=lin_idx_female,
+                            features_list=lin_out_features_female, importance_mean=lin_imp_female,
                             importance_above_zero=lin_above_zero_imp_female, importance_std=None)
-            plt.savefig(folder_name + f'/{kern}_female_feature_importance.tiff', bbox_inches='tight',
+            plt.savefig(folder_name + f'/female_{kern}_feature_importance.tiff', bbox_inches='tight',
                         dpi=tiff_figure_dpi)
             plt.close()
-            print('Female data top important features with linear kernel:\n',
-                  lin_out_features_female[::-1], '\n')
+            print('Female data top important features with linear kernel (limited to top 40):\n',
+                  lin_out_features_female[lin_idx_female][::-1][:40], '\n')
         else:
             lin_idx_male, lin_above_zero_imp_male,\
                 lin_idx_female, lin_above_zero_imp_female,\
                 lin_out_features_male, lin_out_features_female,\
                 lin_out_real_idx_for_bbp_male, lin_out_real_idx_for_bbp_female,\
-                bbp_lin_features_male, bbp_lin_features_female = [None] * 10
-       
+                lin_imp_male, lin_imp_female = [None] * 10
+
         ############################################################
         # ## Box and bar plots in case of linear feature importance
         ############################################################
         if enable_box_bar_plots:
-            # Full data
-            box_and_bar_plot(train_features, train_labels, test_features, test_labels, lin_out_real_idx_for_bbp,
-                             bbp_lin_features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
-                             positive_class.capitalize(), 'full', kern, folder_name, importance_method='',
+            # In case of LDA, there might be more interesting features than importance measures by SVM, and the box and
+            # bar plot should therefore show these supplementary features as well. This can be identified if
+            # lin_out_real_idx_for_bbp is larger than the lin_idx. this must also be considered for the split data case.
+            # if LDA with multiple features, lin_out_real_idx will have all the idx that belong into features, only
+            # lin_idx seems to be flawed then.
+
+            # In case of kernel PCA: lin_idx includes kernel pca components, although info about real feature is lost
+            # thus we need to remove those specific lin_idx.
+            if pca_tech == 'kernel_pca' and len(lin_idx) != len(lin_out_real_idx_for_bbp):
+                # remove the kernel components importance for the final box and bar plot
+                to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
+                lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp[len(to_remove):], bar_cap=40)
+
+            # plot
+            box_and_bar_plot(train_features, train_labels, test_features, test_labels,
+                             np.array(lin_out_real_idx_for_bbp)[lin_idx][-lin_above_zero_imp:],
+                             features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
+                             positive_class.capitalize(), 'full', kern, folder_name, importance_method='SVM_coef',
                              tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+
             if enable_data_split:
                 # Male data
+                if pca_tech == 'kernel_pca' and len(lin_idx_male) != len(lin_out_real_idx_for_bbp_male):
+                    # remove kernel pca components
+                    to_remove_male = np.arange(grid_imba_male.best_params_["features__continuous__pca__n_components"])
+                    lin_idx_male, lin_above_zero_imp_male = \
+                        sorted_above_zero(importance_mean=lin_imp_male[len(to_remove_male):], bar_cap=40)
+                # plot
                 box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
-                                 lin_out_real_idx_for_bbp_male, bbp_lin_features_male, lin_above_zero_imp_male, output_feature,
-                                 negative_class.capitalize(), positive_class.capitalize(), 'male', kern, folder_name,
-                                 importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 np.array(lin_out_real_idx_for_bbp_male)[lin_idx_male][-lin_above_zero_imp_male:],
+                                 features_male, lin_above_zero_imp_male, output_feature, negative_class.capitalize(),
+                                 positive_class.capitalize(), 'male', kern, folder_name, importance_method='SVM_coef',
+                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
                 # Female data
+                if pca_tech == 'kernel_pca' and len(lin_idx_female) != len(lin_out_real_idx_for_bbp_female):
+                    # remove kernel pca components
+                    to_remove_female = \
+                        np.arange(grid_imba_female.best_params_["features__continuous__pca__n_components"])
+                    lin_idx_female, lin_above_zero_imp_female = \
+                        sorted_above_zero(importance_mean=lin_imp_female[len(to_remove_female):], bar_cap=40)
+                # plot
                 box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
-                                 lin_out_real_idx_for_bbp_female, bbp_lin_features_female, lin_above_zero_imp_female, output_feature,
+                                 np.array(lin_out_real_idx_for_bbp_female)[lin_idx_female][-lin_above_zero_imp_female:],
+                                 features_female, lin_above_zero_imp_female, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'female', kern, folder_name,
-                                 importance_method='', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
+                                 importance_method='SVM_coef', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
                                  fontsize=fix_font)
+
+            # Reset matplotlib style conflict with seaborn for next plots if data split is skipped
+            plt.style.use(plot_style)
+
+        ########################################################################################################
+        # ## Scatter plot to compare permutation & SVM_coef if linear_shuffle is enabled with linear SVM kernel
+        ########################################################################################################
+        # We can have multiple cases where linear feature transformation and linear classification happen
+        # For all, linear_shuffle must be enabled (to have second approach to compare) with the linear SVM_coef
+
+        if linear_shuffle and kern == 'linear':
+            # in case of kernel pca, we have to clip off the n_components from the beginning of the lin_imp
+            if pca_tech == 'kernel_pca':
+                to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
+                lin_imp = lin_imp[len(to_remove):]  # clip off the kernel_pca components that we can't trace back
+            # renew lin out real idx for bbp, in this case it would then only split off the first feature from lda
+            if da_tech == 'lda' and '#2' not in lin_out_features[1]:  # only if 1 comp
+                lin_out_real_idx_for_bbp = \
+                    [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
+
+            # plot
+            scatter_plot_importance_technique(kern, 'Full', mean1=lin_imp, mean2=perm_importance.importances_mean,
+                                              mean3=perm_mean, mean4=imp_vals, tuple_of_names=('SVM_coef vs Sklearn',
+                                                                                               'SVM_coef vs Eli5',
+                                                                                               'SVM_coef vs Mlxtend'),
+                                              fontsize=12, permutation_technique=feature_importance_method,
+                                              lin_out_real_idx=lin_out_real_idx_for_bbp)
+            plt.savefig(folder_name + f'/full_{kern}_scatter_permutation_versus_svm.tiff',
+                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.close()
+
+            # Same for split data sets if enabled
+            if enable_data_split:
+                # male
+                if pca_tech == 'kernel_pca':
+                    to_remove_male = np.arange(grid_imba_male.best_params_["features__continuous__pca__n_components"])
+                    lin_imp_male = lin_imp_male[len(to_remove_male):]  # clip off the pca components that can't find
+                # renew lin out real idx for bbp, in this case it would only split off the first feature from lda
+                if da_tech == 'lda' and '#2' not in lin_out_features_male[1]:
+                    lin_out_real_idx_for_bbp_male = \
+                        [list(features_male).index(x.split(' (')[0]) for x in lin_out_features_male if
+                         x.split(' (')[0] in features_male]
+                # plot
+                scatter_plot_importance_technique(kern, 'Male', mean1=lin_imp_male,
+                                                  mean2=perm_importance_male.importances_mean, mean3=perm_mean_male,
+                                                  mean4=imp_vals_male, tuple_of_names=('SVM_coef vs Sklearn',
+                                                                                       'SVM_coef vs Eli5',
+                                                                                       'SVM_coef vs Mlxtend'),
+                                                  fontsize=12, permutation_technique=feature_importance_method,
+                                                  lin_out_real_idx=lin_out_real_idx_for_bbp_male)
+                plt.savefig(folder_name + f'/male_{kern}_scatter_permutation_versus_svm.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
+                # female
+                if pca_tech == 'kernel_pca':
+                    to_remove_female = \
+                        np.arange(grid_imba_female.best_params_["features__continuous__pca__n_components"])
+                    lin_imp_female = lin_imp_female[len(to_remove_female):]  # clip off the kernel_pca components ...
+                # renew lin out real idx for bbp, in this case it would only split off the first feature from lda
+                if da_tech == 'lda' and '#2' not in lin_out_features_female[1]:
+                    lin_out_real_idx_for_bbp_female = \
+                        [list(features_female).index(x.split(' (')[0]) for x in lin_out_features_female if
+                         x.split(' (')[0] in features_female]
+                # plot
+                scatter_plot_importance_technique(kern, 'Female', mean1=lin_imp_female,
+                                                  mean2=perm_importance_female.importances_mean, mean3=perm_mean_female,
+                                                  mean4=imp_vals_female, tuple_of_names=('SVM_coef vs Sklearn',
+                                                                                         'SVM_coef vs Eli5',
+                                                                                         'SVM_coef vs Mlxtend'),
+                                                  fontsize=12, permutation_technique=feature_importance_method,
+                                                  lin_out_real_idx=lin_out_real_idx_for_bbp_female)
+                plt.savefig(folder_name + f'/female_{kern}_scatter_permutation_versus_svm.tiff',
+                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.close()
 
     #############################################
     # ## Display the summary performance metrics
