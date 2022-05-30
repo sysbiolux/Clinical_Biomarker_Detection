@@ -693,7 +693,7 @@ def check_constant_features(features_list, training_features, datatype, nbr_spli
               f'class is below the number of stratified k fold splits {nbr_splits} , thus we assume them as being '
               f'constant features, namely:\n{[features_list[var] for var in near_constants_cat]}.\n')
     print(f'In total, found {len(constants)} constant and near-constant features in the {datatype} training data set:\n'
-          f'{[features_list[var] for var in constants]}.')
+          f'{[features_list[var] for var in constants]}.\n')
     return constants
 
 
