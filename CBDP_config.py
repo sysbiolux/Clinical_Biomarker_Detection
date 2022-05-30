@@ -1,13 +1,16 @@
 ########################################################################################################################
 # CLINICAL BIOMARKER DETECTION - PIPELINE (CBD-P) CONFIGURATION FILE ###################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - April 2022, University of Luxembourg #################################################################
+# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
 ########################################################################################################################
 
-# Configure up to 70 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 78 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
-# /!\ When launching a given configuration, wait until the job has started running before modifying the config file /!\
+# /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
+
+# Possible configurations to add:
+# -- drop or passthrough columns if single feature transformation is used
 
 
 ########################################################################################################################
@@ -26,6 +29,7 @@ import numpy as np
 ########################################################################################
 # ## General settings like random seed, plotting style, library options and figures dpi
 ########################################################################################
+# TODO REWRITE VARIABLE DESCRIPTION PROPERLY
 seed = 42  # Random seed, 42, int
 fix_font = 18  # Fix font size for general plots, 18, int
 imp_font = 8  # Specific font size for feature importance plots, 8, int
@@ -42,7 +46,7 @@ tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
 # DATA SET RULES: Data should be provided in imputed training and imputed test set, containing mixed structure of
 # continuous, binary and ordinal features
 curr_dir = os.getcwd()  # Pathway to current directory, str (dir)
-folder_prefix = 'results/'  # Folder name for results can be a folder in folder or prefix, str (suffixed in code)
+folder_prefix = 'results/BASE-II'  # Prefix of results folder name can be a folder in folder, str (suffixed in code)
 # It is recommended to set a folder prefix that refers to the experimental configuration of interest
 # Please adapt the following variables to your data set and research topic, e.g. Frailty in BASE-II
 train_path = curr_dir + '/data/train_imputed.csv'  # Path to imputed training set, str (file)
@@ -59,7 +63,7 @@ output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion'
 ###################################################################################################################
 # /!\ SUPPORTED KERNELS: linear, poly, rbf, sigmoid
 # Classification variables
-kernels = ['poly', 'rbf', 'sigmoid']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
+kernels = ['linear', 'rbf']  # Kernels to use for the Support Vector Machine classifier, str (can be list)
 # Will be replaced by 'linear' only if kernelPCA is activated
 non_linear_kernels = ['poly', 'rbf', 'sigmoid']  # Repeat with the above kernels that are non_linear, str (can be list)
 cache_size = 200  # Cache size of SVM classifier, 200 (HPC), 2000 (local), int
@@ -81,13 +85,16 @@ linear_shuffle = True  # In case of linear SVM combined with linear pca, get fea
 ######################################################################################
 # ## Select parallel method and enabling various pipeline steps with given techniques
 ######################################################################################
-parallel_method = 'ipyparallel'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
-n_jobs = -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
-enable_data_split = True  # True if data should be split based on the binary split feature below, default True, bool
+parallel_method = 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
+n_jobs = 4  # -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
+thresh_near_constant = 0.001  # Thresh for a continuous feature near-constance by variance-mean-ratio, def 0.001, float
+# near-constant categorical feature threshold will be based on the number of stratified k fold splits defined above
+enable_data_split = False  # True if data should be split based on the binary split feature below, default True, bool
 split_feature = 'PM-sex'  # Feature based on which data is split, str (will be set to None if disabled)
 enable_subgroups = False  # True if data shall be limited to subgroups, else full feature input, default False, bool
 subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, default 'all', tuple of str, str or 'all'
-# /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix below
+# /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix below and
+# that the output feature defined above is included .e.g. subgroups_to_keep = ('BF-', 'SV-', output_feature)
 # Possible subgroups are prefixed: BF- (body fluids), PM- (physical measurements), IM- (individual medications), ID-
 # (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), OT- (others)
 enable_engineered_input_removal = True  # Change to enable or disable removal of engineered input features, True, bool
@@ -102,8 +109,12 @@ enable_resampling = True  # Change to True to enable & False to disable resampli
 resampling_tech = 'rus'  # 'rus' (random under-sampling), 'smote' (synthetic minority over-sampling technique), str
 enable_ft = True  # Change to True to enable & False to disable feature transformation, default True, bool
 scaler_tech = 'standard'  # Change scaler function to 'standard', 'minmax' or 'robust' scaler, default 'standard', str
+# /!\ If PCA is enabled or given, then LDA/QDA will be disabled, and vice versa
 pca_tech = 'normal_pca'  # Select pca technique to choose between 'normal_pca' and 'kernel_pca', def 'normal_pca', str
+# /!\ Currently, either LDA or PCA can be selected as tech for continuous features, later maybe enable LDA after PCA
+da_tech = ''  # Select discriminant analysis tech for continuous features, 'lda' (LDA, later QDA), def 'lda', str
 # /!\ Resampling_tech and pca_tech will be set to '' anyhow if disabled, scaler_tech must be given
+kbest_tech = 'cramer'  # Select score function for kbest technique, 'chi2', or callable score func, str, func
 pipeline_order = 'samples->features'  # Order of the steps either 'samples->features' or 'features->samples', first, str
 enable_feature_importance = True  # Change to True to enable & False to disable feature importance, default True, bool
 feature_importance_method = 'all'  # Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, def. 'all', str
@@ -116,20 +127,20 @@ box_bar_figures = 'combined'  # Whether the box and bar plots should be separate
 # /!\ VARIABLE RULES: in the form of 'name_abbr' with abbr being the first letter of the corresponding kernel
 # E.g. poly=p, rbf=r, sigmoid=s, the abbreviation must be preceded by an underscore '_', name shall be parameter name
 # SVM classifier specific variables
-regularization_lpsr = [x for x in np.logspace(-2, 6, 9)]  # Regularization parameter, default 1, int
+regularization_lpsr = [x for x in np.logspace(-2, 6, 1)]  # Regularization parameter, default 1, int
 shrinking_lpsr = [True, False]  # Shrinking heuristic, default True, bool
-tolerance_lpsr = [x for x in np.logspace(-4, -2, 3)]  # Stopping criterion tolerance, default 0.001, float
+tolerance_lpsr = [x for x in np.logspace(-4, -2, 1)]  # Stopping criterion tolerance, default 0.001, float
 gamma_psr = ['scale', 'auto', 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]  # Single training influence, default 'scale'
 degree_p = [2, 3, 4, 5]  # Polynomial degree, default 3, int
 coef0_ps = [0.0, 0.01, 0.1, 0.5]  # Independent term in kernel function, default 0.0, float
 
 # Pipeline step specific variables
 # With resampling enabled and resampling_tech='smote'
-k_neighbors_smote_lpsr = [3, 5]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
+k_neighbors_smote_lpsr = [3]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
 # With FT enabled regarding categorical features
-k_best_lpsr = [5, 10, 20, 30, 45]  # Number of k best features to select, default 10, int
+k_best_lpsr = [5]  # , 10, 20, 30, 45]  # Number of k best features to select, default 10, int
 # With FT enabled and pca_tech='normal_pca', regarding continuous features
-pca_lpsr = [5, 10, 20, 30, 45]  # Number of PCA components, default None, int
+pca_lpsr = [5]  # , 10, 20, 30, 45]  # Number of PCA components, default None, int
 # With FT enabled and pca_tech='kernel_pca', regarding continuous features
 kernel_pca_kernel_lpsr = ['poly', 'rbf', 'sigmoid']  # kernels for kernelPCA, default 'linear', str
 kernel_pca_lpsr = [5, 10, 20, 30, 45]  # Number of components, default None, int
@@ -137,6 +148,11 @@ kernel_pca_tol_lpsr = [0.0, 0.001, 0.01]  # Tolerance, default 0, float
 kernel_pca_gamma_lpsr = [None, 0.1, 1.0, 10.0]  # Gamma, default None, float
 kernel_pca_degree_lpsr = [2, 3, 4, 5]  # Degree, default 3, int
 kernel_pca_coef0_lpsr = [0.1, 0.5, 1.0]  # Coef0, default 1, float
+# With FT enabled, pca_tech = '' and da_tech = 'lda', regarding continuous features
+lda_shrinkage_lpsr = [None]  # This should be left to None if no covariance estimator is used, default None, float
+lda_priors_lpsr = [None]  # Class prior prob., proportions are inferred from train data if def, default, None, np.array
+lda_components_lpsr = [1]  # LDA components, if None, will be set to min(n_classes-1, n_features), default, None, int
+lda_tol_lpsr = [0.0001, 0.001, 0.01]  # Tolerance for singular value x to be considered significant, default, 0.0001
 
 ########################################################################################################################
 # ## Generating various parameter dictionaries based on above configuration, please double check and adapt if necessary
@@ -149,13 +165,16 @@ kernel_pca_coef0_lpsr = [0.1, 0.5, 1.0]  # Coef0, default 1, float
 total_params_and_splits = {'regularization_lpsr': regularization_lpsr, 'shrinking_lpsr': shrinking_lpsr,
                            'tolerance_lpsr': tolerance_lpsr, 'gamma_psr': gamma_psr, 'coef0_ps': coef0_ps,
                            'degree_p': degree_p, 'pca_lpsr': pca_lpsr, 'k_best_lpsr': k_best_lpsr,
-                           'k_neighbors_smote_lpsr': k_neighbors_smote_lpsr,
-                           'splits': splits}
+                           'k_neighbors_smote_lpsr': k_neighbors_smote_lpsr, 'splits': splits}
 
 # Kernel PCA specific dictionary enabled with FT and kernel pca technique, using same rules as above
 pca_kernel_dict = {'kpca_components_lpsr': kernel_pca_lpsr, 'kpca_kernel_lpsr': kernel_pca_kernel_lpsr,
                    'kpca_gamma_lpsr': kernel_pca_gamma_lpsr, 'kpca_tol_lpsr': kernel_pca_tol_lpsr,
                    'kpca_degree_lpsr': kernel_pca_degree_lpsr, 'kpca_coef0_lpsr': kernel_pca_coef0_lpsr}
+
+# LDA specific dictionary enabled with FT and pca_tech ='', da_tech = 'lda', using same rules as above
+lda_dict = {'lda_shrinkage_lpsr': lda_shrinkage_lpsr, 'lda_priors_lpsr': lda_priors_lpsr,
+            'lda_components_lpsr': lda_components_lpsr, 'lda_tol_lpsr': lda_tol_lpsr}
 
 # If any additional kernel or technique is added with a parameter interval required in grid search
 # /!\ These additional TECHNIQUE parameters may require modifications in the main script to ensure correct activation
@@ -167,22 +186,26 @@ additional_technique_params = {}  # Add additional technique parameter to introd
 # ## /!\ Specified grid search parameters selected for this project, do not modify the below comments /!\
 ##########################################################################################################
 # -------------------------------------------------------------------------------------------------------------------- #
-# Exhaustive interval kernels; ['poly', 'rbf', 'sigmoid']    , ['linear'] if kernelPCA is activated
+# Exhaustive interval kernels; ['linear', 'poly', 'rbf', 'sigmoid']
 # Exhaustive interval regularization_lpsr: [x for x in np.logspace(-2, 6, 9)]
 # Exhaustive interval shrinking_lpsr: [True, False]
 # Exhaustive interval tolerance_lpsr: [x for x in np.logspace(-4, -2, 3)]
 # Exhaustive interval gamma_psr: ['scale', 'auto', 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]
 # Exhaustive interval degree_p: [2, 3, 4, 5]
 # Exhaustive interval coef0_ps: [0.0, 0.01, 0.1, 0.5]
-# Exhaustive interval pca_lpsr: [5, 10, 20, 30, 45]
-# Exhaustive interval k_best_lpsr: [5, 10, 20, 30, 45]
-# Exhaustive interval k_neighbors_smote_lpsr: [3, 5]
+# Exhaustive interval pca_lpsr: [2, 5, 10, 15, 20]                                              old: [5, 10, 20, 30, 45]
+# Exhaustive interval k_best_lpsr: [1, 2, 5, 10, 15]                                            old: [5, 10, 20, 30, 45]
+# Exhaustive interval k_neighbors_smote_lpsr: [2, 3, 5]
 # Exhaustive interval kernel_pca_kernel_lpsr: ['poly', 'rbf', 'sigmoid']
-# Exhaustive interval kernel_pca_lpsr: [5, 10, 20, 30, 45]
+# Exhaustive interval kernel_pca_lpsr: [2, 5, 10, 15, 20]                                       old: [5, 10, 20, 30, 45]
 # Exhaustive interval kernel_pca_tol_lpsr: [0.0, 0.001, 0.01]
 # Exhaustive interval kernel_pca_gamma_lpsr: [None, 0.1, 1.0, 10.0]
 # Exhaustive interval kernel_pca_degree_lpsr: [2, 3, 4, 5]
 # Exhaustive interval kernel_pca_coef0_lpsr: [0.1, 0.5, 1.0]
+# Exhaustive interval lda_shrinkage_lpsr = [None]
+# Exhaustive interval lda_priors_lpsr = [None]
+# Exhaustive interval lda_components_lpsr = [1]
+# Exhaustive interval lda_tol_lpsr = [0.0001, 0.001, 0.01]
 # -------------------------------------------------------------------------------------------------------------------- #
 
 ########################################################################################################################
