@@ -752,7 +752,7 @@ def cramers_corrected_stat(x, y):
     if len(np.unique(x)) == 1:
         print("First variable is constant")
     elif len(np.unique(y)) == 1:
-        print("Second variable is constant")
+        print("Target variable is constant")
     else:
         conf_matrix = pd.crosstab(x, y)
         if conf_matrix.shape[0] == 2:
@@ -791,7 +791,7 @@ def corr_cramer_kbest(x, y):
         list of cramer V p-values for each of the training features compared to the target
     """
     if len(np.unique(y)) == 1:
-        print("Second variable is constant")
+        print("Target variable is constant")
 
     cramer_list = []
     cramer_pv_list = []
