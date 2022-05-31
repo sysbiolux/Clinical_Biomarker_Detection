@@ -46,7 +46,7 @@
 
 # UserWarning: No features were selected: either the data is too noisy or the selection test too strict. WORKING ON IT,
 # HAPPENS IF CRAMER KBEST IS SELECTED AND SMOTE IS USED WITH THE PIPELINE ORDER BEING SAMPLES->FEATURES. DOES NOT HAPPEN
-# IF THE ORDER IS FEATURES->SAMPLES.
+# IF THE ORDER IS FEATURES->SAMPLES. ONLY HAPPENS AFTER I ADDED NEAR_CONSTANT_NON_BINARY REMOVAL.
 
 
 ########################################################################################################################
