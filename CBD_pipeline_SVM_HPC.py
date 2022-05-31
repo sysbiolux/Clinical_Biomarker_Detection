@@ -64,7 +64,7 @@ import sys
 
 import pandas as pd
 from eli5.permutation_importance import get_score_importances
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, SMOTENC
 from imblearn.pipeline import Pipeline
 from imblearn.under_sampling import RandomUnderSampler
 from ipyparallel import Client
@@ -1074,8 +1074,32 @@ sampler = 'passthrough'  # In case resampling is disabled
 if enable_resampling:
     if resampling_tech == 'rus':
         sampler = RandomUnderSampler(sampling_strategy='majority', replacement=False, random_state=seed)  # RUS function
-    elif resampling_tech == 'smote':
-        sampler = SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)  # SMOTE function
+    elif resampling_tech == 'smote':  # SMOTENC if categorical are present else SMOTE
+        sampler = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
+                          categorical_features=categorical_idx) if len(categorical_idx) != 0 else \
+            SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
+
+if enable_data_split:
+    sampler_male = 'passthrough'  # In case resampling is disabled
+    sampler_female = sampler_male  # same as above, no changes
+    if resampling_tech == 'rus':
+        # male
+        sampler_male = RandomUnderSampler(sampling_strategy='majority', replacement=False,
+                                          random_state=seed)  # RUS function
+        # female
+        sampler_female = sampler_male  # no changes to above
+    elif resampling_tech == 'smote':  # SMOTENC if categorical are present, else SMOTE
+        # male
+        sampler_male = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
+                               categorical_features=categorical_idx_male) if len(categorical_idx_male) != 0 else \
+            SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
+        # female
+        sampler_female = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
+                                 categorical_features=categorical_idx_female
+                                 ) if len(categorical_idx_female) != 0 else \
+            SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
+else:
+    sampler_male, sampler_female = [None]*2
 
 # Setting up scaler technique
 if scaler_tech == 'minmax':
