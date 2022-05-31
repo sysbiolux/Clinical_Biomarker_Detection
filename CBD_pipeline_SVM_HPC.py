@@ -604,7 +604,7 @@ for kern in kernels:
           f"{info_pca if pca_tech != '' else info_da if da_tech != '' else scale_only}\n"
           f"{with_or_without_sampling} resampling, {'with' if enable_feature_importance else 'without'} feature "
           f"importance, and {'with' if additional_params else 'without'} additional\nnon-supported grid search "
-          f"parameters: {total_fits[kern]}")
+          f"parameters: {total_fits[kern]}\n")
     if pca_tech == 'kernel_pca' and len(kernel_pca_kernel_lpsr) > 1:
         poly_fits = int(1/3 * total_fits[kern])
         rbf_fits = int(1/3 * (int((1/len(kernel_pca_degree_lpsr) * 1/len(kernel_pca_coef0_lpsr))*total_fits[kern])))
