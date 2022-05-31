@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
+# November 2021 - May 2022, University of Luxembourg, v.05/31/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -923,7 +923,8 @@ def cramer_threshold_to_drop(cramer_matrix, thresh, categorical, feats, director
         if verbosity:
             print("Writing the Corrected Cramer's V Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Cramer_correlation_states.txt', 'w')
-            f.write("Corrected Cramer's V Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Corrected Cramer's V Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(cramer_matrix)):
                 tmp = np.where(np.array(upper[col]) > thresh[0])
                 if len(tmp[0]) > 0:
@@ -941,7 +942,8 @@ def cramer_threshold_to_drop(cramer_matrix, thresh, categorical, feats, director
         if verbosity:
             print("Writing the Corrected Cramer's V Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Cramer_correlation_states.txt', 'w')
-            f.write("Corrected Cramer's V Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Corrected Cramer's V Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(cramer_matrix)):
                 tmp = np.where(np.array(upper[col]) > thresh_percentile)
                 if len(tmp[0]) > 0:
@@ -1068,7 +1070,8 @@ def spearman_threshold_to_drop(spearman_matrix, thresh, continuous, feats, direc
         if verbosity:
             print("Writing the Spearman's Rank Order Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Spearman_correlation_states.txt', 'w')
-            f.write("Spearman's Rank Order Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Spearman's Rank Order Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(spearman_matrix)):
                 tmp = np.where(np.array(upper[col]) > thresh[0])
                 if len(tmp[0]) > 0:
@@ -1085,7 +1088,8 @@ def spearman_threshold_to_drop(spearman_matrix, thresh, continuous, feats, direc
         if verbosity:
             print("Writing the Spearman's Rank Order Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Spearman_correlation_states.txt', 'w')
-            f.write("Spearman's Rank Order Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Spearman's Rank Order Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(spearman_matrix)):
                 tmp = np.where(np.array(upper[col]) > thresh_percentile)
                 if len(tmp[0]) > 0:
@@ -1299,7 +1303,8 @@ def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, shorter, remaini
         if verbosity:
             print("Writing the Point Bi-Serial Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Point_biserial_correlation_states.txt', 'w')
-            f.write("Point Bi-Serial Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Point Bi-Serial Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(point_bs_matrix)):
                 tmp = np.where(np.array(point_bs_matrix[col, :]) > thresh[0])
                 if len(tmp[0]) > 0:
@@ -1317,7 +1322,8 @@ def point_bs_threshold_to_drop(point_bs_matrix, thresh, longer, shorter, remaini
         if verbosity:
             print("Writing the Point Bi-Serial Correlation States into a separate file...")
             f = open(directory + '/' + folder + '/' + f'{datatype}_Point_biserial_correlation_states.txt', 'w')
-            f.write("Point Bi-Serial Correlation States for the removed highly correlated features\n\n\n")
+            f.write(f"Point Bi-Serial Correlation States for the removed highly correlated features in "
+                    f"{datatype} data set\n\n\n")
             for col in range(len(point_bs_matrix)):
                 tmp = np.where(np.array(point_bs_matrix[col, :]) > thresh_percentile)
                 if len(tmp[0]) > 0:
