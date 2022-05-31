@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
+# November 2021 - May 2022, University of Luxembourg, v.05/31/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -87,13 +87,13 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.05/30/2022 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.05/31/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.05/30/2022.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.05/31/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
