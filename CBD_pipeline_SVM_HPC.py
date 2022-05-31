@@ -1106,6 +1106,7 @@ else:
     scaler = StandardScaler()  # Default standard scaler for continuous features if none is selected
 
 # Initialize FT step if enabled, pca/lda and select k best are added as column transformer steps to feature_filtration
+k_filter = 'passthrough'
 if enable_ft:
     # PCA dimensionality reduction on continuous depending on pca technique
     pca = PCA(random_state=seed) if pca_tech == 'normal_pca' else KernelPCA(random_state=seed,
