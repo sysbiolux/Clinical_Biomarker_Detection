@@ -591,9 +591,9 @@ else:
 scale_only = 'including ' + scaler_tech + ' scaling, '
 info_pca = \
     (scale_only + (pca_tech.replace('_', ' ') + ', ' if pca_tech != '' else '') +
-     (str(kbest_tech)+' select k best, ' if kbest_tech != '' else ''))
-info_da = (scale_only + (da_tech if da_tech != '' else '') +
-           (str(kbest_tech)+' select k best, ' if kbest_tech != '' else ''))
+     (str(kbest_tech) + ' select k best, ' if kbest_tech != '' else ''))
+info_da = (scale_only + (da_tech + ', ' if da_tech != '' else '') +
+           (str(kbest_tech) + ' select k best, ' if kbest_tech != '' else ''))
 for kern in kernels:
     print(f"Total fitting for {kern} kernel, with {splits} fold cross-validation, {'with' if enable_ft else 'without'} "
           f"feature transformation, "
