@@ -474,7 +474,8 @@ if parallel_method != 'ipyparallel':
           f"a local machine.\nTherefore, the raw output results of the pipeline will be flushed to the output file "
           f"at the following location:\n** {file_path.replace(chr(92), '/')} **")  # with chr(92) being a backslash
     print("\n******************************************")
-    sys.stdout = open(file_path, "w")
+    buff_size = 1
+    sys.stdout = open(file_path, "w", buffering=buff_size)
 else:
     # To know the location of the python script
     FILE_DIR = os.path.dirname(os.path.abspath(__file__))
