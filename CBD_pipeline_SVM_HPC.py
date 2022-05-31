@@ -1099,7 +1099,7 @@ if enable_data_split:
                                  ) if len(categorical_idx_female) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
 else:
-    sampler_male, sampler_female = [None]*2
+    sampler_male, sampler_female = [None] * 2
 
 # Setting up scaler technique
 if scaler_tech == 'minmax':
@@ -1251,15 +1251,17 @@ for kern in kernels:
     if pipeline_order == 'samples->features':  # first sampler then feature transformation
         pipeline = Pipeline([('samples', sampler), ('features', feature_trans), ('clf', svm_clf)])
         if enable_data_split:
-            pipeline_male = Pipeline([('samples', sampler), ('features', feature_trans_male), ('clf', svm_clf)])
-            pipeline_female = Pipeline([('samples', sampler), ('features', feature_trans_female), ('clf', svm_clf)])
+            pipeline_male = Pipeline([('samples', sampler_male), ('features', feature_trans_male), ('clf', svm_clf)])
+            pipeline_female = \
+                Pipeline([('samples', sampler_female), ('features', feature_trans_female), ('clf', svm_clf)])
         else:
             pipeline_male, pipeline_female = [None] * 2
     else:  # If pipeline order is reversed if resampling is deactivated (sampler will become 'passthrough' then)
         pipeline = Pipeline([('features', feature_trans), ('samples', sampler), ('clf', svm_clf)])
         if enable_data_split:
-            pipeline_male = Pipeline([('features', feature_trans_male), ('samples', sampler), ('clf', svm_clf)])
-            pipeline_female = Pipeline([('features', feature_trans_female), ('samples', sampler), ('clf', svm_clf)])
+            pipeline_male = Pipeline([('features', feature_trans_male), ('samples', sampler_male), ('clf', svm_clf)])
+            pipeline_female = \
+                Pipeline([('features', feature_trans_female), ('samples', sampler_female), ('clf', svm_clf)])
         else:
             pipeline_male, pipeline_female = [None] * 2
 
