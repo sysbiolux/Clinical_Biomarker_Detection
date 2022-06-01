@@ -186,7 +186,7 @@ additional_technique_params = {}  # Add additional technique parameter to introd
 # ## /!\ Specified grid search parameters selected for this project, do not modify the below comments /!\
 ##########################################################################################################
 # -------------------------------------------------------------------------------------------------------------------- #
-# Exhaustive interval kernels; ['linear', 'poly', 'rbf', 'sigmoid']
+# Exhaustive interval kernels: ['linear', 'poly', 'rbf', 'sigmoid']
 # Exhaustive interval regularization_lpsr: [x for x in np.logspace(-2, 6, 9)]
 # Exhaustive interval shrinking_lpsr: [True, False]
 # Exhaustive interval tolerance_lpsr: [x for x in np.logspace(-4, -2, 3)]
