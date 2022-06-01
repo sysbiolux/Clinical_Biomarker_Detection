@@ -610,8 +610,8 @@ for kern in kernels:
               f"tested for the poly kernelPCA.\nThe rbf and sigmoid kernels do accept less parameters, and therefore "
               f"undergo less number of fits.\nThus, the total fits of this experiment are:\n"
               f"{int(poly_fits + rbf_fits + sigmoid_fits)} total fits, with {int(poly_fits)} poly fits, {int(rbf_fits)}"
-              f" rbf fits, and {int(sigmoid_fits)} sigmoid fits.")
-print(f"\nOverview of enabled grid search parameters parameters:\n"
+              f" rbf fits, and {int(sigmoid_fits)} sigmoid fits.\n")
+print(f"Overview of enabled grid search parameters:\n"
       f"{newline.join(f'{key}: {value}' for key, value in total_params_and_splits.items())}\n\n"
       f"Results folder pathway:\n{curr_dir.replace(backslash, '/') + '/' + folder_name}\n\n"
       f"******************************************\n")
