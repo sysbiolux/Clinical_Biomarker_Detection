@@ -472,7 +472,9 @@ if parallel_method != 'ipyparallel':
     file_path = curr_dir + '/' + folder_name + '/' + 'CBD-P_output_raw.txt'
     print(f"As parallel method is not set to ipyparallel, it is assumed that you are running the experiment on "
           f"a local machine.\nTherefore, the raw output results of the pipeline will be flushed to the output file "
-          f"at the following location:\n** {file_path.replace(chr(92), '/')} **")  # with chr(92) being a backslash
+          f"at the following location:\n** {file_path.replace(chr(92), '/')} **\n\nIf the process is exiting for any "
+          f"reason before completing the pipeline, please use the following two lines to redirect the printouts to "
+          f"your local console.\nsys.stdout.close()\nsys.stdout = orig_stdout\n")  # with chr(92) being a backslash
     print("\n******************************************")
     buff_size = 1
     sys.stdout = open(file_path, "w", buffering=buff_size)
