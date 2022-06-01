@@ -2131,7 +2131,10 @@ for kern in kernels:
                 # remove the kernel components importance for the final box and bar plot
                 to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
                 lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp[len(to_remove):], bar_cap=40)
-
+            # In case of LDA: renew real idx of features including only the first one of the LDA
+            if da_tech == 'lda' and '#2' not in lin_out_features[1]:  # only if 1 comp
+                lin_out_real_idx_for_bbp = \
+                    [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
             # plot
             box_and_bar_plot(train_features, train_labels, test_features, test_labels,
                              np.array(lin_out_real_idx_for_bbp)[lin_idx][-lin_above_zero_imp:],
@@ -2146,6 +2149,11 @@ for kern in kernels:
                     to_remove_male = np.arange(grid_imba_male.best_params_["features__continuous__pca__n_components"])
                     lin_idx_male, lin_above_zero_imp_male = \
                         sorted_above_zero(importance_mean=lin_imp_male[len(to_remove_male):], bar_cap=40)
+                # In case of LDA: renew real idx of features including only the first one of the LDA
+                if da_tech == 'lda' and '#2' not in lin_out_features_male[1]:
+                    lin_out_real_idx_for_bbp_male = \
+                        [list(features_male).index(x.split(' (')[0]) for x in lin_out_features_male if
+                         x.split(' (')[0] in features_male]
                 # plot
                 box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
                                  np.array(lin_out_real_idx_for_bbp_male)[lin_idx_male][-lin_above_zero_imp_male:],
@@ -2159,6 +2167,11 @@ for kern in kernels:
                         np.arange(grid_imba_female.best_params_["features__continuous__pca__n_components"])
                     lin_idx_female, lin_above_zero_imp_female = \
                         sorted_above_zero(importance_mean=lin_imp_female[len(to_remove_female):], bar_cap=40)
+                # In case of LDA: renew real idx of features including only the first one of the LDA
+                if da_tech == 'lda' and '#2' not in lin_out_features_female[1]:
+                    lin_out_real_idx_for_bbp_female = \
+                        [list(features_female).index(x.split(' (')[0]) for x in lin_out_features_female if
+                         x.split(' (')[0] in features_female]
                 # plot
                 box_and_bar_plot(train_female_features, train_female_labels, test_female_features, test_female_labels,
                                  np.array(lin_out_real_idx_for_bbp_female)[lin_idx_female][-lin_above_zero_imp_female:],
@@ -2181,11 +2194,6 @@ for kern in kernels:
             if pca_tech == 'kernel_pca':
                 to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
                 lin_imp = lin_imp[len(to_remove):]  # clip off the kernel_pca components that we can't trace back
-            # renew lin out real idx for bbp, in this case it would then only split off the first feature from lda
-            if da_tech == 'lda' and '#2' not in lin_out_features[1]:  # only if 1 comp
-                lin_out_real_idx_for_bbp = \
-                    [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
-
             # plot
             scatter_plot_importance_technique(kern, 'Full', mean1=lin_imp, mean2=perm_importance.importances_mean,
                                               mean3=perm_mean, mean4=imp_vals, tuple_of_names=('SVM_coef vs Sklearn',
@@ -2203,11 +2211,6 @@ for kern in kernels:
                 if pca_tech == 'kernel_pca':
                     to_remove_male = np.arange(grid_imba_male.best_params_["features__continuous__pca__n_components"])
                     lin_imp_male = lin_imp_male[len(to_remove_male):]  # clip off the pca components that can't find
-                # renew lin out real idx for bbp, in this case it would only split off the first feature from lda
-                if da_tech == 'lda' and '#2' not in lin_out_features_male[1]:
-                    lin_out_real_idx_for_bbp_male = \
-                        [list(features_male).index(x.split(' (')[0]) for x in lin_out_features_male if
-                         x.split(' (')[0] in features_male]
                 # plot
                 scatter_plot_importance_technique(kern, 'Male', mean1=lin_imp_male,
                                                   mean2=perm_importance_male.importances_mean, mean3=perm_mean_male,
@@ -2224,11 +2227,6 @@ for kern in kernels:
                     to_remove_female = \
                         np.arange(grid_imba_female.best_params_["features__continuous__pca__n_components"])
                     lin_imp_female = lin_imp_female[len(to_remove_female):]  # clip off the kernel_pca components ...
-                # renew lin out real idx for bbp, in this case it would only split off the first feature from lda
-                if da_tech == 'lda' and '#2' not in lin_out_features_female[1]:
-                    lin_out_real_idx_for_bbp_female = \
-                        [list(features_female).index(x.split(' (')[0]) for x in lin_out_features_female if
-                         x.split(' (')[0] in features_female]
                 # plot
                 scatter_plot_importance_technique(kern, 'Female', mean1=lin_imp_female,
                                                   mean2=perm_importance_female.importances_mean, mean3=perm_mean_female,
