@@ -596,6 +596,10 @@ def plot_violin(kernel, datatype, top_all, top_feat, fontsize):
     if len(poss_cols) == 2:
         cols = int(np.ceil(1 / 4 * len(top_feat)))
         rows = int(np.ceil(len(top_feat) / cols))
+    # In case if only one feature is showing changes (rare but can happen)
+    if len(poss_cols) == 1:
+        cols = 2
+        rows = 2
     # Reverse the order of the vectors
     top_all = top_all[::-1]
     top_feat = top_feat[::-1]
@@ -625,6 +629,8 @@ def plot_violin(kernel, datatype, top_all, top_feat, fontsize):
                 axxx[k, p].hlines(mean, 0.9, 1.1, color='b', linestyle='-', lw=1, zorder=1)
                 axxx[k, p].set_xticks(range(0))
                 axxx[k, p].axhline(0, color='k', linestyle='--', lw=1, zorder=0.9)
+            else:
+                axxx[k, p].set_axis_off()
     # Add title and adjust subplots
     fig.suptitle(f'{datatype} feature importance violin plot of {len(top_feat)} best features {kernel} kernel', size=18)
     plt.subplots_adjust(bottom=0.01, wspace=0.05)
