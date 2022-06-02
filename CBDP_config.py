@@ -85,11 +85,11 @@ linear_shuffle = True  # In case of linear SVM combined with linear pca, get fea
 ######################################################################################
 # ## Select parallel method and enabling various pipeline steps with given techniques
 ######################################################################################
-parallel_method = 'threading'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
-n_jobs = 4  # -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
+parallel_method = 'ipyparallel'  # Parallel agent, 'ipyparallel' (HPC), 'threading', 'multiprocess', 'loki' (local), str
+n_jobs = -1  # Number of jobs for distributed tasks, will be adjusted if ipyparallel is enabled, default -1, int
 thresh_near_constant = 0.001  # Thresh for a continuous feature near-constance by variance-mean-ratio, def 0.001, float
 # near-constant categorical feature threshold will be based on the number of stratified k fold splits defined above
-enable_data_split = False  # True if data should be split based on the binary split feature below, default True, bool
+enable_data_split = True  # True if data should be split based on the binary split feature below, default True, bool
 split_feature = 'PM-sex'  # Feature based on which data is split, str (will be set to None if disabled)
 enable_subgroups = False  # True if data shall be limited to subgroups, else full feature input, default False, bool
 subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, default 'all', tuple of str, str or 'all'
