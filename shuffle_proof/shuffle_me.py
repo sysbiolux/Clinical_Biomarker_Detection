@@ -79,7 +79,7 @@ scatter = ax.scatter(range(shuffle), point, color='k', s=5)
 anim = animation.FuncAnimation(fig, update, frames=1200, interval=1, save_count=1200, repeat=False)
 plt.show()
 # finally save as gif
-plt.rcParams['animation.ffmpeg_path'] = r'C:\\Users\\jeff.didier\\Desktop\\ffmpeg\\bin\\ffmpeg.exe'
+plt.rcParams['animation.ffmpeg_path'] = r'C:\\Your\\path\\to\\ffmpeg\\bin\\ffmpeg.exe'
 f = r"trace_position.gif"
 writer = animation.FFMpegWriter(fps=60)
 anim.save(f, writer)
