@@ -1953,6 +1953,10 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         if len(poss_cols) == 2 and max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
+        # In case where only 1 feature shows up after permutation importance
+        if len(poss_cols) == 1:
+            cols = 2
+            rows = 2
         if rows > cols:
             rows, cols = cols, rows
         # Start combined box and bar plot figure
