@@ -136,7 +136,7 @@ coef0_ps = [0.0, 0.01, 0.1, 0.5]  # Independent term in kernel function, default
 
 # Pipeline step specific variables
 # With resampling enabled and resampling_tech='smote'
-k_neighbors_smote_lpsr = [2, 3, 5]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
+k_neighbors_smote_lpsr = [5]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
 # With FT enabled regarding categorical features
 k_best_lpsr = [1, 2, 5, 10, 15]  # Number of k best features to select, default 10, int
 # With FT enabled and pca_tech='normal_pca', regarding continuous features
