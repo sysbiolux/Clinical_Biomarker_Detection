@@ -195,7 +195,7 @@ additional_technique_params = {}  # Add additional technique parameter to introd
 # Exhaustive interval coef0_ps: [0.0, 0.01, 0.1, 0.5]
 # Exhaustive interval pca_lpsr: [2, 5, 10, 15, 20]                                              old: [5, 10, 20, 30, 45]
 # Exhaustive interval k_best_lpsr: [1, 2, 5, 10, 15]                                            old: [5, 10, 20, 30, 45]
-# Exhaustive interval k_neighbors_smote_lpsr: [2, 3, 5]
+# Exhaustive interval k_neighbors_smote_lpsr: [5]
 # Exhaustive interval kernel_pca_kernel_lpsr: ['poly', 'rbf', 'sigmoid']
 # Exhaustive interval kernel_pca_lpsr: [2, 5, 10, 15, 20]                                       old: [5, 10, 20, 30, 45]
 # Exhaustive interval kernel_pca_tol_lpsr: [0.0, 0.001, 0.01]
