@@ -593,11 +593,11 @@ def plot_violin(kernel, datatype, top_all, top_feat, fontsize):
     cols = int(np.round(np.median(poss_cols)))
     rows = int(np.ceil(len(top_feat) / cols))
     # In case of a prime number
-    if len(poss_cols) == 2:
+    if len(poss_cols) == 2 and max(poss_cols) > 3:
         cols = int(np.ceil(1 / 4 * len(top_feat)))
         rows = int(np.ceil(len(top_feat) / cols))
     # In case if only one feature is showing changes (rare but can happen)
-    if len(poss_cols) == 1:
+    if len(poss_cols) in np.array([1, 2]) and max(poss_cols) < 3:
         cols = 2
         rows = 2
     # Reverse the order of the vectors
@@ -1954,7 +1954,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
         # In case where only 1 feature shows up after permutation importance
-        if len(poss_cols) == 1:
+        if len(poss_cols) in np.array([1, 2]) and max(poss_cols) < 3:
             cols = 2
             rows = 2
         if rows > cols:
