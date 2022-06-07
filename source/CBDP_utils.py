@@ -209,7 +209,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     thresh = np.nanpercentile(c_matrix, 50)
     # Labeling the plot
     for i, j in itertools.product(range(c_matrix.shape[0]), range(c_matrix.shape[1])):
-        plt.text(j, i, format(c_matrix[i, j], fmt) + '%' + '\n\n' +
+        plt.text(j, i, format(c_matrix[i, j] * 100, fmt) + '%' + '\n\n' +
                  format(true_matrix[i, j], 'd') if normalize else format(c_matrix[i, j], fmt), fontsize=20,
                  horizontalalignment="center", verticalalignment="center",
                  color="white" if c_matrix[i, j] >= thresh else "black")
