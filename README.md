@@ -13,10 +13,11 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 ### Requirements (necessary for both local machine and HPC application)
 * The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`. Python version used: `Python version 3.8.6`.
 
-* **/!\\ /!\\ /!\\** After installing the required packages, files in the *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing.
+* **/!\\ /!\\ /!\\** After installing the required packages, files in the *imblearn*, *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing and additional automations.
 
   - In *eli5*: The file *permutation_importance.py* in the ***./env/lib/.../eli5/*** folder must be replaced by this [permutation_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/eli5_mod) file.
   - In *mlxtend*: The files *feature_importance.py* and *\__init__.py* in the ***./env/lib/.../mlxtend/evaluate/*** folder must be replaced by the two files [feature_importance.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod) and [\__init__.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/mlxtend_mod).
+  - In *imblearn*: The file *base.py* in the ***./env/lib/.../imblearn/over_sampling/_smote/*** folder must be replaced by this [base.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/imblearn_mod) file.
 
 ---
 ## ~The Pipeline Flow~ (NOT UP TO DATE YET)
