@@ -182,32 +182,6 @@ additional_params = False  # Change to True if additional non supported paramete
 additional_kernel_params = {}  # Add additional kernel parameter to introduce here if not supported already
 additional_technique_params = {}  # Add additional technique parameter to introduce here if not supported already
 
-##########################################################################################################
-# ## /!\ Specified grid search parameters selected for this project, do not modify the below comments /!\
-##########################################################################################################
-# -------------------------------------------------------------------------------------------------------------------- #
-# Exhaustive interval kernels: ['linear', 'poly', 'rbf', 'sigmoid']
-# Exhaustive interval regularization_lpsr: [x for x in np.logspace(-2, 6, 9)]
-# Exhaustive interval shrinking_lpsr: [True, False]
-# Exhaustive interval tolerance_lpsr: [x for x in np.logspace(-4, -2, 3)]
-# Exhaustive interval gamma_psr: ['scale', 'auto', 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]
-# Exhaustive interval degree_p: [2, 3, 4, 5]
-# Exhaustive interval coef0_ps: [0.0, 0.01, 0.1, 0.5]
-# Exhaustive interval pca_lpsr: [2, 5, 10, 15, 20]                                              old: [5, 10, 20, 30, 45]
-# Exhaustive interval k_best_lpsr: [1, 2, 5, 10, 15]                                            old: [5, 10, 20, 30, 45]
-# Exhaustive interval k_neighbors_smote_lpsr: [5]
-# Exhaustive interval kernel_pca_kernel_lpsr: ['poly', 'rbf', 'sigmoid']
-# Exhaustive interval kernel_pca_lpsr: [2, 5, 10, 15, 20]                                       old: [5, 10, 20, 30, 45]
-# Exhaustive interval kernel_pca_tol_lpsr: [0.0, 0.001, 0.01]
-# Exhaustive interval kernel_pca_gamma_lpsr: [None, 0.1, 1.0, 10.0]
-# Exhaustive interval kernel_pca_degree_lpsr: [2, 3, 4, 5]
-# Exhaustive interval kernel_pca_coef0_lpsr: [0.1, 0.5, 1.0]
-# Exhaustive interval lda_shrinkage_lpsr = [None]
-# Exhaustive interval lda_priors_lpsr = [None]
-# Exhaustive interval lda_components_lpsr = [1]
-# Exhaustive interval lda_tol_lpsr = [0.0001, 0.001, 0.01]
-# -------------------------------------------------------------------------------------------------------------------- #
-
 ########################################################################################################################
 # END OF CBD-P CONFIG ##################################################################################################
 ########################################################################################################################
