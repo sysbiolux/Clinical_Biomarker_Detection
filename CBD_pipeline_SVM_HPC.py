@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.05/31/2022 (M/d/y) #############################################
+# November 2021 - May 2022, University of Luxembourg, v.06/08/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -87,13 +87,13 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.05/31/2022 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.06/08/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.05/31/2022.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.06/08/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
@@ -1073,8 +1073,10 @@ if enable_resampling:
     if resampling_tech == 'rus':
         sampler = RandomUnderSampler(sampling_strategy='majority', replacement=False, random_state=seed)  # RUS function
     elif resampling_tech == 'smote':  # SMOTENC if categorical are present else SMOTE
+        # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
-                          categorical_features=categorical_idx) if len(categorical_idx) != 0 else \
+                          categorical_features=categorical_idx if pipeline_order == 'samples->features' else
+                          'find_for_me') if len(categorical_idx) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
 
 if enable_data_split:
@@ -1088,13 +1090,16 @@ if enable_data_split:
         sampler_female = sampler_male  # no changes to above
     elif resampling_tech == 'smote':  # SMOTENC if categorical are present, else SMOTE
         # male
+        # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler_male = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
-                               categorical_features=categorical_idx_male) if len(categorical_idx_male) != 0 else \
+                               categorical_features=categorical_idx_male if pipeline_order == 'samples->features' else
+                               'find_for_me') if len(categorical_idx_male) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
         # female
+        # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler_female = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
-                                 categorical_features=categorical_idx_female
-                                 ) if len(categorical_idx_female) != 0 else \
+                                 categorical_features=categorical_idx_female if pipeline_order == 'samples->features'
+                                 else 'find_for_me') if len(categorical_idx_female) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
 else:
     sampler_male, sampler_female = [None] * 2
