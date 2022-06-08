@@ -468,6 +468,8 @@ class SMOTENC(SMOTE):
 
     def _fit_resample(self, X, y):
         self.n_features_ = X.shape[1]
+        # Edit by Jeff DIDIER
+        # automated finding of categorical index if categorical_feature == 'find_for_me'
         setting = self.categorical_features
         if setting == 'find_for_me':
             _, self.categorical_features = self.get_data_types(X)
@@ -601,7 +603,7 @@ class SMOTENC(SMOTE):
 
         return X_new
 
-    # Adapted from the CBDP_utils.py script function get_cat_and_cont
+    # Author Jeff DIDIER, Adapted from the CBDP_utils.py script function get_cat_and_cont
     def get_data_types(self, X):
         """
         Function to separately collect the indices of categorical and continuous features.
