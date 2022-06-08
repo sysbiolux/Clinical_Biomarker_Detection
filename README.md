@@ -8,7 +8,7 @@ The Clinical Biomarker Detection pipeline presented in this repository applies p
 ---
 ## Getting Started
 The repository is composed of the main pipeline script [CBD_pipeline_SVM_HPC.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBD_pipeline_SVM_HPC.py) and the configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) that needs to be configured in respect to the clinical data and the research topic.  
-Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including two modified files for both python packages `eli5` and `mlxtend`.
+Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including modified files for the python packages `imblearn`, `eli5` and `mlxtend`.
 
 ### Requirements (necessary for both local machine and HPC application)
 * The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`. Python version used: `Python version 3.8.6`.
