@@ -345,7 +345,9 @@ class SMOTENC(SMOTE):
 
         - array of indices specifying the categorical features;
         - mask array of shape (n_features, ) and ``bool`` dtype for which
-          ``True`` indicates the categorical features.
+          ``True`` indicates the categorical features;
+        - string 'find_for_me' in case where SMOTENC is applied inside sklearn pipeline
+          after feature transformation and will update the categorical indices automatically.
 
     {sampling_strategy}
 
