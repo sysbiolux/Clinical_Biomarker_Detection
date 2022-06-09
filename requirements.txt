@@ -6,7 +6,7 @@ scikit-learn==1.0.1
 imbalanced-learn==0.8.1
 scipy==1.7.3
 seaborn==0.11.2
-ipyparallel==8.0.0
+ipyparallel==8.3.0
 joblib==1.1.0
 eli5==0.11.0
 mlxtend==0.19.0
