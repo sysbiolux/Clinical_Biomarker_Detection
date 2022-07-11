@@ -96,7 +96,8 @@ subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, defau
 # /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix below and
 # that the output feature defined above is included .e.g. subgroups_to_keep = ('BF-', 'SV-', output_feature)
 # Possible subgroups are prefixed: BF- (body fluids), PM- (physical measurements), IM- (individual medications), ID-
-# (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), OT- (others)
+# (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), CH- (chronic), NT- (nutritient),
+# CG- (cognitive), ST- (study-related).
 enable_engineered_input_removal = True  # Change to enable or disable removal of engineered input features, True, bool
 engineered_input_prefix = ('IM-', 'ID-')  # Prefix of features used in engineering, IM, ID, str, tuple of str, can be ''
 enable_rhcf = True  # Change to True to enable & False to disable RHCF, default True, bool
