@@ -29,7 +29,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 * Pipe funnel point (#1): Pipeline funnel exit
 * Ending point (#1): End of pipeline and results output
 
-![pipeline_flowchart](https://user-images.githubusercontent.com/38098941/159273787-dad5cbf3-5b6e-4da9-9228-3002d92ba69a.svg)
+![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/178956338-267de9c2-2b76-4e2d-a3c0-e0f51cceec3f.svg)
 * Abbreviations:  
   - T/F: True/False
   - rus: random under-sampling  
