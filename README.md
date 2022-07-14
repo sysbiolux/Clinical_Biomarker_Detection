@@ -1,4 +1,4 @@
-# Clinical Biomarker Detection - Pipeline
+# Clinical Biomarker Detection - Pipeline (version 06/08/2022 [\M/d/y])
 DRIVEN-DTU WP13: Biomarker Detection In Clinical Cohort Data Using Machine Learning
 
 ---
@@ -20,25 +20,26 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
   - In *imblearn*: The file *base.py* in the ***./env/lib/.../imblearn/over_sampling/_smote/*** folder must be replaced by this [base.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source/imblearn_mod) file.
 
 ---
-## ~The Pipeline Flow~ (NOT UP TO DATE YET)
+## The Pipeline Flow
 ![pipeline_flowchart_legend](https://user-images.githubusercontent.com/38098941/159273463-e41be6e8-d8d8-41d3-96d9-89216e5d5c55.svg)
-* Step (#8): Refers to the configurable processing steps
-* Technique (#14): Point where a technique must be selected
-* Specification (#31): Possible configurable technique specifications
+* Step (#9): Refers to the configurable processing steps
+* Technique (#16): Point where a technique must be selected
+* Specification (#42): Possible configurable technique specifications
 * Starting point (#1): Pipeline entry point
 * Pipe funnel point (#1): Pipeline funnel exit
 * Ending point (#1): End of pipeline and results output
 
-![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/178956338-267de9c2-2b76-4e2d-a3c0-e0f51cceec3f.svg)
+![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/178972898-0b3fafb7-6d3a-4ab7-9e15-62aa9d68eb2f.svg)
 * Abbreviations:  
   - T/F: True/False
   - rus: random under-sampling  
   - smote: synthetic minority over-sampling technique
   - chi_sq: chi squared
+  - PCA: principal component analysis
+  - LDA: linear discriminant analysis
 
 * Note:  
-  - Only one possibility of pipe-order is shown in detail in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is perfromed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier. The two mentioned cases are depicted as black dashed lines. The green dashed line is a visual separator of the two kinds of feature transformation that can be applied, namely the *scaler_tech* on the left-hand side and the *feature_tech* on the right-hand side.
-
+  - Only one possibility of pipeline-order is shown in detail in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is performed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier. The two mentioned cases are depicted as black dashed lines. Regarding the feature transformation techniques, it is possible to select a combination of continuous and categorical techniques (e.g. PCA + Select K Best) as well as to select one single transformation, e.g. PCA for the continuous features. In that case any categorical features will be passed through the pipeline without any transformation. Later update of the pipeline may include the choice between passing these features through or dropping them.
 ---
 ## ~The Pipeline Steps and Relevant Techniques Briefly Explained~ (NOT UP TO DATE YET)
 
