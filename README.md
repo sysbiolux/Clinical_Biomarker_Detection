@@ -1,6 +1,7 @@
-# Clinical Biomarker Detection - Pipeline,               version 06/08/2022 (M/d/y)
+# Clinical Biomarker Detection - Pipeline
 DRIVEN-DTU WP13: Biomarker Detection In Clinical Cohort Data Using Machine Learning
-
+---
+version 06/08/2022 (M/d/y)
 ---
 ## Description
 The Clinical Biomarker Detection pipeline presented in this repository applies pre-processing and machine learning-based approaches to identify strong biomarkers for a given disease in clinical cohort data. The pipeline is currently designed to apply Support Vector Machine Classification to predict a binary target feature (e.g. disease) in combination with other configurable techniques and processing steps that can drastically improve the prediction power.
