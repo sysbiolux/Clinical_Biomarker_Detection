@@ -26,12 +26,12 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 ![pipeline_flowchart_legend](https://user-images.githubusercontent.com/38098941/159273463-e41be6e8-d8d8-41d3-96d9-89216e5d5c55.svg)
 * Step (#9): Refers to the configurable processing steps
 * Technique (#16): Point where a technique must be selected
-* Specification (#42): Possible configurable technique specifications
+* Specification (#43): Possible configurable technique specifications
 * Starting point (#1): Pipeline entry point
 * Pipe funnel point (#1): Pipeline funnel exit
 * Ending point (#1): End of pipeline and results output
 
-![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/178972898-0b3fafb7-6d3a-4ab7-9e15-62aa9d68eb2f.svg)
+![pipeline_flowchart gv](https://user-images.githubusercontent.com/38098941/178989590-0669bb23-d0f5-401f-98dc-03c5e4c7107f.svg)
 * Abbreviations:  
   - T/F: True/False
   - rus: random under-sampling  
@@ -69,11 +69,11 @@ Step of the classification pipeline to transform the features. The order of step
   - Scaler technique: Select between the standard scaler (distribution centered around 0, standard deviation of 1, mean removed), robust scaler (median and scales removed according to the quantile range), or Minmax scaler (scaling each feature to a specific range like \[0, 1]). The scaler technique will only be applied on the continuous features, with standard scaler being the default if none is selected. The default scaling technique will also be applied alone in case this step is disabled.
   - Feature technique: Select between linear PCA, LDA and non-linear kernel PCA for continuous features. For categorical features, currently only the *select k best method* using chi squared and Cramer's V correlation is available. If the step is disabled, the features will not be transformed. Please note that in case of non-linear PCA, the classifier kernel will be forced to be linear in order to avoid applying non-linear kernel transformations twice (if linear PCA or LDA is selected, non-linear classifier kernels are allowed).  
 * **Feature importance (FI):**  
-Step to identify the most important features selected by the classification model if this step is enabled. In case of linear classification, feature importance by permutation is not necessary and the information can be retrieved directly from the trained estimator. In case of non-linear classification, the feature importance is measured using the feature permutation algorithm. In this case, it is possible to choose between three different methods that do show consistent results. It is also possible to select all and validate the results consistency by yourself.
+Step to identify the most important features selected by the classification model if this step is enabled. In case of linear classification, feature importance by permutation is not necessary and the information can be retrieved directly from the trained estimator using the built-in `SVC.coef_` attribute. In case of non-linear classification, the feature importance is measured using the feature permutation algorithm. In this case, it is possible to choose between three different methods that do show consistent results. It is also possible to select all and validate the result's consistency by yourself.
   - sklearn's *permutation_importance* function of the sklearn.inspection group.
   - eli5's *get_score_importance* function of the eli5.permutation_importance group (mod files required).
   - mlxtend's *feature_importance_permutation* function of the mlxtend.evaluate group (mod files required).
-  - 'all' to run the feature importance with all three methods and to plot comparisons (mod files required).  
+  - 'all' to run the permuted feature importance with all three methods and to plot comparisons (mod files required).  
 * **Box and bar plotting (BBP):**  
 Step to visualize the most important features in a ranked order between the negative and positive classes. If disabled, the step will be ignored. If enabled, the most important categorical and continuous features can be plotted separately or combined as defined in the configuration file.  
 * **Output:**  
