@@ -209,7 +209,7 @@ In the provided [regular HPC launcher script](https://github.com/sysbiolux/Clini
 * `environment_to_load` to specify the path to the environment source
 * Please also verify the resource allocation before submitting a job and adjust if necessary.  
 
-When the environment is set up, packages installed and files in eli5 and mlxtend replaced, you can start adjusting the configuration file to the needs of your data and experimental setting. Please note that on HPC, parallelization via the `parallel_method` `ipyparallel` is highly recommended. The number of jobs will be automatically set to the number of available workers based on the launcher script. The `clf_verbose` can be set to `false` and the `grid_verbose` to `1` to avoid massive printouts, and the SVM parameter `cache_size` can be adjusted to `200` (mb).  
+When the environment is set up, packages installed and files in eli5, mlxtend, and smote package directories replaced, you can start adjusting the configuration file to the needs of your data and experimental setting. Please note that on HPC, parallelization via the `parallel_method` `ipyparallel` is highly recommended. The number of jobs will be automatically set to the number of available workers based on the launcher script. The `clf_verbose` can be set to `false` and the `grid_verbose` to `1` to avoid massive printouts, and the SVM parameter `cache_size` can be adjusted to `200` (mb).  
 
 On the HPC node, the files should be accessible and stored in the same way as found in this repository, and verify the path to the cleaned imputed training and test data set and the path where results should be stored so that it matches the variables in the configuration file.  
 
