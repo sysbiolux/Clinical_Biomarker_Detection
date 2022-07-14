@@ -43,7 +43,7 @@ Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker
 * Note:  
   - Only one possibility of pipeline-order is shown in detail in the figure above, namely *samples->features*. In case of *features->samples*, the pipeline steps IR and FT are swapped, meaning that FT is performed before IR. In case of IR and FT being both disabled in the configuration file, these steps will be skipped except the standard scaling mechanism of continuous features during FT which is the minimum of transformation one should at least pass to a Support Vector Machine classifier. The two mentioned cases are depicted as black dashed lines. Regarding the feature transformation techniques, it is possible to select a combination of continuous and categorical techniques (e.g. PCA + Select K Best) as well as to select one single transformation, e.g. PCA for the continuous features. In that case any categorical features will be passed through the pipeline without any transformation. Later update of the pipeline may include the choice between passing these features through or dropping them.
 ---
-## ~The Pipeline Steps and Relevant Techniques Briefly Explained~ (NOT UP TO DATE YET)
+## The Pipeline Steps and Relevant Techniques Briefly Explained
 
 * **Input:**  
 Entry of the pipeline. The pipeline is desinged to take as input a preferrably cleaned and imputed version of the data, which is already split into training and test sets.  
@@ -233,7 +233,8 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [x] ~Near-constancy check added for continuous and binary features~ 05/30/2022
 - [x] ~Enable launching analysis with any combination of the supported techniques, including single or double feature transformation~ 05/30/2022
 - [x] ~Generate detailed list of highly correlated features during that pre processing step~ 05/30/2022
-- [x] ~Added corrected Cramer's V correlation as a possible score function for selectKBest~ 05/30/2022    
+- [x] ~Added corrected Cramer's V correlation as a possible score function for selectKBest~ 05/30/2022
+- [x] ~Updated the pipeline flow-chart and README descriptions~ 07/14/2022
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
