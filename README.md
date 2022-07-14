@@ -1,4 +1,4 @@
-# Clinical Biomarker Detection - Pipeline (version 06/08/2022 [\M/d/y])
+# Clinical Biomarker Detection - Pipeline,               version 06/08/2022 (M/d/y)
 DRIVEN-DTU WP13: Biomarker Detection In Clinical Cohort Data Using Machine Learning
 
 ---
