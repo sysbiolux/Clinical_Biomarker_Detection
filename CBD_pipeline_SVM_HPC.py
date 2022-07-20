@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.06/08/2022 (M/d/y) #############################################
+# November 2021 - May 2022, University of Luxembourg, v.07/20/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -87,7 +87,7 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.06/08/2022 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.07/20/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
@@ -1193,6 +1193,9 @@ elif scorer == 'F.5':
     scoring = make_scorer(fbeta_score, beta=0.5, average='macro')  # F beta 0.5
 elif scorer == 'F1':
     scoring = make_scorer(fbeta_score, beta=1, average='macro')  # F beta 1
+elif scorer == 'roc_auc':
+    scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_threshold=False,
+                          needs_proba=False, average='macro')  # roc_auc scorer
 else:
     scoring = make_scorer(accuracy_score)  # Accuracy as default if none is selected
 
