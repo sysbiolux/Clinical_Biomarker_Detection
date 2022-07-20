@@ -57,6 +57,7 @@ import logging
 import math
 import random
 import sys
+import warnings
 
 import pandas as pd
 from eli5.permutation_importance import get_score_importances
@@ -216,7 +217,7 @@ else:
 # Be sure that scaler tech is set, cannot be empty, thus reset to default if not set
 if scaler_tech not in ('standard', 'minmax', 'robust'):
     scaler_tech = 'standard'
-    raise Warning("**Scaler technique was not set in the configuration file. Default 'standard' is loaded.**")
+    warnings.warn("**Scaler technique was not set in the configuration file. Default 'standard' is loaded.**")
 # If da_tech is set to 'lda', update total_params_and_splits
 if enable_ft and da_tech == 'lda' and pca_tech == '':
     total_params_and_splits.update(lda_dict)
@@ -233,14 +234,14 @@ else:
 # Reset scorer if not among implemented possibilities
 if scorer not in ('F.5', 'F1', 'F2', 'roc_auc', 'accuracy'):
     scorer = 'accuracy'
-    raise Warning("**Scorer was not among the possible scores. Default 'accuracy' is loaded.**")
+    warnings.warn("**Scorer was not among the possible scores. Default 'accuracy' is loaded.**")
 # Reset feature importance method settings
 if not enable_feature_importance:
     feature_importance_method = ''
     enable_box_bar_plots = False
 elif feature_importance_method not in ('sklearn', 'mlxtend', 'eli5', 'all'):
     feature_importance_method = 'all'
-    raise Warning("**Feature importance method not set correctly. Default 'all' is loaded.**")
+    warnings.warn("**Feature importance method not set correctly. Default 'all' is loaded.**")
 else:
     enable_box_bar_plots, feature_importance_method = enable_box_bar_plots, feature_importance_method
 # Reset box and bar plot settings dependent on the feature importance
@@ -248,7 +249,7 @@ if not enable_box_bar_plots:
     box_bar_figures = ''
 elif box_bar_figures not in ('separated', 'combined'):
     box_bar_figures = 'combined'
-    raise Warning("**Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.**")
+    warnings.warn("**Plot setting for box and bar plots are not set correctly. Default 'combined' is loaded.**")
 else:
     box_bar_figures = box_bar_figures
 # check if target feature and positive/negative classes are given
