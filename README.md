@@ -2,7 +2,7 @@
 PRIDE-DRIVEN-DTU WP13:  
 Biomarker Detection In Clinical Cohort Data Using Machine Learning
 ---
-version 06/08/2022 (M/d/y)
+version 07/20/2022 (M/d/y)
 
 ---
 ## Description
@@ -126,7 +126,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | grid_verbose | 1 | Grid search verbose | int |
 | hard_iter_cap | 150000 | Hard stopping criterion | int |
 | splits | 10 | Stratified k fold splits | int |
-| scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, or accuracy | str |
+| scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, roc_auc, or accuracy | str |
 | shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
 | shuffle_male | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
 | shuffle_female | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
@@ -238,6 +238,7 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [x] ~Generate detailed list of highly correlated features during that pre processing step~ 05/30/2022
 - [x] ~Added corrected Cramer's V correlation as a possible score function for selectKBest~ 05/30/2022
 - [x] ~Updated the pipeline flow-chart and README descriptions~ 07/14/2022
+- [x] ~Added roc_auc as GridSearchCV scorer~ 07/20/2022
 - [ ] Extend the pipeline to allow tree-based classification
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add delight to the experience when all tasks are complete :tada:
