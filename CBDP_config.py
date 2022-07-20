@@ -1,7 +1,7 @@
 ########################################################################################################################
 # CLINICAL BIOMARKER DETECTION - PIPELINE (CBD-P) CONFIGURATION FILE ###################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.05/30/2022 (M/d/y) #############################################
+# November 2021 - May 2022, University of Luxembourg, v.07/20/2022 (M/d/y) #############################################
 ########################################################################################################################
 
 # Configure up to 78 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
@@ -72,7 +72,7 @@ clf_verbose = False  # Classifier verbose either True or False, False, bool
 grid_verbose = 1  # Grid search verbose, either 1 or 2, 1, int
 hard_iter_cap = 150000  # Hard stopping criterion, 150000, int
 splits = 10  # Stratified k fold splits, 10, int
-scorer = 'F2'  # Scorer used during the experimental steps, F.5, F1, F2, or accuracy, default accuracy, str
+scorer = 'F2'  # Scorer used during the experimental steps, F.5, F1, F2, roc_auc, or accuracy, default accuracy, str
 # /!\ Kernels will be changed to only 'linear' if non-linear PCA is activated in the pipeline
 
 # Feature importance number of shuffles
