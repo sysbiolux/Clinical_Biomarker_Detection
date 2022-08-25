@@ -1371,23 +1371,23 @@ for kern in kernels:
     f1_test = f1_score(test_labels, predictions, average='macro')
     f1_train = f1_score(train_labels, train_predictions, average='macro')
     auc = roc_auc_score(test_labels, predictions)
-    misclassified = np.array(test_labels != predictions).sum()
+    correctly_classified = np.array(test_labels == predictions).sum()
     # male ony
     if enable_data_split:
         accuracy_male = accuracy_score(test_men_labels, male_predictions)
         f1_test_male = f1_score(test_men_labels, male_predictions, average='macro')
         f1_train_male = f1_score(train_men_labels, train_male_predictions, average='macro')
         auc_male = roc_auc_score(test_men_labels, male_predictions)
-        misclassified_male = np.array(test_men_labels != male_predictions).sum()
+        correctly_classified_male = np.array(test_men_labels == male_predictions).sum()
         # female ony
         accuracy_female = accuracy_score(test_female_labels, female_predictions)
         f1_test_female = f1_score(test_female_labels, female_predictions, average='macro')
         f1_train_female = f1_score(train_female_labels, train_female_predictions, average='macro')
         auc_female = roc_auc_score(test_female_labels, female_predictions)
-        misclassified_female = np.array(test_female_labels != female_predictions).sum()
+        correctly_classified_female = np.array(test_female_labels == female_predictions).sum()
     else:
-        accuracy_male, f1_test_male, f1_train_male, auc_male, misclassified_male, \
-            accuracy_female, f1_test_female, f1_train_female, auc_female, misclassified_female = [None] * 10
+        accuracy_male, f1_test_male, f1_train_male, auc_male, correctly_classified_male, \
+            accuracy_female, f1_test_female, f1_train_female, auc_female, correctly_classified_female = [None] * 10
 
     ######################
     # ## Evaluation plots
@@ -2265,7 +2265,7 @@ for kern in kernels:
     print('F1 test score:', round(f1_test, 4) * 100, '%.')
     print('F1 train score:', round(f1_train, 4) * 100, '%.')
     print('AUC:', round(auc, 4) * 100, '%.')
-    print('Misclassified samples:', misclassified, 'of', len(test_labels))
+    print('Correctly classified samples:', correctly_classified, 'of', len(test_labels))
     print('Best fitting parameters after grid search:', grid_imba.best_params_, '\n')
     print('******************************************')
 
@@ -2280,7 +2280,7 @@ for kern in kernels:
         print('F1 test score:', round(f1_test_male, 4) * 100, '%.')
         print('F1 train score:', round(f1_train_male, 4) * 100, '%.')
         print('AUC:', round(auc_male, 4) * 100, '%.')
-        print('Misclassified samples:', misclassified_male, 'of', len(test_men_labels))
+        print('Correctly classified samples:', correctly_classified_male, 'of', len(test_men_labels))
         print('Best fitting parameters after grid search:', grid_imba_male.best_params_, '\n')
 
         print(f"******************************************\nFemale data performance summary "
@@ -2294,7 +2294,7 @@ for kern in kernels:
         print('F1 test score:', round(f1_test_female, 4) * 100, '%.')
         print('F1 train score:', round(f1_train_female, 4) * 100, '%.')
         print('AUC:', round(auc_female, 4) * 100, '%.')
-        print('Misclassified samples:', misclassified_female, 'of', len(test_female_labels))
+        print('Correctly classified samples:', correctly_classified_female, 'of', len(test_female_labels))
         print('Best fitting parameters after grid search:', grid_imba_female.best_params_, '\n')
         print('******************************************')
 
