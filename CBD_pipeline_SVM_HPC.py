@@ -454,13 +454,16 @@ if folder_prefix.__contains__('/'):
         else:
             tmp_dir += '/' + folder_prefix.split('/')[slash]
 
-# Now as all pre folders are created, create the final results folder, if it already exists, clear it for new results
+# Now as all pre folders are created, create the final results folder, if it already exists, append a 3-digit value
+folder_name = folder_name + '_000'
 if os.path.isdir(curr_dir + '/' + folder_name) is False:
     os.mkdir(curr_dir + '/' + folder_name)
 else:
-    files = os.listdir(curr_dir + '/' + folder_name)
-    for f in files:
-        os.remove(curr_dir + '/' + folder_name + '/' + f)
+    files = os.listdir(curr_dir + '/' + folder_prefix)
+    size = len(folder_name)
+    count = sum([folder_name.split('/')[-1][:-4] in f for f in files])
+    folder_name = folder_name.replace(folder_name[size - 4:], f"_{'%03d' % count}", 1)
+    os.mkdir(curr_dir + '/' + folder_name)
 
 ###############################################################
 # ## HPC parallelization preparations and n_jobs configuration
