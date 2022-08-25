@@ -454,15 +454,15 @@ if folder_prefix.__contains__('/'):
         else:
             tmp_dir += '/' + folder_prefix.split('/')[slash]
 
-# Now as all pre folders are created, create the final results folder, if it already exists, append a 3-digit value
-folder_name = folder_name + '_000'
+# Now as all pre folders are created, create the final results folder, if it already exists, append a 2-digit value
+folder_name = folder_name + '_00'
 if os.path.isdir(curr_dir + '/' + folder_name) is False:
     os.mkdir(curr_dir + '/' + folder_name)
 else:
     files = os.listdir(curr_dir + '/' + folder_prefix)
     size = len(folder_name)
-    count = sum([folder_name.split('/')[-1][:-4] in f for f in files])
-    folder_name = folder_name.replace(folder_name[size - 4:], f"_{'%03d' % count}", 1)
+    count = sum([folder_name.split('/')[-1][:-3] in f for f in files])
+    folder_name = folder_name.replace(folder_name[size - 3:], f"_{'%02d' % count}", 1)
     os.mkdir(curr_dir + '/' + folder_name)
 
 ###############################################################
