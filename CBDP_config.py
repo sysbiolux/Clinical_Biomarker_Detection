@@ -54,8 +54,12 @@ test_path = curr_dir + '/data/test_imputed.csv'  # Path to imputed training set,
 output_feature = 'PM-Frailty_Index'  # Target output feature, str (must be binary vector)
 positive_class = 'frail'  # Name to give the positive class of your target feature, str
 negative_class = 'non-frail'  # Name to give the negative class of your target feature, str
-output_related = ['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion',
-                  'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max',
+output_related = ['PM-Frailty_Score',
+                  'PM-Frailty_gait',
+                  'SV-Frailty_exhaustion',
+                  'SV-Frailty_physicalactivity',
+                  'PM-Frailty_gripstrength',
+                  'PM-Gripstrength_max',
                   'PM-Frailty_weightloss']  # Output-related features, str (can be list)
 
 ###################################################################################################################
