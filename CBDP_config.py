@@ -100,7 +100,7 @@ subgroups_to_keep = 'all'  # Prefix of subgroups to keep for the analysis, defau
 # /!\ If specific prefixes are selected, make sure that they do not conflict with the engineered_input_prefix below and
 # that the output feature defined above is included .e.g. subgroups_to_keep = ('BF-', 'SV-', output_feature)
 # Possible subgroups are prefixed: BF- (body fluids), PM- (physical measurements), IM- (individual medications), ID-
-# (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), CH- (chronic), NT- (nutritient),
+# (individual devices), GM- (grouped medications), GD- (grouped devices), SV- (survey), CH- (chronic), NT- (nutrients),
 # CG- (cognitive), ST- (study-related).
 enable_engineered_input_removal = True  # Change to enable or disable removal of engineered input features, True, bool
 engineered_input_prefix = ('IM-', 'ID-')  # Prefix of features used in engineering, IM, ID, str, tuple of str, can be ''
@@ -141,7 +141,7 @@ coef0_ps = [0.0, 0.01, 0.1, 0.5]  # Independent term in kernel function, default
 
 # Pipeline step specific variables
 # With resampling enabled and resampling_tech='smote'
-k_neighbors_smote_lpsr = [5]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
+k_neighbors_smote_lpsr = [3, 5, 7]  # K nearest neighbor for smote resampling, default 5 (or a kneighborsmixin)
 # With FT enabled regarding categorical features
 k_best_lpsr = [1, 2, 5, 10, 15]  # Number of k best features to select, default 10, int
 # With FT enabled and pca_tech='normal_pca', regarding continuous features
