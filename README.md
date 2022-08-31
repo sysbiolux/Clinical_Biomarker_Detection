@@ -239,6 +239,11 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [x] ~Added corrected Cramer's V correlation as a possible score function for selectKBest~ 05/30/2022
 - [x] ~Updated the pipeline flow-chart and README descriptions~ 07/14/2022
 - [x] ~Added roc_auc as GridSearchCV scorer~ 07/20/2022
-- [ ] Extend the pipeline to allow tree-based classification
+- [ ] Extend the pipeline to allow tree-based classification (e.g. RF, XGBoost)
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
+- [ ] Add QDA as non-linear supervised continuous transformer
+- [ ] Allow to choose if ONLY the data subgroups (e.g. male & female) should be processed
+- [ ] Add decision-making possibilities for tagging features to be removed during the RHCF step
+- [ ] Allow the use of other correlation metrics during RHCF
+- [ ] Look for categorical selector or transformer other than SelectKBest
 - [ ] Add delight to the experience when all tasks are complete :tada:
