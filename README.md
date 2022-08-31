@@ -246,4 +246,5 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [ ] Add decision-making possibilities for tagging features to be removed during the RHCF step
 - [ ] Allow the use of other correlation metrics during RHCF
 - [ ] Look for categorical selector or transformer other than SelectKBest
+- [ ] Allow the possibility to 'drop' or 'passthrough' features that are not eligible for the transformer steps (e.g. case where categorical transformer is disabled, what should happen to the input categorical features, drop or pass them through?
 - [ ] Add delight to the experience when all tasks are complete :tada:
