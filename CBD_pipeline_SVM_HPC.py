@@ -1135,40 +1135,40 @@ if enable_ft:
         Pipeline([('scaler', scaler), ('lda', da)]) if da_tech != '' else \
         Pipeline([('scaler', scaler)])
     # Setting up the feature transformation transformer for the full, male, and female data if lengths are above 1
-    if len(continuous_idx) > 1 and len(categorical_idx) > 1:
+    if len(continuous_idx) >= 1 and len(categorical_idx) >= 1:
         feature_trans = ColumnTransformer(transformers=[('continuous', continuous_pipeline, continuous_idx),
                                                         ('categorical', k_filter, categorical_idx)], n_jobs=n_jobs)
-    elif len(continuous_idx) > 1:
+    elif len(continuous_idx) >= 1:
         feature_trans = ColumnTransformer(transformers=[
             ('continuous', continuous_pipeline, continuous_idx)], remainder='passthrough', n_jobs=n_jobs)
-    elif len(categorical_idx) > 1:
+    elif len(categorical_idx) >= 1:
         feature_trans = ColumnTransformer(transformers=[('categorical', k_filter, categorical_idx)],
                                           remainder='passthrough', n_jobs=n_jobs)
     else:
         feature_trans = 'passthrough'
 
     if enable_data_split:
-        if len(continuous_idx_male) > 1 and len(categorical_idx_male) > 1:
+        if len(continuous_idx_male) >= 1 and len(categorical_idx_male) >= 1:
             feature_trans_male = ColumnTransformer(transformers=[
                 ('continuous', continuous_pipeline, continuous_idx_male),
                 ('categorical', k_filter, categorical_idx_male)], n_jobs=n_jobs)
-        elif len(continuous_idx_male) > 1:
+        elif len(continuous_idx_male) >= 1:
             feature_trans_male = ColumnTransformer(transformers=[
                 ('continuous', continuous_pipeline, continuous_idx_male)], remainder='passthrough', n_jobs=n_jobs)
-        elif len(categorical_idx_male) > 1:
+        elif len(categorical_idx_male) >= 1:
             feature_trans_male = ColumnTransformer(transformers=[
                 ('categorical', k_filter, categorical_idx_male)], remainder='passthrough', n_jobs=n_jobs)
         else:
             feature_trans_male = 'passthrough'
 
-        if len(continuous_idx_female) > 1 and len(categorical_idx_female) > 1:
+        if len(continuous_idx_female) >= 1 and len(categorical_idx_female) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
                 ('continuous', continuous_pipeline, continuous_idx_female),
                 ('categorical', k_filter, categorical_idx_female)], n_jobs=n_jobs)
-        elif len(continuous_idx_female) > 1:
+        elif len(continuous_idx_female) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
                 ('continuous', continuous_pipeline, continuous_idx_female)], remainder='passthrough', n_jobs=n_jobs)
-        elif len(categorical_idx_male) > 1:
+        elif len(categorical_idx_male) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
                 ('categorical', k_filter, categorical_idx_female)], remainder='passthrough', n_jobs=n_jobs)
         else:
@@ -1179,14 +1179,14 @@ if enable_ft:
 else:  # If FT is disabled, we only stick with the scaler for continuous features if length > 1, else skip
     feature_trans = ColumnTransformer(transformers=[
         ('continuous', scaler, continuous_idx)], remainder='passthrough',
-        n_jobs=n_jobs) if len(continuous_idx) > 1 else 'passthrough'
+        n_jobs=n_jobs) if len(continuous_idx) >= 1 else 'passthrough'
     if enable_data_split:
         feature_trans_male = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_male)],
                                                remainder='passthrough',
-                                               n_jobs=n_jobs) if len(continuous_idx_male) > 1 else 'passthrough'
+                                               n_jobs=n_jobs) if len(continuous_idx_male) >= 1 else 'passthrough'
         feature_trans_female = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_female)],
                                                  remainder='passthrough',
-                                                 n_jobs=n_jobs) if len(continuous_idx_female) > 1 else 'passthrough'
+                                                 n_jobs=n_jobs) if len(continuous_idx_female) >= 1 else 'passthrough'
     else:
         feature_trans_male, feature_trans_female = [None] * 2
 
