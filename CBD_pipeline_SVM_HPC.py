@@ -1399,7 +1399,7 @@ for kern in kernels:
     if plt.rcParams['font.size'] != fix_font:
         plt.rcParams['font.size'] = fix_font
 
-    # ROC_AUC curve full data
+    # ROC_AUC curve test set full data
     print(f"Full data model evaluation for {kern.upper()} kernel:")
     evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, fontsize=16)
     plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
