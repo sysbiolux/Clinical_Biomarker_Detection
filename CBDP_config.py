@@ -4,7 +4,7 @@
 # November 2021 - May 2022, University of Luxembourg, v.07/20/2022 (M/d/y) #############################################
 ########################################################################################################################
 
-# Configure up to 78 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 79 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -121,6 +121,7 @@ da_tech = ''  # Select discriminant analysis tech for continuous features, 'lda'
 # /!\ Resampling_tech and pca_tech will be set to '' anyhow if disabled, scaler_tech must be given
 kbest_tech = 'cramer'  # Select score function for kbest technique, 'chi2', or callable score func, str, func
 pipeline_order = 'samples->features'  # Order of the steps either 'samples->features' or 'features->samples', first, str
+drop_or_pass_non_treated_features = 'drop'  # Either 'drop' or 'passthrough' untransformed features, str
 enable_feature_importance = True  # Change to True to enable & False to disable feature importance, default True, bool
 feature_importance_method = 'all'  # Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, def. 'all', str
 enable_box_bar_plots = True  # True to enable box and bar plots of most important features, default True, bool
