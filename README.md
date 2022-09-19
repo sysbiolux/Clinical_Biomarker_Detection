@@ -87,7 +87,7 @@ Classification model of the selected output-target, model evaluation summaries a
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 78 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 79 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
 #### General Settings
 
@@ -157,6 +157,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | da_tech | 'lda' | Select discriminant analysis tech for continuous features, 'lda' (LDA, later QDA) | str |
 | kbest_tech | 'cramer' | Select score function for kbest technique, 'chi2', 'cramer', or callable score func | str or callable |
 | pipeline_order | 'samples->features' | Order of the steps either 'samples->features' or 'features->samples' | str |
+| drop_or_pass_non_treated_features | 'drop' | Either 'drop' or 'passthrough' untransformed features | str |
 | enable_feature_importance | True | Change to True to enable & False to disable feature importance | bool |
 | feature_importance_method | 'all' | Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, default 'all' | str |
 | enable_box_bar_plots | True | True to enable box and bar plots of most important features or False to disable, default True | bool |
