@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.07/20/2022 (M/d/y) #############################################
+# November 2021 - September 2022, University of Luxembourg, v.09/16/2022 (M/d/y) #######################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -88,24 +88,26 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.07/20/2022 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.09/16/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.07/20/2022.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.09/16/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
-    from source.CBDP_utils import *  # On github
+    from source.CBDP_utils import *
+    # import all CBDP related functions
     print("CBD-P utils file loaded successfully!\n")
 except ImportError('CBD-P utils file could not be found or loaded correctly.'):
     exit()
 # Loading the CBD-P configuration file
 print(f"Loading the CBD-P configuration file ...")
 try:
-    from CBDP_config import *  # On github
+    from CBDP_config import *
+    # import the related configurations
     print("CBD-P configuration file loaded successfully!\n")
 except ImportError('CBD-P configuration file could not be found or loaded correctly.'):
     exit()
@@ -271,6 +273,11 @@ if set(non_linear_kernels) != set(tmp):
 else:
     non_linear_kernels = non_linear_kernels
 
+if drop_or_pass_non_treated_features not in ('drop', 'passthrough'):
+    drop_or_pass_non_treated_features = 'drop'
+    warnings.warn("**Decision to drop or passthrough features in column-transformer that are not transformed is not "
+                  "valid. Default 'drop' is loaded.**")
+
 ##################################
 # ## Configuration variable check
 ##################################
@@ -295,13 +302,13 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
               resampling_tech, folder_prefix, pca_tech, da_tech, scaler_tech, scorer, feature_importance_method,
-              box_bar_figures, negative_class, positive_class, kbest_tech]
+              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features]
 if not (all(isinstance(i, str) for i in config_str)):
     if not hasattr(kbest_tech, '__call__'):
         raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
                         'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
                         'da_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures, negative_class, '
-                        'positive_class, kbest_tech. Got %s instead.' % config_str)
+                        'positive_class, kbest_tech, drop_or_pass_non_treated_features. Got %s instead.' % config_str)
 # Variables check that should strictly be a list of strings or str
 if not (all(isinstance(i, str) for i in output_related) or isinstance(output_related, list)):
     raise TypeError('One or multiple of the configured output features were not recognized as str or list of str: '
@@ -455,14 +462,17 @@ if folder_prefix.__contains__('/'):
             tmp_dir += '/' + folder_prefix.split('/')[slash]
 
 # Now as all pre folders are created, create the final results folder, if it already exists, append a 2-digit value
-folder_name = folder_name + '_00'
+folder_name = folder_name + '_00'  # folder _00 until _99 equal 100 folders
 if os.path.isdir(curr_dir + '/' + folder_name) is False:
     os.mkdir(curr_dir + '/' + folder_name)
 else:
     files = os.listdir(curr_dir + '/' + os.path.split(folder_name)[0])
     size = len(folder_name)
     count = sum([folder_name.split('/')[-1][:-3] in f for f in files])
-    folder_name = folder_name.replace(folder_name[size - 3:], f"_{'%02d' % count}", 1)
+    if count >= 100:  # if there are 100 folders or more (00-99), add another digit to display _100 in worst cases
+        folder_name = folder_name.replace(folder_name[size - 3:], f"{'%03d' % count}", 1)
+    else:
+        folder_name = folder_name.replace(folder_name[size - 3:], f"_{'%02d' % count}", 1)
     os.mkdir(curr_dir + '/' + folder_name)
 
 ###############################################################
@@ -585,6 +595,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Feature importance methods and visualizations enabled: {enable_feature_importance, feature_importance_method}\n"
       f"Box and bar plotting enabled and selected method: {enable_box_bar_plots, box_bar_figures}\n"
       f"Order of steps in the pipeline if FT or resampling are enabled: {pipeline_order}\n"
+      f"Decision to drop or pass through features that are not transformed: {drop_or_pass_non_treated_features}\n"
       f"Additional grid search parameters that are not directly supported: {additional_params}\n"
       f"Additional technique parameters: {additional_technique_params}\n"
       f"Additional kernel parameters: {additional_kernel_params}\n")
@@ -837,7 +848,7 @@ if enable_rhcf:
         # Heatmap of the cramer matrix (saving process inside function)
         cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name, tiff_figure_dpi)
     else:
-        cat_to_drop, cramer_set = [], []
+        cat_to_drop, cramer_set = [], set()
 
     # Spearman correlation
     if len(continuous_idx) > 1:
@@ -850,7 +861,7 @@ if enable_rhcf:
         # Heatmap of the spearman matrix (saving process inside function)
         spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name, tiff_figure_dpi)
     else:
-        cont_to_drop, spearman_set = [], []
+        cont_to_drop, spearman_set = [], set()
     # General data update after continuous and categorical correlation features were identified
     rem_train, rem_test, rem_feat, rem_idx = drop_and_update_correlated_data(
         continuous_to_drop=cont_to_drop, categorical_to_drop=cat_to_drop, training_set=train_features,
@@ -866,7 +877,7 @@ if enable_rhcf:
         # Heatmap of the point bi-serial matrix (saving process inside function)
         pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name, tiff_figure_dpi)
     else:
-        pbs_to_drop, rem_cat, rem_cont, pbs_set = [], [], [], []
+        pbs_to_drop, rem_cat, rem_cont, pbs_set = [], [], [], set()
 
     # Generate the final remaining training set, test set, and feature list
     final_train_features, final_test_features, final_feature_list = final_drop_and_update(
@@ -905,7 +916,7 @@ if enable_rhcf:
             # Heatmap of the male cramer matrix (saving process inside function)
             cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name, tiff_figure_dpi)
         else:
-            cat_to_drop_male, cramer_set_male = [], []
+            cat_to_drop_male, cramer_set_male = [], set()
 
         # Spearman correlation
         if len(continuous_idx_male) > 1:
@@ -916,7 +927,7 @@ if enable_rhcf:
             spearman_heatmap(spearman_res_male, thresh_spearman, 'male', continuous_idx_male, folder_name,
                              tiff_figure_dpi)
         else:
-            cont_to_drop_male, spearman_set_male = [], []
+            cont_to_drop_male, spearman_set_male = [], set()
         # General data update after continuous and categorical correlation features were identified
         rem_train_male, rem_test_male, rem_feat_male, rem_idx_male = drop_and_update_correlated_data(
             continuous_to_drop=cont_to_drop_male, categorical_to_drop=cat_to_drop_male, training_set=train_men_features,
@@ -934,7 +945,7 @@ if enable_rhcf:
             pbs_heatmap(res_pb_r_male, thresh_pbs, 'male', rem_cat_male, rem_cont_male, longest_male, folder_name,
                         tiff_figure_dpi)
         else:
-            pbs_to_drop_male, rem_cont_male, rem_cat_male, pbs_set_male = [], [], [], []
+            pbs_to_drop_male, rem_cont_male, rem_cat_male, pbs_set_male = [], [], [], set()
 
         # Generate the final remaining training set, test set, and feature list
         final_train_features_male, final_test_features_male, final_feature_list_male = final_drop_and_update(
@@ -975,7 +986,7 @@ if enable_rhcf:
             cramer_heatmap(cramer_res_female, thresh_cramer, 'female', categorical_idx_female, folder_name,
                            tiff_figure_dpi)
         else:
-            cat_to_drop_female, cramer_set_female = [], []
+            cat_to_drop_female, cramer_set_female = [], set()
 
         # Spearman correlation
         if len(continuous_idx_female) > 1:
@@ -987,7 +998,7 @@ if enable_rhcf:
             spearman_heatmap(spearman_res_female, thresh_spearman, 'female', continuous_idx_female, folder_name,
                              tiff_figure_dpi)
         else:
-            cont_to_drop_female, spearman_set_female = [], []
+            cont_to_drop_female, spearman_set_female = [], set()
 
         # General data update after continuous and categorical correlation features were identified
         rem_train_female, rem_test_female, rem_feat_female, rem_idx_female = drop_and_update_correlated_data(
@@ -1007,7 +1018,7 @@ if enable_rhcf:
             pbs_heatmap(res_pb_r_female, thresh_pbs, 'female', rem_cat_female, rem_cont_female, longest_female,
                         folder_name, tiff_figure_dpi)
         else:
-            pbs_to_drop_female, rem_cont_female, rem_cat_female, pbs_set_female = [], [], [], []
+            pbs_to_drop_female, rem_cont_female, rem_cat_female, pbs_set_female = [], [], [], set()
 
         # Generate the final remaining training set, test set, and feature list
         final_train_features_female, final_test_features_female, final_feature_list_female = final_drop_and_update(
@@ -1140,10 +1151,11 @@ if enable_ft:
                                                         ('categorical', k_filter, categorical_idx)], n_jobs=n_jobs)
     elif len(continuous_idx) >= 1:
         feature_trans = ColumnTransformer(transformers=[
-            ('continuous', continuous_pipeline, continuous_idx)], remainder='passthrough', n_jobs=n_jobs)
+            ('continuous', continuous_pipeline, continuous_idx)], remainder=drop_or_pass_non_treated_features,
+            n_jobs=n_jobs)
     elif len(categorical_idx) >= 1:
         feature_trans = ColumnTransformer(transformers=[('categorical', k_filter, categorical_idx)],
-                                          remainder='passthrough', n_jobs=n_jobs)
+                                          remainder=drop_or_pass_non_treated_features, n_jobs=n_jobs)
     else:
         feature_trans = 'passthrough'
 
@@ -1154,10 +1166,12 @@ if enable_ft:
                 ('categorical', k_filter, categorical_idx_male)], n_jobs=n_jobs)
         elif len(continuous_idx_male) >= 1:
             feature_trans_male = ColumnTransformer(transformers=[
-                ('continuous', continuous_pipeline, continuous_idx_male)], remainder='passthrough', n_jobs=n_jobs)
+                ('continuous', continuous_pipeline, continuous_idx_male)], remainder=drop_or_pass_non_treated_features,
+                n_jobs=n_jobs)
         elif len(categorical_idx_male) >= 1:
             feature_trans_male = ColumnTransformer(transformers=[
-                ('categorical', k_filter, categorical_idx_male)], remainder='passthrough', n_jobs=n_jobs)
+                ('categorical', k_filter, categorical_idx_male)], remainder=drop_or_pass_non_treated_features,
+                n_jobs=n_jobs)
         else:
             feature_trans_male = 'passthrough'
 
@@ -1167,10 +1181,12 @@ if enable_ft:
                 ('categorical', k_filter, categorical_idx_female)], n_jobs=n_jobs)
         elif len(continuous_idx_female) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
-                ('continuous', continuous_pipeline, continuous_idx_female)], remainder='passthrough', n_jobs=n_jobs)
+                ('continuous', continuous_pipeline, continuous_idx_female)], remainder=drop_or_pass_non_treated_features,
+                n_jobs=n_jobs)
         elif len(categorical_idx_male) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
-                ('categorical', k_filter, categorical_idx_female)], remainder='passthrough', n_jobs=n_jobs)
+                ('categorical', k_filter, categorical_idx_female)], remainder=drop_or_pass_non_treated_features,
+                n_jobs=n_jobs)
         else:
             feature_trans_female = 'passthrough'
     else:
@@ -1178,14 +1194,14 @@ if enable_ft:
 
 else:  # If FT is disabled, we only stick with the scaler for continuous features if length > 1, else skip
     feature_trans = ColumnTransformer(transformers=[
-        ('continuous', scaler, continuous_idx)], remainder='passthrough',
+        ('continuous', scaler, continuous_idx)], remainder=drop_or_pass_non_treated_features,
         n_jobs=n_jobs) if len(continuous_idx) >= 1 else 'passthrough'
     if enable_data_split:
         feature_trans_male = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_male)],
-                                               remainder='passthrough',
+                                               remainder=drop_or_pass_non_treated_features,
                                                n_jobs=n_jobs) if len(continuous_idx_male) >= 1 else 'passthrough'
         feature_trans_female = ColumnTransformer(transformers=[('continuous', scaler, continuous_idx_female)],
-                                                 remainder='passthrough',
+                                                 remainder=drop_or_pass_non_treated_features,
                                                  n_jobs=n_jobs) if len(continuous_idx_female) >= 1 else 'passthrough'
     else:
         feature_trans_male, feature_trans_female = [None] * 2
@@ -1399,24 +1415,60 @@ for kern in kernels:
     if plt.rcParams['font.size'] != fix_font:
         plt.rcParams['font.size'] = fix_font
 
-    # ROC_AUC curve test set full data
+    # ROC_AUC curve of cross-validated grid search training and final test set full data
     print(f"Full data model evaluation for {kern.upper()} kernel:")
-    evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, fontsize=16)
+    # test set roc_auc
+    evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, 16, 'full')
     plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
+    # cross-validated training set roc_auc
+    cv_roc_mean, cv_roc_std = plot_roc_validation('full', pd.DataFrame(train_features), pd.DataFrame(train_labels),
+                                                  grid_imba.best_estimator_, reps=5, folds=splits, ax=plt)
+    plt.savefig(folder_name + f'/full_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.close()
+    print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
+          % (5, splits, float(cv_roc_mean), float(cv_roc_std)))
+
     if enable_data_split:
         # Male data
-        print(f"\nMale data model evaluation for {kern.upper()} kernel:")
+        print(f"\n\nMale data model evaluation for {kern.upper()} kernel:")
+        # test set roc_auc
         evaluate_model(male_predictions, male_probs, train_male_predictions, train_male_probs, test_men_labels,
-                       train_men_labels, fontsize=16)
+                       train_men_labels, 16, 'male')
         plt.savefig(folder_name + f'/male_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
+        # cross-validated training set roc_auc
+        cv_roc_mean_male, cv_roc_std_male = plot_roc_validation('male',
+                                                                pd.DataFrame(train_men_features),
+                                                                pd.DataFrame(train_men_labels),
+                                                                grid_imba_male.best_estimator_,
+                                                                reps=5, folds=splits, ax=plt)
+        plt.savefig(folder_name + f'/male_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
+              % (5, splits, float(cv_roc_mean_male), float(cv_roc_std_male)))
+
         # Female data
-        print(f"\nFemale data model evaluation for {kern.upper()} kernel:")
+        print(f"\n\nFemale data model evaluation for {kern.upper()} kernel:")
+        # test set roc_auc
         evaluate_model(female_predictions, female_probs, train_female_predictions, train_female_probs,
-                       test_female_labels, train_female_labels, fontsize=16)
+                       test_female_labels, train_female_labels, 16, 'female')
         plt.savefig(folder_name + f'/female_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
+        # cross-validated training set roc_auc
+        cv_roc_mean_female, cv_roc_std_female = plot_roc_validation('female',
+                                                                    pd.DataFrame(train_female_features),
+                                                                    pd.DataFrame(train_female_labels),
+                                                                    grid_imba_female.best_estimator_,
+                                                                    reps=5, folds=splits, ax=plt)
+        plt.savefig(folder_name + f'/female_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
+              % (5, splits, float(cv_roc_mean_female), float(cv_roc_std_female)))
+    else:
+        cv_roc_mean_male, cv_roc_std_male, cv_roc_mean_female, cv_roc_std_female = [None] * 4
 
     # Confusion matrix full data
     cm = confusion_matrix(test_labels, predictions)
@@ -1440,6 +1492,8 @@ for kern in kernels:
                               title='Confusion Matrix', normalize=True)
         plt.savefig(folder_name + f'/female_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
+    else:
+        cm_male, cm_female = [None] * 2
 
     # Turn the original feature lists into np arrays with technically just shorter names for later use
     features = np.array(feature_list)
@@ -2149,6 +2203,7 @@ for kern in kernels:
             if da_tech == 'lda' and '#2' not in lin_out_features[1]:  # only if 1 comp
                 lin_out_real_idx_for_bbp = \
                     [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
+            
             # plot
             box_and_bar_plot(train_features, train_labels, test_features, test_labels,
                              np.array(lin_out_real_idx_for_bbp)[lin_idx][-lin_above_zero_imp:],
@@ -2259,45 +2314,57 @@ for kern in kernels:
     # Baseline, training and test precision, recall and roc are displayed with evaluate_model()
     # Confusion matrix is displayed with plot_confusion_matrix()
     print(f"******************************************\nFull data performance summary for {kern.upper()} kernel:\n")
-    print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba.best_score_, 5) * 100, '%.')
-    print(f"Mean ({scorer}) train score:", round(scoring(grid_imba.best_estimator_,
-                                                         train_features, train_labels), 5) * 100, '%')
-    print(f"Mean ({scorer}) test score:", round(scoring(grid_imba.best_estimator_,
-                                                        test_features, test_labels), 5) * 100, '%')
-    print('Accuracy:', round(accuracy, 4) * 100, '%.')
-    print('F1 test score:', round(f1_test, 4) * 100, '%.')
-    print('F1 train score:', round(f1_train, 4) * 100, '%.')
-    print('AUC:', round(auc, 4) * 100, '%.')
+    print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba.best_score_ * 100), '%.')
+    print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba.best_estimator_,
+                                                             train_features, train_labels) * 100), '%.')
+    print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba.best_estimator_,
+                                                            test_features, test_labels) * 100), '%.')
+    print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean * 100), '%.', '(+- %.2f)' % (cv_roc_std * 100))
+    print('Overall ROC-AUC test score: %.2f' % (auc * 100), '%.')
+    print('Overall F1 train score: %.2f' % (f1_train * 100), '%.')
+    print('Overall F1 test score: %.2f' % (f1_test * 100), '%.')
+    print('Accuracy: %.2f' % (accuracy * 100), '%.')
     print('Correctly classified samples:', correctly_classified, 'of', len(test_labels))
+    print('True negatives detail:', cm[0, 0], 'correctly classified of', cm[0, 0] + cm[0, 1])
+    print('True positives detail:', cm[1, 1], 'correctly classified of', cm[1, 1] + cm[1, 0])
     print('Best fitting parameters after grid search:', grid_imba.best_params_, '\n')
     print('******************************************')
 
     if enable_data_split:
         print(f"Male data performance summary for {kern.upper()} kernel:\n")
-        print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba_male.best_score_, 5) * 100, '%.')
-        print(f"Mean ({scorer}) train score:", round(scoring(grid_imba_male.best_estimator_,
-                                                             train_men_features, train_men_labels), 5) * 100, '%')
-        print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_male.best_estimator_,
-                                                            test_men_features, test_men_labels), 5) * 100, '%')
-        print('Accuracy:', round(accuracy_male, 4) * 100, '%.')
-        print('F1 test score:', round(f1_test_male, 4) * 100, '%.')
-        print('F1 train score:', round(f1_train_male, 4) * 100, '%.')
-        print('AUC:', round(auc_male, 4) * 100, '%.')
+        print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_male.best_score_ * 100), '%.')
+        print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba_male.best_estimator_,
+                                                                 train_men_features, train_men_labels) * 100), '%.')
+        print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba_male.best_estimator_,
+                                                                test_men_features, test_men_labels) * 100), '%.')
+        print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_male * 100),
+              '%.', '(+- %.2f)' % (cv_roc_std_male * 100))
+        print('Overall ROC-AUC test score: %.2f' % (auc_male * 100), '%.')
+        print('Overall F1 train score: %.2f' % (f1_train_male * 100), '%.')
+        print('Overall F1 test score: %.2f' % (f1_test_male * 100), '%.')
+        print('Accuracy: %.2f' % (accuracy_male * 100), '%.')
         print('Correctly classified samples:', correctly_classified_male, 'of', len(test_men_labels))
+        print('True negatives detail:', cm_male[0, 0], 'correctly classified of', cm_male[0, 0] + cm_male[0, 1])
+        print('True positives detail:', cm_male[1, 1], 'correctly classified of', cm_male[1, 1] + cm_male[1, 0])
         print('Best fitting parameters after grid search:', grid_imba_male.best_params_, '\n')
 
         print(f"******************************************\nFemale data performance summary "
               f"for {kern.upper()} kernel:\n")
-        print(f"Mean GridSearchCV ({scorer}) train score:", round(grid_imba_female.best_score_, 5) * 100, '%.')
-        print(f"Mean ({scorer}) train score:", round(scoring(grid_imba_female.best_estimator_,
-                                                             train_female_features, train_female_labels), 5) * 100, '%')
-        print(f"Mean ({scorer}) test score:", round(scoring(grid_imba_female.best_estimator_,
-                                                            test_female_features, test_female_labels), 5) * 100, '%')
-        print('Accuracy:', round(accuracy_female, 4) * 100, '%.')
-        print('F1 test score:', round(f1_test_female, 4) * 100, '%.')
-        print('F1 train score:', round(f1_train_female, 4) * 100, '%.')
-        print('AUC:', round(auc_female, 4) * 100, '%.')
+        print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_female.best_score_ * 100), '%.')
+        print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba_female.best_estimator_,
+                                                                 train_female_features,
+                                                                 train_female_labels) * 100), '%.')
+        print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba_female.best_estimator_,
+                                                                test_female_features, test_female_labels) * 100), '%.')
+        print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_female * 100),
+              '%.', '(+- %.2f)' % (cv_roc_std_female * 100), '%.')
+        print('Overall ROC-AUC test score: %.2f' % (auc_female * 100), '%.')
+        print('Overall F1 train score: %.2f' % (f1_train_female * 100), '%.')
+        print('Overall F1 test score: %.2f' % (f1_test_female * 100), '%.')
+        print('Accuracy: %.2f' % (accuracy_female * 100), '%.')
         print('Correctly classified samples:', correctly_classified_female, 'of', len(test_female_labels))
+        print('True negatives detail:', cm_female[0, 0], 'correctly classified of', cm_female[0, 0] + cm_female[0, 1])
+        print('True positives detail:', cm_female[1, 1], 'correctly classified of', cm_female[1, 1] + cm_female[1, 0])
         print('Best fitting parameters after grid search:', grid_imba_female.best_params_, '\n')
         print('******************************************')
 
