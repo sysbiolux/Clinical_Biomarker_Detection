@@ -2264,10 +2264,18 @@ for kern in kernels:
                 to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
                 lin_imp = lin_imp[len(to_remove):]  # clip off the kernel_pca components that we can't trace back
             # plot
-            scatter_plot_importance_technique(kern, 'Full', mean1=lin_imp, mean2=perm_importance.importances_mean,
-                                              mean3=perm_mean, mean4=imp_vals, tuple_of_names=('SVM_coef vs Sklearn',
-                                                                                               'SVM_coef vs Eli5',
-                                                                                               'SVM_coef vs Mlxtend'),
+            scatter_plot_importance_technique(kern, 'Full', mean1=lin_imp,
+                                              mean2=perm_importance.importances_mean if
+                                              feature_importance_method in ('all',
+                                                                            'sklearn') else np.zeros(len(features)),
+                                              mean3=perm_mean if
+                                              feature_importance_method in ('all',
+                                                                            'eli5') else np.zeros(len(features)),
+                                              mean4=imp_vals if
+                                              feature_importance_method in ('all',
+                                                                            'mlxtend') else np.zeros(len(features)),
+                                              tuple_of_names=('SVM_coef vs Sklearn', 'SVM_coef vs Eli5',
+                                                              'SVM_coef vs Mlxtend'),
                                               fontsize=12, permutation_technique=feature_importance_method,
                                               lin_out_real_idx=lin_out_real_idx_for_bbp)
             plt.savefig(folder_name + f'/full_{kern}_scatter_permutation_versus_svm.tiff',
@@ -2282,10 +2290,17 @@ for kern in kernels:
                     lin_imp_male = lin_imp_male[len(to_remove_male):]  # clip off the pca components that can't find
                 # plot
                 scatter_plot_importance_technique(kern, 'Male', mean1=lin_imp_male,
-                                                  mean2=perm_importance_male.importances_mean, mean3=perm_mean_male,
-                                                  mean4=imp_vals_male, tuple_of_names=('SVM_coef vs Sklearn',
-                                                                                       'SVM_coef vs Eli5',
-                                                                                       'SVM_coef vs Mlxtend'),
+                                                  mean2=perm_importance_male.importances_mean if
+                                                  feature_importance_method in ('all', 'sklearn') else
+                                                  np.zeros(len(features_male)),
+                                                  mean3=perm_mean_male if
+                                                  feature_importance_method in ('all', 'eli5') else
+                                                  np.zeros(len(features_male)),
+                                                  mean4=imp_vals_male if
+                                                  feature_importance_method in ('all', 'mlxtend') else
+                                                  np.zeros(len(features_male)),
+                                                  tuple_of_names=('SVM_coef vs Sklearn', 'SVM_coef vs Eli5',
+                                                                  'SVM_coef vs Mlxtend'),
                                                   fontsize=12, permutation_technique=feature_importance_method,
                                                   lin_out_real_idx=lin_out_real_idx_for_bbp_male)
                 plt.savefig(folder_name + f'/male_{kern}_scatter_permutation_versus_svm.tiff',
@@ -2298,10 +2313,17 @@ for kern in kernels:
                     lin_imp_female = lin_imp_female[len(to_remove_female):]  # clip off the kernel_pca components ...
                 # plot
                 scatter_plot_importance_technique(kern, 'Female', mean1=lin_imp_female,
-                                                  mean2=perm_importance_female.importances_mean, mean3=perm_mean_female,
-                                                  mean4=imp_vals_female, tuple_of_names=('SVM_coef vs Sklearn',
-                                                                                         'SVM_coef vs Eli5',
-                                                                                         'SVM_coef vs Mlxtend'),
+                                                  mean2=perm_importance_female.importances_mean if
+                                                  feature_importance_method in ('all', 'sklearn') else
+                                                  np.zeros(len(features_female)),
+                                                  mean3=perm_mean_female if
+                                                  feature_importance_method in ('all', 'eli5') else
+                                                  np.zeros(len(features_female)),
+                                                  mean4=imp_vals_female if
+                                                  feature_importance_method in ('all', 'mlxtend') else
+                                                  np.zeros(len(features_female)),
+                                                  tuple_of_names=('SVM_coef vs Sklearn', 'SVM_coef vs Eli5',
+                                                                  'SVM_coef vs Mlxtend'),
                                                   fontsize=12, permutation_technique=feature_importance_method,
                                                   lin_out_real_idx=lin_out_real_idx_for_bbp_female)
                 plt.savefig(folder_name + f'/female_{kern}_scatter_permutation_versus_svm.tiff',
