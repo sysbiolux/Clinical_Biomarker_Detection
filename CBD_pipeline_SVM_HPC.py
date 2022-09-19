@@ -2357,7 +2357,7 @@ for kern in kernels:
         print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba_female.best_estimator_,
                                                                 test_female_features, test_female_labels) * 100), '%.')
         print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_female * 100),
-              '%.', '(+- %.2f)' % (cv_roc_std_female * 100), '%.')
+              '%.', '(+- %.2f)' % (cv_roc_std_female * 100))
         print('Overall ROC-AUC test score: %.2f' % (auc_female * 100), '%.')
         print('Overall F1 train score: %.2f' % (f1_train_female * 100), '%.')
         print('Overall F1 test score: %.2f' % (f1_test_female * 100), '%.')
