@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - May 2022, University of Luxembourg, v.05/31/2022 (M/d/y) #############################################
+# November 2021 - September 2022, University of Luxembourg, v.09/16/2022 (M/d/y) #######################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -119,7 +119,7 @@ def separate_full_data(full_train, full_test, target_feature, splitting_feature=
 # ## ROC-AUC curve
 ###################
 # Create model evaluation function
-def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, fontsize):
+def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, fontsize, data_group):
     """
     Function to compare and evaluate machine learning models to baseline performance.
     Computes statistics and shows ROC curve.
@@ -140,6 +140,8 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
         labels of the training data set
     fontsize : int
         fontsize for the ROC curve figure
+    data_group : str
+        name of the data subgroup to be analysed.     
     """
     # Calculate and store baseline, test and train results
     baseline = {'Recall': recall_score(testlabels, [1 for _ in range(len(testlabels))]),
@@ -161,12 +163,86 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     # Plot both curves
     plt.figure(figsize=(8, 6))
     plt.rcParams['font.size'] = fontsize
-    plt.plot(base_fpr, base_tpr, 'b', label='baseline')
-    plt.plot(model_fpr, model_tpr, 'r', label='model')
-    plt.legend()
+    plt.plot(base_fpr, base_tpr, 'r--', linewidth=1.5, label='baseline')
+    plt.plot(model_fpr, model_tpr, 'b', label='model')
+    plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('ROC Curves')
+    plt.title(f'{data_group.capitalize()} ROC AUC Curve')
+
+
+#####################################
+# ## ROC_AUC during cross-validation
+#####################################
+# function to plot ROC_AUC curves of the stratified k-fold cross-validation during GridSearchCV
+def plot_roc_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None, fontsize=14):
+    """ performs (reps) times (folds)-fold cross-validation and displays
+    the average ROC curve, its confidence interval as well as each ROC curve
+    for each validation fold for an out-of-bag stacked model.
+    Parameters
+    ----------
+    data_group : String
+        name of the data subgroup to be analysed.
+    x : DataFrame
+        Predictors
+    y : Series
+        Targets
+    final_model : model
+        sklearn model type for stacking
+    reps : int, optional
+        number of shuffled repeats. The default is 5.
+    folds : int, optional
+        number of folds in the cross-validation. The default is 5.
+    ax : axis, optional
+        the axis to be plotted. The default is None.
+    fontsize : int, optional
+        plot text font size.
+
+    Returns
+    -------
+    None.
+    """
+    tprs = []
+    scores = []
+    base_fpr = np.linspace(0, 1, 101)
+    idx = np.arange(0, len(y))
+    np.random.seed(42)
+    ax.figure(figsize=(8, 6))
+    ax.rcParams['font.size'] = fontsize
+    for j in np.random.randint(0, high=10000, size=reps):
+        np.random.shuffle(idx)
+        kf = StratifiedKFold(folds, shuffle=True, random_state=j)
+        x_shuff = x.iloc[idx, :]
+        y_shuff = y.iloc[idx]
+        for train, test in kf.split(x_shuff, y_shuff):
+            x_test = x_shuff.iloc[test]
+            y_test = y_shuff.iloc[test]
+            trained_model = final_model
+            y_score = trained_model.predict_proba(x_test)
+            fpr, tpr, _ = roc_curve(y_test, y_score[:, 1])
+            score = roc_auc_score(y_test, y_score[:, 1])
+            scores.append(score)
+            ax.plot(fpr, tpr, "b", alpha=0.1, linewidth=2)
+            tpr = np.interp(base_fpr, fpr, tpr)
+            tpr[0] = 0.0
+            tprs.append(tpr)
+    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')
+    tprs = np.array(tprs)
+    mean_tprs = tprs.mean(axis=0)
+    mean_scores = np.mean(scores)
+    std_scores = np.std(scores)
+    std = tprs.std(axis=0)
+    tprs_upper = np.minimum(mean_tprs + std, 1)
+    tprs_lower = mean_tprs - std
+    ax.plot(base_fpr, mean_tprs, "b", linewidth=3, label='average ROC curve')
+    ax.fill_between(base_fpr, tprs_lower, tprs_upper, color="grey", alpha=0.3, label='confidence interval')
+    ax.plot([0, 1], [0, 1], "r--", linewidth=1.2, label='baseline')
+    ax.xlim([-0.01, 1.01])
+    ax.ylim([-0.01, 1.01])
+    ax.title(f"{data_group.capitalize()} ROC AUC in %d-times %d-fold CV: %.3f +- %.3f"
+             % (reps, folds, float(mean_scores), float(std_scores)))
+    ax.legend(fontsize=8, loc='lower right')
+    return mean_scores, std_scores
 
 
 ######################
