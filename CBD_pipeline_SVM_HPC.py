@@ -234,7 +234,7 @@ if not enable_subgroups:
 else:
     subgroups_to_keep = subgroups_to_keep
 # Reset scorer if not among implemented possibilities
-if scorer not in ('F.5', 'F1', 'F2', 'roc_auc', 'accuracy', 'balanced_accuracy', 'matthews_corrcoef', 'dor'):
+if scorer not in ('F.5', 'F1', 'F2', 'F5', 'roc_auc', 'accuracy', 'balanced_accuracy', 'matthews_corrcoef', 'dor'):
     scorer = 'accuracy'
     warnings.warn("**Scorer was not among the possible scores. Default 'accuracy' is loaded.**")
 # Reset feature importance method settings
