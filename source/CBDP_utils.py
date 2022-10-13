@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - September 2022, University of Luxembourg, v.09/16/2022 (M/d/y) #######################################
+# November 2021 - October 2022, University of Luxembourg, v.10/13/2022 (M/d/y) #########################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -2500,6 +2500,33 @@ def swap_words(string, first_to_swap, second_to_swap):
     new_string = \
         second_to_swap.join(part.replace(second_to_swap, first_to_swap) for part in string.split(first_to_swap))
     return new_string
+
+
+def dor_score(y_true, y_pred):
+    """
+    Diagnostic odds ratio scorer for medical binary classification scoring.
+
+    Parameters
+    ----------
+    y_true : np.array
+        array of ground truth labels
+    y_pred : np.array
+        predicted labels
+
+    Returns
+    -------
+    dor : np.float
+        floating dor score
+    """
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    tpr = (tp/(tp+fn))
+    fpr = (fp/(fp+tn))
+    fnr = (fn/(tp+fn))
+    tnr = (tn/(fp+tn))
+    lr_plus = tpr/fpr
+    lr_minus = fnr/tnr
+    dor = lr_plus/lr_minus
+    return dor
 
 
 ########################################################################################################################
