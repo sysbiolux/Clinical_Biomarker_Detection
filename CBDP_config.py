@@ -76,7 +76,6 @@ splits = 10  # Stratified k fold splits, 10, int
 scorer = 'dor'  # Scorer used in GridSearch, F.5, F1, F2, roc_auc, dor, matthews_corrcoef, balanced_accuracy or accuracy,
 # def acc.,str, if scorer is balanced_accuracy or matthews_corrcoef, the current weights are 10 to 1 for positive class.
 # /!\ Kernels will be changed to only 'linear' if non-linear PCA is activated in the pipeline
-# /!\ Kernels will be changed to only 'linear' if non-linear PCA is activated in the pipeline
 
 # Feature importance number of shuffles
 shuffle_all = 1000  # Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values
