@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - September 2022, University of Luxembourg, v.09/16/2022 (M/d/y) #######################################
+# November 2021 - October 2022, University of Luxembourg, v.10/13/2022 (M/d/y) #########################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -88,13 +88,13 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.09/16/2022 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.10/13/2022 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.09/16/2022.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.10/13/2022.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
@@ -234,7 +234,7 @@ if not enable_subgroups:
 else:
     subgroups_to_keep = subgroups_to_keep
 # Reset scorer if not among implemented possibilities
-if scorer not in ('F.5', 'F1', 'F2', 'roc_auc', 'accuracy'):
+if scorer not in ('F.5', 'F1', 'F2', 'roc_auc', 'accuracy', 'balanced_accuracy', 'matthews_corrcoef', 'dor'):
     scorer = 'accuracy'
     warnings.warn("**Scorer was not among the possible scores. Default 'accuracy' is loaded.**")
 # Reset feature importance method settings
@@ -1207,7 +1207,24 @@ else:  # If FT is disabled, we only stick with the scaler for continuous feature
         feature_trans_male, feature_trans_female = [None] * 2
 
 # Additional pipeline properties including scoring, stratified k fold and parameters for all kernel and possible steps
-if scorer == 'F2':
+if scorer in ('balanced_accuracy', 'matthews_corrcoef'):
+    test_weights = [1 if y == 0 else 10 for y in test_labels]
+    train_weights = [1 if y == 0 else 10 for y in train_labels]
+    if enable_data_split:
+        test_weights_male = [1 if y == 0 else 10 for y in test_men_labels]
+        train_weights_male = [1 if y == 0 else 10 for y in train_men_labels]
+        test_weights_female = [1 if y == 0 else 10 for y in test_female_labels]
+        train_weights_female = [1 if y == 0 else 10 for y in train_female_labels]
+    else:
+        test_weights_male, train_weights_male, test_weights_female, train_weights_female = [None] * 4
+else:
+    test_weights, train_weights, test_weights_male, train_weights_male, test_weights_female, train_weights_female \
+        = [None] * 6
+
+scoring_test, scoring_male, scoring_test_male, scoring_female, scoring_test_female = [None] * 5
+if scorer == 'F5':
+    scoring = make_scorer(fbeta_score, beta=5, average='macro')  # F beta 5
+elif scorer == 'F2':
     scoring = make_scorer(fbeta_score, beta=2, average='macro')  # F beta 2
 elif scorer == 'F.5':
     scoring = make_scorer(fbeta_score, beta=0.5, average='macro')  # F beta 0.5
@@ -1216,6 +1233,24 @@ elif scorer == 'F1':
 elif scorer == 'roc_auc':
     scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_threshold=False,
                           needs_proba=False, average='macro')  # roc_auc scorer
+elif scorer == 'balanced_accuracy':  # balanced accuracy scorer with sample_weight
+    scoring = make_scorer(balanced_accuracy_score, sample_weight=train_weights)
+    scoring_test = make_scorer(balanced_accuracy_score, sample_weight=test_weights)
+    if enable_data_split:
+        scoring_male = make_scorer(balanced_accuracy_score, sample_weight=train_weights_male)
+        scoring_test_male = make_scorer(balanced_accuracy_score, sample_weight=test_weights_male)
+        scoring_female = make_scorer(balanced_accuracy_score, sample_weight=train_weights_female)
+        scoring_test_female = make_scorer(balanced_accuracy_score, sample_weight=test_weights_female)
+elif scorer == 'matthews_corrcoef':  # matthews correlation coefficient with sample_weight
+    scoring = make_scorer(matthews_corrcoef, sample_weight=train_weights)
+    scoring_test = make_scorer(matthews_corrcoef, sample_weight=test_weights)
+    if enable_data_split:
+        scoring_male = make_scorer(matthews_corrcoef, sample_weight=train_weights_male)
+        scoring_test_male = make_scorer(matthews_corrcoef, sample_weight=test_weights_male)
+        scoring_female = make_scorer(matthews_corrcoef, sample_weight=train_weights_female)
+        scoring_test_female = make_scorer(matthews_corrcoef, sample_weight=test_weights_female)
+elif scorer == 'dor':
+    scoring = make_scorer(dor_score)
 else:
     scoring = make_scorer(accuracy_score)  # Accuracy as default if none is selected
 
@@ -1334,14 +1369,16 @@ for kern in kernels:
     if enable_data_split:
         grid_imba_male = GridSearchCV(pipeline_male, param_grid=final_params,
                                       cv=skf,
-                                      scoring=scoring,
+                                      scoring=scoring_male if scorer in ('balanced_accuracy',
+                                                                         'matthews_corrcoef') else scoring,
                                       return_train_score=True,
                                       verbose=grid_verbose,
                                       n_jobs=n_jobs)
         # Grid search on female data
         grid_imba_female = GridSearchCV(pipeline_female, param_grid=final_params,
                                         cv=skf,
-                                        scoring=scoring,
+                                        scoring=scoring_female if scorer in ('balanced_accuracy',
+                                                                             'matthews_corrcoef') else scoring,
                                         return_train_score=True,
                                         verbose=grid_verbose,
                                         n_jobs=n_jobs)
@@ -2336,11 +2373,20 @@ for kern in kernels:
     # Baseline, training and test precision, recall and roc are displayed with evaluate_model()
     # Confusion matrix is displayed with plot_confusion_matrix()
     print(f"******************************************\nFull data performance summary for {kern.upper()} kernel:\n")
-    print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba.best_score_ * 100), '%.')
-    print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba.best_estimator_,
-                                                             train_features, train_labels) * 100), '%.')
-    print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba.best_estimator_,
-                                                            test_features, test_labels) * 100), '%.')
+    if scorer == 'dor':
+        print(f"Mean GridSearchCV ({scorer.upper()}) train score: %.2f" % grid_imba.best_score_)
+        print(f"Overall ({scorer.upper()}) train score: %.2f" % scoring(grid_imba.best_estimator_,
+                                                                        train_features, train_labels))
+        print(f"Overall ({scorer.upper()}) test score: %.2f" % scoring(grid_imba.best_estimator_,
+                                                                       test_features, test_labels))
+    else:
+        print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba.best_score_ * 100), '%.')
+        print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba.best_estimator_,
+                                                                 train_features, train_labels) * 100), '%.')
+        print(f"Overall ({scorer}) test score: %.2f" % (
+            scoring_test(grid_imba.best_estimator_,
+                         test_features, test_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
+            scoring(grid_imba.best_estimator_, test_features, test_labels) * 100), '%.')
     print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean * 100), '%.', '(+- %.2f)' % (cv_roc_std * 100))
     print('Overall ROC-AUC test score: %.2f' % (auc * 100), '%.')
     print('Overall F1 train score: %.2f' % (f1_train * 100), '%.')
@@ -2354,11 +2400,22 @@ for kern in kernels:
 
     if enable_data_split:
         print(f"Male data performance summary for {kern.upper()} kernel:\n")
-        print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_male.best_score_ * 100), '%.')
-        print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba_male.best_estimator_,
-                                                                 train_men_features, train_men_labels) * 100), '%.')
-        print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba_male.best_estimator_,
-                                                                test_men_features, test_men_labels) * 100), '%.')
+        if scorer == 'dor':
+            print(f"Mean GridSearchCV ({scorer.upper()}) train score: %.2f" % grid_imba_male.best_score_)
+            print(f"Overall ({scorer.upper()}) train score: %.2f" % scoring(grid_imba_male.best_estimator_,
+                                                                            train_men_features, train_men_labels))
+            print(f"Overall ({scorer.upper()}) test score: %.2f" % scoring(grid_imba_male.best_estimator_,
+                                                                           test_men_features, test_men_labels))
+        else:
+            print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_male.best_score_ * 100), '%.')
+            print(f"Overall ({scorer}) train score: %.2f" % (
+                scoring_male(grid_imba_male.best_estimator_, train_men_features,
+                             train_men_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
+                scoring(grid_imba_male.best_estimator_, train_men_features, train_men_labels) * 100), '%.')
+            print(f"Overall ({scorer}) test score: %.2f" % (
+                scoring_test_male(grid_imba_male.best_estimator_, test_men_features,
+                                  test_men_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
+                scoring(grid_imba_male.best_estimator_, test_men_features, test_men_labels) * 100), '%.')
         print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_male * 100),
               '%.', '(+- %.2f)' % (cv_roc_std_male * 100))
         print('Overall ROC-AUC test score: %.2f' % (auc_male * 100), '%.')
@@ -2372,12 +2429,25 @@ for kern in kernels:
 
         print(f"******************************************\nFemale data performance summary "
               f"for {kern.upper()} kernel:\n")
-        print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_female.best_score_ * 100), '%.')
-        print(f"Overall ({scorer}) train score: %.2f" % (scoring(grid_imba_female.best_estimator_,
-                                                                 train_female_features,
-                                                                 train_female_labels) * 100), '%.')
-        print(f"Overall ({scorer}) test score: %.2f" % (scoring(grid_imba_female.best_estimator_,
-                                                                test_female_features, test_female_labels) * 100), '%.')
+        if scorer == 'dor':
+            print(f"Mean GridSearchCV ({scorer.upper()}) train score: %.2f" % grid_imba_female.best_score_)
+            print(f"Overall ({scorer.upper()}) train score: %.2f" % scoring(grid_imba_female.best_estimator_,
+                                                                            train_female_features,
+                                                                            train_female_labels))
+            print(f"Overall ({scorer.upper()}) test score: %.2f" % scoring(grid_imba_female.best_estimator_,
+                                                                           test_female_features,
+                                                                           test_female_labels))
+        else:
+            print(f"Mean GridSearchCV ({scorer}) train score: %.2f" % (grid_imba_female.best_score_ * 100), '%.')
+            print(f"Overall ({scorer}) train score: %.2f" % (
+                scoring_female(grid_imba_female.best_estimator_, train_female_features,
+                               train_female_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
+                scoring(grid_imba_female.best_estimator_, train_female_features, train_female_labels) * 100), '%.')
+            print(f"Overall ({scorer}) test score: %.2f" % (
+                scoring_test_female(grid_imba_female.best_estimator_, test_female_features,
+                                    test_female_labels) * 100 if scorer in ('balanced_accuracy',
+                                                                            'matthews_corrcoef') else
+                scoring(grid_imba_female.best_estimator_, test_female_features, test_female_labels) * 100), '%.')
         print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_female * 100),
               '%.', '(+- %.2f)' % (cv_roc_std_female * 100))
         print('Overall ROC-AUC test score: %.2f' % (auc_female * 100), '%.')
