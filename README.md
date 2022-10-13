@@ -2,7 +2,7 @@
 PRIDE-DRIVEN-DTU WP13:  
 Biomarker Detection In Clinical Cohort Data Using Machine Learning
 ---
-version 07/20/2022 (M/d/y)
+version 10/13/2022 (M/d/y)
 
 ---
 ## Description
