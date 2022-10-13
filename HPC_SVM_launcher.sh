@@ -2,8 +2,8 @@
 
 #SBATCH -J short-parallel-job
 #SBATCH -N 3
-#SBATCH -c 4
-#SBATCH --ntasks 96
+#SBATCH -c 8
+#SBATCH --ntasks 48
 #SBATCH --time=02-00:00:00
 #SBATCH -p batch
 #SBATCH --mail-type=END,FAIL
