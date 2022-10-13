@@ -2,8 +2,8 @@
 
 #SBATCH -J long-parallel-job
 #SBATCH -N 2
-#SBATCH -c 4
-#SBATCH --ntasks 64
+#SBATCH -c 8
+#SBATCH --ntasks 32
 #SBATCH --time=10-00:00:00
 #SBATCH --qos=long
 #SBATCH -p batch
