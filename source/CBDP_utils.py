@@ -2519,6 +2519,12 @@ def dor_score(y_true, y_pred):
         floating dor score
     """
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+        # correcting contingency table to ensure DOR approximation in case we encounter division by zero
+    tn = tn + .5
+    fp = fp + .5
+    fn = fn + .5
+    tp = tp + .5
+    # continue rates and likelihood calculations
     tpr = (tp/(tp+fn))
     fpr = (fp/(fp+tn))
     fnr = (fn/(tp+fn))
