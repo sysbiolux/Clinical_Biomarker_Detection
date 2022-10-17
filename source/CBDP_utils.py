@@ -227,7 +227,7 @@ def plot_roc_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None,
             tpr = np.interp(base_fpr, fpr, tpr)
             tpr[0] = 0.0
             tprs.append(tpr)
-    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')
+    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')  # force roc curve at 0,0
     tprs = np.array(tprs)
     mean_tprs = tprs.mean(axis=0)
     mean_scores = np.mean(scores)
@@ -304,7 +304,7 @@ def plot_pr_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None, 
     y_real = np.concatenate(y_real)
     y_proba = np.concatenate(y_proba)
     precision, recall, _ = precision_recall_curve(y_real, y_proba)
-    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')
+    ax.plot(0, 1, "b", alpha=0.1, label='n times k-fold cross-validation')  # force pr curve at 0,1
     mean_precision = np.mean(precision_array, axis=0)
     std_precision = np.std(precision_array, axis=0)
     mean_scores = np.mean(mean_precision)
