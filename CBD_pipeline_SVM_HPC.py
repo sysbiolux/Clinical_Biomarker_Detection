@@ -1465,6 +1465,13 @@ for kern in kernels:
     plt.close()
     print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
           % (5, splits, float(cv_roc_mean), float(cv_roc_std)))
+    # cross-validated training set pr_curve
+    cv_pr_mean, cv_pr_std = plot_pr_validation('full', pd.DataFrame(train_features), pd.DataFrame(train_labels),
+                                               grid_imba.best_estimator_, reps=5, folds=splits, ax=plt)
+    plt.savefig(folder_name + f'/full_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.close()
+    print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
+          % (5, splits, float(cv_pr_mean), float(cv_pr_std)))
 
     if enable_data_split:
         # Male data
@@ -1485,7 +1492,18 @@ for kern in kernels:
         plt.close()
         print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
               % (5, splits, float(cv_roc_mean_male), float(cv_roc_std_male)))
-
+        # cross-validated training set pr_auc
+        cv_pr_mean_male, cv_pr_std_male = plot_pr_validation('male',
+                                                             pd.DataFrame(train_men_features),
+                                                             pd.DataFrame(train_men_labels),
+                                                             grid_imba_male.best_estimator_,
+                                                             reps=5, folds=splits, ax=plt)
+        plt.savefig(folder_name + f'/male_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
+              % (5, splits, float(cv_pr_mean_male), float(cv_pr_std_male)))
+              
         # Female data
         print(f"\n\nFemale data model evaluation for {kern.upper()} kernel:")
         # test set roc_auc
@@ -1504,8 +1522,20 @@ for kern in kernels:
         plt.close()
         print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f\n"
               % (5, splits, float(cv_roc_mean_female), float(cv_roc_std_female)))
+        # cross-validated training set pr_auc
+        cv_pr_mean_female, cv_pr_std_female = plot_pr_validation('female',
+                                                                 pd.DataFrame(train_female_features),
+                                                                 pd.DataFrame(train_female_labels),
+                                                                 grid_imba_female.best_estimator_,
+                                                                 reps=5, folds=splits, ax=plt)
+        plt.savefig(folder_name + f'/female_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f\n"
+              % (5, splits, float(cv_pr_mean_female), float(cv_pr_std_female)))
     else:
-        cv_roc_mean_male, cv_roc_std_male, cv_roc_mean_female, cv_roc_std_female = [None] * 4
+        cv_roc_mean_male, cv_roc_std_male, cv_roc_mean_female, cv_roc_std_female, cv_pr_mean_male, cv_pr_std_male, \
+          cv_pr_mean_female, cv_pr_std_female = [None] * 8
 
     # Confusion matrix full data
     cm = confusion_matrix(test_labels, predictions)
@@ -2387,6 +2417,7 @@ for kern in kernels:
             scoring_test(grid_imba.best_estimator_,
                          test_features, test_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
             scoring(grid_imba.best_estimator_, test_features, test_labels) * 100), '%.')
+    print('Mean GridSearchCV PR-AUC train score: %.2f' % (cv_pr_mean * 100), '%.', '(+- %.2f)' % (cv_pr_std * 100))
     print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean * 100), '%.', '(+- %.2f)' % (cv_roc_std * 100))
     print('Overall ROC-AUC test score: %.2f' % (auc * 100), '%.')
     print('Overall F1 train score: %.2f' % (f1_train * 100), '%.')
@@ -2416,6 +2447,8 @@ for kern in kernels:
                 scoring_test_male(grid_imba_male.best_estimator_, test_men_features,
                                   test_men_labels) * 100 if scorer in ('balanced_accuracy', 'matthews_corrcoef') else
                 scoring(grid_imba_male.best_estimator_, test_men_features, test_men_labels) * 100), '%.')
+        print('Mean GridSearchCV PR-AUC train score: %.2f' % (cv_pr_mean_male * 100),
+              '%.', '(+- %.2f)' % (cv_pr_std_male * 100))
         print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_male * 100),
               '%.', '(+- %.2f)' % (cv_roc_std_male * 100))
         print('Overall ROC-AUC test score: %.2f' % (auc_male * 100), '%.')
@@ -2448,6 +2481,8 @@ for kern in kernels:
                                     test_female_labels) * 100 if scorer in ('balanced_accuracy',
                                                                             'matthews_corrcoef') else
                 scoring(grid_imba_female.best_estimator_, test_female_features, test_female_labels) * 100), '%.')
+        print('Mean GridSearchCV PR-AUC train score: %.2f' % (cv_pr_mean_female * 100),
+              '%.', '(+- %.2f)' % (cv_pr_std_female * 100))
         print('Mean GridSearchCV ROC-AUC train score: %.2f' % (cv_roc_mean_female * 100),
               '%.', '(+- %.2f)' % (cv_roc_std_female * 100))
         print('Overall ROC-AUC test score: %.2f' % (auc_female * 100), '%.')
