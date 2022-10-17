@@ -25,6 +25,7 @@ import scipy.stats as ss
 from joblib import parallel_backend, Parallel, delayed
 from matplotlib_venn import venn3, venn3_unweighted
 from sklearn.metrics import *
+from sklearn.model_selection import StratifiedKFold
 
 
 ########################################################################################################################
@@ -240,6 +241,81 @@ def plot_roc_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None,
     ax.xlim([-0.01, 1.01])
     ax.ylim([-0.01, 1.01])
     ax.title(f"{data_group.capitalize()} ROC AUC in %d-times %d-fold CV: %.3f +- %.3f"
+             % (reps, folds, float(mean_scores), float(std_scores)))
+    ax.legend(fontsize=8, loc='lower right')
+    return mean_scores, std_scores
+
+
+# function to plot ROC_AUC curves of the stratified k-fold cross-validation during GridSearchCV
+def plot_pr_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None, fontsize=14):
+    """ performs (reps) times (folds)-fold cross-validation and displays
+    the average PR (precision-recall) curve, its confidence interval as well as each PR curve
+    for each validation fold for an out-of-bag stacked model.
+    Parameters
+    ----------
+    data_group : String
+        name of the data subgroup to be analysed.
+    x : DataFrame
+        Predictors
+    y : Series
+        Targets
+    final_model : model
+        sklearn model type for stacking
+    reps : int, optional
+        number of shuffled repeats. The default is 5.
+    folds : int, optional
+        number of folds in the cross-validation. The default is 5.
+    ax : axis, optional
+        the axis to be plotted. The default is None.
+    fontsize : int, optional
+        plot text font size.
+
+    Returns
+    -------
+    None.
+    """
+
+    y_real = []
+    y_proba = []
+    precision_array = []
+    recall_array = np.linspace(0, 1, 100)
+    idx = np.arange(0, len(y))
+    np.random.seed(42)
+    ax.figure(figsize=(8, 6))
+    ax.rcParams['font.size'] = fontsize
+    for j in np.random.randint(0, high=10000, size=reps):
+        np.random.shuffle(idx)
+        kf = StratifiedKFold(folds, shuffle=True, random_state=j)
+        x_shuff = x.iloc[idx, :]
+        y_shuff = y.iloc[idx]
+        for train, test in kf.split(x_shuff, y_shuff):
+            x_test = x_shuff.iloc[test]
+            y_test = y_shuff.iloc[test]
+            trained_model = final_model
+            y_score = trained_model.predict_proba(x_test)
+            prec, rec, _ = precision_recall_curve(y_test, y_score[:, 1])
+            prec, rec = prec[::-1], rec[::-1]  # reverse order of results
+            prec_array = np.interp(recall_array, rec, prec)
+            precision_array.append(prec_array)
+            ax.plot(rec, prec, "b", alpha=0.1, linewidth=2)
+            y_real.append(y_test)
+            y_proba.append(y_score[:, 1])
+
+    y_real = np.concatenate(y_real)
+    y_proba = np.concatenate(y_proba)
+    precision, recall, _ = precision_recall_curve(y_real, y_proba)
+    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')
+    mean_precision = np.mean(precision_array, axis=0)
+    std_precision = np.std(precision_array, axis=0)
+    mean_scores = np.mean(mean_precision)
+    std_scores = np.mean(std_precision)
+    ax.plot(recall, precision, "b", linewidth=3, label='average PR curve')
+    ax.fill_between(recall_array, mean_precision - std_precision, mean_precision + std_precision,
+                    color="grey", alpha=0.3, label='confidence interval')
+    ax.plot([0, 1], [1, 0], "r--", linewidth=1.2, label='baseline')
+    ax.xlim([-0.01, 1.01])
+    ax.ylim([-0.01, 1.01])
+    ax.title(f"{data_group.capitalize()} PR AUC in %d-times %d-fold CV: %.3f +- %.3f"
              % (reps, folds, float(mean_scores), float(std_scores)))
     ax.legend(fontsize=8, loc='lower right')
     return mean_scores, std_scores
