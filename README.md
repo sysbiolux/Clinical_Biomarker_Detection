@@ -222,11 +222,11 @@ If everything is set and ready, run the pipeline with the configured experimenta
 
 ---
 ## Results
-The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps, e.g. `<possible_prefix>-DS-REI-RHCF-ST-chi2KBEST-PCA-FT-RUS-FI-BBP-SVM-both-lin-and-non-lin-HPC` for a pipeline deployed with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), chi2 SelectKBest (chi2KBEST) normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) with linear and non-linear kernels (both-lin-and-non-lin) and run on the high performance computing clusters (HPC). Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
+The results will be stored in the configured `folder_prefix` folder and bear the combined and sorted abbreviations of enabled steps including 3-digit numericals to avoid duplicated folders, e.g. `<possible_prefix>-DS-REI-RHCF-ST-chi2KBEST-PCA-FT-RUS-FI-BBP-SVM-both-lin-and-non-lin-HPC_00` for a pipeline deployed with data splitting (DS), removing engineered input (REI), removing highly correlated features (RHCF), standard scaler (ST), chi2 SelectKBest (chi2KBEST) normal PCA (PCA), feature transformation (FT), imbalance resampling with random under-sampling (RUS), calculated feature importance (FI), with box and bar plots (BBP), using support vector machine classification (SVM) with linear and non-linear kernels (both-lin-and-non-lin) and run on the high performance computing clusters (HPC) for the first time (00). If run a second time, a second folder would be created with the same name and ending with \_01. Note the pipeline-order in the name being features first by FT, then resampling by RUS.  
 
 Other possible abbreviations are: MI minmax scaler, RO robust scaler, SMOTE synthetic minority over-sampling technique, kPCA kernel PCA (which will be preceeded by the actual kernel if one analyses them one by one, e.g. polykPCA to save computational time). 
 
-The results will consist of confusion matrices, roc_auc curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
+The results will consist of confusion matrices, roc_auc curves, precision-recall curves, summarising heatmap and venn diagram plots for RHCF, summarising plots for feature importance and shuffling effects, comparison scatter plots for the different feature importance methods, and the code execution output file generated either in the terminal (local machine) or in a readable .out file (HPC).
 
 ---
 ## Planned Updates
@@ -241,6 +241,7 @@ The results will consist of confusion matrices, roc_auc curves, summarising heat
 - [x] ~Updated the pipeline flow-chart and README descriptions~ 07/14/2022
 - [x] ~Added roc_auc as GridSearchCV scorer~ 07/20/2022
 - [x] ~Add Diagnostic Odds Ratio, balanced_accuracy, and matthews correlation coefficient as Cross-validation scorers~ 10/13/2022
+- [x] ~Add cross-validation roc-auc and precision-recall curve plots~ 10/13/2022 
 - [ ] Extend the pipeline to allow tree-based classification (e.g. RF, XGBoost)
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add QDA as non-linear supervised continuous transformer
