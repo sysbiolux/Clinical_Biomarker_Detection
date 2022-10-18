@@ -126,7 +126,7 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | grid_verbose | 1 | Grid search verbose | int |
 | hard_iter_cap | 150000 | Hard stopping criterion | int |
 | splits | 10 | Stratified k fold splits | int |
-| scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, roc_auc, matthews_corrcoef, dor (diagnostic odds ratio), balanced_accuracy or accuracy | str |
+| scorer | 'F2' | Scorer used during the experimental steps, F.5, F1, F2, F5, roc_auc, matthews_corrcoef, dor (diagnostic odds ratio), balanced_accuracy or accuracy | str |
 | shuffle_all | 1000 | Proven 1000 for a set of 1200 samples that each sample receives at least half of the other values  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
 | shuffle_male | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
 | shuffle_female | 500 | Proven 500 for a set of 600 samples  (see [proof](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/shuffle_proof/shuffle_me.py)) | int |
