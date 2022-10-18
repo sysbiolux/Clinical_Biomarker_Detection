@@ -73,7 +73,7 @@ clf_verbose = False  # Classifier verbose either True or False, False, bool
 grid_verbose = 1  # Grid search verbose, either 1 or 2, 1, int
 hard_iter_cap = 150000  # Hard stopping criterion, 150000, int
 splits = 10  # Stratified k fold splits, 10, int
-scorer = 'dor'  # Scorer used in GridSearch, F.5, F1, F2, roc_auc, dor, matthews_corrcoef, balanced_accuracy or accuracy,
+scorer = 'F2'  # Scorer used, either F.5, F1, F2, F5, roc_auc, dor, matthews_corrcoef, balanced_accuracy or accuracy,
 # def acc.,str, if scorer is balanced_accuracy or matthews_corrcoef, the current weights are 10 to 1 for positive class.
 # /!\ Kernels will be changed to only 'linear' if non-linear PCA is activated in the pipeline
 
