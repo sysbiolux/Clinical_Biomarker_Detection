@@ -1458,6 +1458,11 @@ for kern in kernels:
     evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, 16, 'full')
     plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
+    # test set pr_auc
+    plot_pr(probs, test_labels, 16, 'full')
+    plt.savefig(folder_name + f'/full_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.close()
+
     # cross-validated training set roc_auc
     cv_roc_mean, cv_roc_std = plot_roc_validation('full', pd.DataFrame(train_features), pd.DataFrame(train_labels),
                                                   grid_imba.best_estimator_, reps=5, folds=splits, ax=plt)
@@ -1481,6 +1486,11 @@ for kern in kernels:
                        train_men_labels, 16, 'male')
         plt.savefig(folder_name + f'/male_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
+        # test set pr_auc
+        plot_pr(male_probs, test_men_labels, 16, 'male')
+        plt.savefig(folder_name + f'/male_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.close()
+        
         # cross-validated training set roc_auc
         cv_roc_mean_male, cv_roc_std_male = plot_roc_validation('male',
                                                                 pd.DataFrame(train_men_features),
@@ -1511,6 +1521,11 @@ for kern in kernels:
                        test_female_labels, train_female_labels, 16, 'female')
         plt.savefig(folder_name + f'/female_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
+        # test set pr_auc
+        plot_pr(female_probs, test_female_labels, 16, 'female')
+        plt.savefig(folder_name + f'/female_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.close()
+        
         # cross-validated training set roc_auc
         cv_roc_mean_female, cv_roc_std_female = plot_roc_validation('female',
                                                                     pd.DataFrame(train_female_features),
