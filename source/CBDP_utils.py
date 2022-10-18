@@ -171,6 +171,32 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     plt.ylabel('True Positive Rate')
     plt.title(f'{data_group.capitalize()} ROC AUC Curve')
 
+    
+def plot_pr(prob, testlabels, fontsize, data_group):
+    """
+    Function to plot the precision - recall curve on validation set.
+
+    Parameters
+    ----------
+    prob : np.array
+        model prediction probabilities of the test data set
+    testlabels : np.array
+        labels of the test data set
+    fontsize : int
+        fontsize for the ROC curve figure
+    data_group : str
+        name of the data subgroup to be analysed.
+    """
+    precision, recall, _ = precision_recall_curve(testlabels, prob)
+    plt.figure(figsize=(8, 6))
+    plt.rcParams['font.size'] = fontsize
+    plt.plot([0, 1], [1, 0], 'r--', linewidth=1.5, label='baseline')
+    plt.plot(recall, precision, 'b', label='model')
+    plt.legend(fontsize=8, loc='lower right')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title(f'{data_group.capitalize()} PR AUC Curve')
+
 
 #####################################
 # ## ROC_AUC during cross-validation
