@@ -322,6 +322,7 @@ def plot_pr_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None, 
             prec, rec, _ = precision_recall_curve(y_test, y_score[:, 1])
             prec, rec = prec[::-1], rec[::-1]  # reverse order of results
             prec_array = np.interp(recall_array, rec, prec)
+            prec_array[0] = 1.0
             precision_array.append(prec_array)
             ax.plot(rec, prec, "b", alpha=0.1, linewidth=2)
             y_real.append(y_test)
