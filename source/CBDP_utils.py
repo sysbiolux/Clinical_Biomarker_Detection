@@ -2260,7 +2260,10 @@ class CustomUnpickler(pickle.Unpickler):
         except AttributeError:
             return super().find_class(module, name)
 
-
+        
+#############################################################################################
+# Function to process built-in feature importance by the linear SVM classifier for PCA & LDA
+#############################################################################################
 def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_trans_name, pca_step_name, input_features,
                                      cont_idx, lin_importance_by_svm):
     """
