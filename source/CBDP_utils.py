@@ -1728,7 +1728,7 @@ def rhcf_update_summary(training_features, testing_features, features_list, fin_
           f"{(len(origin_train), len(origin_feat) - len(cat_drop))}, "
           f"{(len(origin_test), len(origin_feat) - len(cat_drop))} to {remaining_train.shape}, {remaining_test.shape} "
           f"after spearman correlation between {len(cont_idx)} continuous features "
-          f"identified {len(cont_drop)} highly correlated features above the {spearman_threshold}th percentile.\n"
+          f"identified {len(cont_drop)} highly correlated features above the {spearman_threshold} threshold.\n"
           f"Finally, the train and test shapes were further reduced from {remaining_train.shape}, "
           f"{remaining_test.shape} to the final shape {training_features.shape}, {testing_features.shape} after "
           f"point bi-serial correlation between {len(remain_cat)} remaining categorical and {len(remain_cont)} "
