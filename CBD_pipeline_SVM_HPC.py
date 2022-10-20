@@ -34,10 +34,6 @@
 
 # /!\ CURRENT WARNINGS / ERRORS ENCOUNTERED: /!\ #
 # ---------------------------------------------- #
-# RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface
-# (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory.
-# (To control this warning, see the rcParam `figure.max_open_warning`). SOLVED, WITH PLT.CLOSE() AND CHANGE PARAM TO 0
-
 # OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.1.
 # Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. IGNORED, MINOR CHANGE NOT WORTH UPDATING
 
