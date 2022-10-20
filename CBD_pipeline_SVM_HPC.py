@@ -51,6 +51,7 @@
 import argparse
 import logging
 import math
+import matplotlib
 import random
 import sys
 import warnings
@@ -642,6 +643,8 @@ plt.style.use(plot_style)
 plt.rcParams.update({'figure.max_open_warning': fig_max_open_warning})
 # Pandas option for number of displayed columns
 pd.set_option('display.max_columns', pandas_col_display_option)
+# Ensure threading on multiple devices
+matplotlib.use('Agg')
 
 #####################################
 # ## Loading the train and test data
