@@ -2560,10 +2560,11 @@ def scatter_plot_importance_technique(kernel, datatype, mean1, mean2, mean3, mea
             axx.plot(dicts[tuple_of_names[_]][0], m * dicts[tuple_of_names[_]][0] + b,
                      linestyle=':', linewidth=1, color='m')
             # Define axis text, uncomment next 3 lines if you wish to have r squared and equation displayed
-            text = r"$r^2$ = " \
-                + f'{round(pg.corr(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1])["r"].values[0] ** 2, 4)}' \
-                + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
-            axx.plot([], label=text)
+            if len(dicts[tuple_of_names[_]][0]) > 1:
+                text = r"$r^2$ = " \
+                  + f'{round(pg.corr(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1])["r"].values[0] ** 2, 4)}' \
+                  + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
+                axx.plot([], label=text)
             axx.legend(handlelength=0, loc='upper left', fontsize=fontsize)
         figs.tight_layout()
     else:
@@ -2575,10 +2576,11 @@ def scatter_plot_importance_technique(kernel, datatype, mean1, mean2, mean3, mea
             axes.plot(dicts[key][0], m * dicts[key][0] + b,
                       linestyle=':', linewidth=1, color='m')
             # Define axis text, uncomment next 3 lines if you wish to have r squared and equation displayed
-            text = r"$r^2$ = " \
-                + f'{round(pg.corr(dicts[key][0], dicts[key][1])["r"].values[0] ** 2, 4)}' \
-                + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
-            axes.plot([], label=text)
+            if len(dicts[key][0]) > 1:
+                text = r"$r^2$ = " \
+                  + f'{round(pg.corr(dicts[key][0], dicts[key][1])["r"].values[0] ** 2, 4)}' \
+                  + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
+                axes.plot([], label=text)
             axes.legend(handlelength=0, loc='upper left', fontsize=fontsize)
         figs.tight_layout()
 
