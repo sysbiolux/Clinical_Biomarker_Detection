@@ -35,7 +35,7 @@
 # /!\ CURRENT WARNINGS / ERRORS ENCOUNTERED: /!\ #
 # ---------------------------------------------- #
 # OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.1.
-# Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. IGNORED, MINOR CHANGE NOT WORTH UPDATING
+# Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. SUPPRESSED, MINOR CHANGES NOT WORTH UPDATING
 
 # ConvergenceWarning: Solver terminated early (max_iter=150000).  Consider pre-processing your data with StandardScaler
 # or MinMaxScaler. IGNORED, HAPPENS WHEN USING ROBUST SCALER OR MAX ITER OF THE CLASSIFIER IS REACHED (SEE CONFIG)
@@ -73,6 +73,9 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+# Suppress pingouin out of date warning
+OUTDATED_IGNORE = 1
 
 # Control output printing destination (original = console)
 orig_stdout = sys.__stdout__
