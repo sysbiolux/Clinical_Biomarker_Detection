@@ -56,8 +56,8 @@ output_related = ['PM-Frailty_Score',
                   'SV-Frailty_exhaustion',
                   'SV-Frailty_physicalactivity',
                   'PM-Frailty_gripstrength',
-                  'PM-Gripstrength_max',
-                  'PM-Frailty_weightloss']  # Output-related features, str (can be list)
+                  'PM-Frailty_weightloss',
+                  'PM-Gripstrength_max']  # Output-related features, str (can be list)
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
