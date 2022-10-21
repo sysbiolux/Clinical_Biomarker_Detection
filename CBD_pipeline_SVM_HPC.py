@@ -58,7 +58,7 @@ import warnings
 
 import pandas as pd
 from eli5.permutation_importance import get_score_importances
-from imblearn.over_sampling import SMOTE, SMOTENC
+from imblearn.over_sampling import SMOTE, SMOTEN, SMOTENC
 from imblearn.pipeline import Pipeline
 from imblearn.under_sampling import RandomUnderSampler
 from ipyparallel import Client
@@ -1093,7 +1093,8 @@ if enable_resampling:
         # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
                           categorical_features=categorical_idx if pipeline_order == 'samples->features' else
-                          'find_for_me') if len(categorical_idx) != 0 else \
+                          'find_for_me') if len(categorical_idx) != 0 and len(continuous_idx) != 0 else \
+            SMOTEN(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs) if len(categorical_idx) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
 
 if enable_data_split:
@@ -1105,18 +1106,24 @@ if enable_data_split:
                                           random_state=seed)  # RUS function
         # female
         sampler_female = sampler_male  # no changes to above
+
     elif resampling_tech == 'smote':  # SMOTENC if categorical are present, else SMOTE
         # male
         # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler_male = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
                                categorical_features=categorical_idx_male if pipeline_order == 'samples->features' else
-                               'find_for_me') if len(categorical_idx_male) != 0 else \
+                               'find_for_me') if len(categorical_idx_male) != 0 and len(continuous_idx_male) != 0 else \
+            SMOTEN(random_state=seed,
+                   sampling_strategy='minority', n_jobs=n_jobs) if len(categorical_idx_male) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
         # female
         # In case where pipeline order is features->samples, we let SMOTENC automatically find the categorical
         sampler_female = SMOTENC(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs,
                                  categorical_features=categorical_idx_female if pipeline_order == 'samples->features'
-                                 else 'find_for_me') if len(categorical_idx_female) != 0 else \
+                                 else 'find_for_me'
+                                 ) if len(categorical_idx_female) != 0 and len(continuous_idx_female) != 0 else \
+            SMOTEN(random_state=seed,
+                   sampling_strategy='minority', n_jobs=n_jobs) if len(categorical_idx_female) != 0 else \
             SMOTE(random_state=seed, sampling_strategy='minority', n_jobs=n_jobs)
 else:
     sampler_male, sampler_female = [None] * 2
