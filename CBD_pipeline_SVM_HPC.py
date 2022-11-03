@@ -1544,7 +1544,7 @@ for kern in kernels:
         plt.savefig(folder_name + f'/female_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
-        print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f\n"
+        print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
               % (5, splits, float(cv_roc_mean_female), float(cv_roc_std_female)))
         # cross-validated training set pr_auc
         cv_pr_mean_female, cv_pr_std_female = plot_pr_validation('female',
