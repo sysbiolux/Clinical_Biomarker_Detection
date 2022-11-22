@@ -2359,7 +2359,8 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
               'assuming that no feature transformation takes place and n_input_features equal n_output_features.')
         return input_features
     else:
-        if 'categorical' not in best_estimator.named_steps['features'].named_transformers_:
+        if 'categorical' not in best_estimator.named_steps['features'].named_transformers_ or \
+                    best_estimator.named_steps['features'].named_transformers_['categorical'] == 'drop':
             print('No categorical transformer found inside the feature transformation step of the estimator pipeline, '
                   'unable to retrieve most important feature names. If a continuous transformation is present and it '
                   'is linear pca, than we can at least attribute the most important number of component.')
