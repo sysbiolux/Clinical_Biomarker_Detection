@@ -2400,9 +2400,9 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
             return np.array(important_feature_names), sum_of_variance
         elif ft_tech == 'lda':
             if len(remaining_cont_features_sorted) == 1:
-                best_ld_feats = input_features[remaining_cont_features_sorted]
+                best_ld_feats = list(input_features[remaining_cont_features_sorted])
             else:
-                best_ld_feats = input_features[np.array(remaining_cont_features_sorted)]
+                best_ld_feats = list(input_features[np.array(remaining_cont_features_sorted)])
             for pos in range(len(best_ld_feats)):
                 best_ld_feats[pos] = best_ld_feats[pos] + f' (LD #1, pos.{pos + 1})'
             important_feature_names = list(best_ld_feats) + list(best_cat_feat_appended)
