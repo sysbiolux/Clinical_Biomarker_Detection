@@ -2291,7 +2291,7 @@ for kern in kernels:
                 to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
                 lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp[len(to_remove):], bar_cap=40)
             # In case of LDA: renew real idx of features including only the first one of the LDA
-            if da_tech == 'lda' and '#2' not in lin_out_features[1]:  # only if 1 comp
+            if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features]):  # only if 1 comp
                 lin_out_real_idx_for_bbp = \
                     [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
             
@@ -2310,7 +2310,7 @@ for kern in kernels:
                     lin_idx_male, lin_above_zero_imp_male = \
                         sorted_above_zero(importance_mean=lin_imp_male[len(to_remove_male):], bar_cap=40)
                 # In case of LDA: renew real idx of features including only the first one of the LDA
-                if da_tech == 'lda' and '#2' not in lin_out_features_male[1]:
+                if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features_male]):
                     lin_out_real_idx_for_bbp_male = \
                         [list(features_male).index(x.split(' (')[0]) for x in lin_out_features_male if
                          x.split(' (')[0] in features_male]
@@ -2328,7 +2328,7 @@ for kern in kernels:
                     lin_idx_female, lin_above_zero_imp_female = \
                         sorted_above_zero(importance_mean=lin_imp_female[len(to_remove_female):], bar_cap=40)
                 # In case of LDA: renew real idx of features including only the first one of the LDA
-                if da_tech == 'lda' and '#2' not in lin_out_features_female[1]:
+                if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features_female]):
                     lin_out_real_idx_for_bbp_female = \
                         [list(features_female).index(x.split(' (')[0]) for x in lin_out_features_female if
                          x.split(' (')[0] in features_female]
