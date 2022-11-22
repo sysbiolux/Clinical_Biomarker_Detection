@@ -1149,7 +1149,7 @@ if enable_ft:
     # Chi squared k best selection on categorical
     k_filter = SelectKBest(score_func=chi2) if kbest_tech == 'chi2' else \
         SelectKBest(score_func=corr_cramer_kbest) if kbest_tech == 'cramer' else \
-        SelectKBest(score_func=kbest_tech) if hasattr(kbest_tech, '__call__') else 'passthrough'
+        SelectKBest(score_func=kbest_tech) if hasattr(kbest_tech, '__call__') else drop_or_pass_non_treated_features
 
     continuous_pipeline = Pipeline([('scaler', scaler), ('pca', pca)]) if pca_tech != '' else \
         Pipeline([('scaler', scaler), ('lda', da)]) if da_tech != '' else \
