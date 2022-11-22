@@ -2494,7 +2494,7 @@ def linear_lda_features_loadings(best_estimator, feature_step_name, cont_trans_n
         else:
             print(f'\nLDA feature transformation resulted in one single dimension with one single feature\nthat '
                   f'explains 95% of the variance. That feature is: {input_features[most_important_feature_idx]}.\n')
-        return [most_important_feature_idx]
+        return most_important_feature_idx
 
 
 def scatter_plot_importance_technique(kernel, datatype, mean1, mean2, mean3, mean4,
