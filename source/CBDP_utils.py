@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - October 2022, University of Luxembourg, v.10/13/2022 (M/d/y) #########################################
+# November 2021 - October 2022, University of Luxembourg, v.11/22/2022 (M/d/y) #########################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -2350,6 +2350,9 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
     important_feature_names : np.array
         array of names for the most important features after column transformation and using linear SVM with its coef_
     """
+    state = ''
+    most_important_cat = []
+    best_cat_feat_appended = ''
     if 'features' not in best_estimator.named_steps:
         print('No feature transformation step found in the estimator pipeline, unable to retrieve most important '
               'feature names. Please note that for the reason this might be intended, the full feature list is returned'
@@ -2359,59 +2362,60 @@ def linear_svm_get_features(best_estimator, lin_idx, categorical_trans_idx, cont
         if 'categorical' not in best_estimator.named_steps['features'].named_transformers_:
             print('No categorical transformer found inside the feature transformation step of the estimator pipeline, '
                   'unable to retrieve most important feature names. If a continuous transformation is present and it '
-                  'is linear pca, than we can at least attribute the most important number of component')
+                  'is linear pca, than we can at least attribute the most important number of component.')
+            state = 'cat_out'
             if 'continuous' not in best_estimator.named_steps['features'].named_transformers_:
                 print('No categorical nor continuous feature transformation step found despite the presence of a step '
                       'called features. This assumes that no feature transformation takes place and returns the full '
                       'feature list. If this is not the case, the function will be passed and there might be an issue '
                       'with the step names, please revise.')
                 return input_features
-            else:
-                pass
-        else:
+
+        if state != 'cat_out':
             feat_k_best = best_estimator.named_steps['features'].named_transformers_[
                 'categorical'].get_support() if hasattr(best_estimator.named_steps['features'].named_transformers_[
                     'categorical'], 'get_support') else input_features[np.array(categorical_trans_idx)]
             most_important_cat = \
                 np.where(feat_k_best == 1)[0] if feat_k_best.dtype == 'bool' else np.arange(len(feat_k_best))
-            # these features are added after the pca transformation, so most_important_cat last features can be known
+            # these features are added after the pca transformation, so most_important_cat last feature can be known
             best_cat_feat_appended = input_features[np.array(categorical_trans_idx)[most_important_cat]]
             # so the feat_k_best last values of lin_imp or arranged lin_idx are the best_cat_feat_appended in same order
             # The remaining len(lin_idx) - feat_k_best should then represent top n_components descending averaged
             # importance for each feature, as yielded by the above function linear_pca_avg_features_loadings
-            remaining_cont_features = len(lin_idx) - len(most_important_cat)
-            remaining_cont_features_sorted, sum_of_variance = \
-                linear_pca_avg_features_loadings(best_estimator, 'features', 'continuous', ft_tech, input_features,
-                                                 continuous_trans_idx, lin_importance_by_svm) if ft_tech == 'pca' else \
-                (linear_lda_features_loadings(best_estimator, 'features', 'continuous', ft_tech,
-                                              continuous_trans_idx, lin_importance_by_svm, input_features),
-                 [None]) if ft_tech == 'lda' else (input_features[continuous_trans_idx], [None])
-            # append 'PC contribution #_' to the remaining_cont_features_sorted if pca
-            if ft_tech == 'pca':
-                best_pc_feats = list(remaining_cont_features_sorted.index[0:remaining_cont_features])
-                for pos in range(len(best_pc_feats)):
-                    best_pc_feats[pos] = best_pc_feats[pos] + f' (PC #{pos + 1})'
-                important_feature_names = best_pc_feats + list(best_cat_feat_appended)
-                return np.array(important_feature_names), sum_of_variance
-            elif ft_tech == 'lda':
-                if len(remaining_cont_features_sorted) == 1:
-                    best_ld_feats = input_features[tuple(remaining_cont_features_sorted)]
-                else:
-                    best_ld_feats = input_features[np.array(remaining_cont_features_sorted)]
-                for pos in range(len(best_ld_feats)):
-                    best_ld_feats[pos] = best_ld_feats[pos] + f' (LD #1, pos.{pos + 1})'
-                important_feature_names = list(best_ld_feats) + list(best_cat_feat_appended)
-                return np.array(important_feature_names)
-            elif ft_tech == 'kernel_pca':
-                kernel_components = best_estimator.get_params()['features__continuous__pca__n_components']
-                best_kpc_feats = []
-                for pos in range(kernel_components):
-                    best_kpc_feats.append(f'Kernel PCA component #{pos + 1}')
-                important_feature_names = list(best_kpc_feats) + list(best_cat_feat_appended)
-                return np.array(important_feature_names)
-            elif ft_tech == 'none':
-                important_feature_names = list(input_features[continuous_trans_idx]) + list(best_cat_feat_appended)
-                return np.array(important_feature_names)
+
+        remaining_cont_features = len(lin_idx) - len(most_important_cat)
+        remaining_cont_features_sorted, sum_of_variance = \
+            linear_pca_avg_features_loadings(best_estimator, 'features', 'continuous', ft_tech, input_features,
+                                             continuous_trans_idx, lin_importance_by_svm) if ft_tech == 'pca' else \
+            (linear_lda_features_loadings(best_estimator, 'features', 'continuous', ft_tech,
+                                          continuous_trans_idx, lin_importance_by_svm, input_features),
+             [None]) if ft_tech == 'lda' else (input_features[continuous_trans_idx], [None])
+        # append 'PC contribution #_' to the remaining_cont_features_sorted if pca
+        if ft_tech == 'pca':
+            best_pc_feats = list(remaining_cont_features_sorted.index[0:remaining_cont_features])
+            for pos in range(len(best_pc_feats)):
+                best_pc_feats[pos] = best_pc_feats[pos] + f' (PC #{pos + 1})'
+            important_feature_names = best_pc_feats + list(best_cat_feat_appended)
+            return np.array(important_feature_names), sum_of_variance
+        elif ft_tech == 'lda':
+            if len(remaining_cont_features_sorted) == 1:
+                best_ld_feats = input_features[tuple(remaining_cont_features_sorted)]
+            else:
+                best_ld_feats = input_features[np.array(remaining_cont_features_sorted)]
+            for pos in range(len(best_ld_feats)):
+                best_ld_feats[pos] = best_ld_feats[pos] + f' (LD #1, pos.{pos + 1})'
+            important_feature_names = list(best_ld_feats) + list(best_cat_feat_appended)
+            return np.array(important_feature_names)
+        elif ft_tech == 'kernel_pca':
+            kernel_components = best_estimator.get_params()['features__continuous__pca__n_components']
+            best_kpc_feats = []
+            for pos in range(kernel_components):
+                best_kpc_feats.append(f'Kernel PCA component #{pos + 1}')
+            important_feature_names = list(best_kpc_feats) + list(best_cat_feat_appended)
+            return np.array(important_feature_names)
+        elif ft_tech == 'none':
+            important_feature_names = list(input_features[continuous_trans_idx]) + list(best_cat_feat_appended)
+            return np.array(important_feature_names)
 
 
 def linear_lda_features_loadings(best_estimator, feature_step_name, cont_trans_name, lda_step_name, cont_idx,
