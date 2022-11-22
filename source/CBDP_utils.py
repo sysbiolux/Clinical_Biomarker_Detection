@@ -2488,9 +2488,10 @@ def linear_lda_features_loadings(best_estimator, feature_step_name, cont_trans_n
             print(f'\nLDA feature transformation resulted in one single dimension with more than one feature\nthat '
                   f'together explain 95% of the variance. In total, {counter} features are necessary to explain these '
                   f'95%. For better visualization, we select only the top 3 to top 5 features.\nThose features are: '
-                  f'{input_features[most_important_feature_idx]}.\nAs it is currently not clear how to bypass this for '
-                  f'the importance plot and box-bar-plot visualization,\nwe will stick with the most important one '
-                  f'for the box and bar plot.\n')
+                  f'{input_features[most_important_feature_idx]}.\nThe following features explain 95% of variance:\n'
+                  f'{input_features[np.array(cont_idx)[sorted_normalized_idx[0:counter]]]}\nAs it is currently not '
+                  f'clear how to bypass this for the importance plot and box-bar-plot visualization,\nwe will stick '
+                  f'with the most important one for the box and bar plot.\n')
         else:
             print(f'\nLDA feature transformation resulted in one single dimension with one single feature\nthat '
                   f'explains 95% of the variance. That feature is: {input_features[most_important_feature_idx]}.\n')
