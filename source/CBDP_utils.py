@@ -2304,8 +2304,8 @@ def linear_pca_avg_features_loadings(best_estimator, feature_step_name, cont_tra
                                 index=input_features[cont_idx])
     importance_of_continuous_features = abs(lin_importance_by_svm[0:n_pca])
     weighted_pca_loadings = pd.DataFrame()
+    imp_coef_position = 0
     for k in pca_loadings.columns:
-        imp_coef_position = 0
         weighted_pca_loadings[k] = abs(pca_loadings[k]) * importance_of_continuous_features[imp_coef_position]
         imp_coef_position += 1
 
