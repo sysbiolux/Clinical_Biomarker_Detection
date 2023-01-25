@@ -251,7 +251,7 @@ The results will consist of confusion matrices, roc_auc curves, precision-recall
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add QDA as non-linear supervised continuous transformer
 - [ ] Allow to choose if ONLY the data subgroups (e.g. male & female) should be processed
-- [ ] Add decision-making possibilities for tagging features to be removed during the RHCF step
+- [ ] Add decision-making possibilities for tagging features to be removed during the RHCF step e.g., remove the one least correlating with output_feature
 - [ ] Allow the use of other correlation metrics during RHCF
 - [ ] Look for categorical selector or transformer other than SelectKBest
 - [x] ~Allow the possibility to 'drop' or 'passthrough' features that are not eligible for the transformer steps (e.g. case where categorical transformer is disabled, what should happen to the input categorical features, drop or pass them through?~ 10/13/2022
