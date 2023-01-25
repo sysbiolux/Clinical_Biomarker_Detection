@@ -2,7 +2,7 @@
 PRIDE-DRIVEN-DTU WP13:  
 Biomarker Detection In Clinical Cohort Data Using Machine Learning
 ---
-version 10/13/2022 (M/d/y)
+version 01/25/2023 (M/d/y)
 
 ---
 ## Description
@@ -14,7 +14,7 @@ The repository is composed of the main pipeline script [CBD_pipeline_SVM_HPC.py]
 Furthermore, the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) contains all necessary functions used by the pipeline, including modified files for the python packages `imblearn`, `eli5` and `mlxtend`.
 
 ### Requirements (necessary for both local machine and HPC application)
-* The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`. Python version used: `Python version 3.8.6`.
+* The python packages necessary for this analysis can be found and installed to your working environment via the [requirements.txt](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/requirements.txt) file using `pip install -r requirements.txt`. Python used: `Python version 3.8.6`.
 
 * **/!\\ /!\\ /!\\** After installing the required packages, files in the *imblearn*, *eli5* and *mlxtend* package folders need to be replaced with the modified files in the [source folder](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/source/) in order to enable them for parallelized computing and additional automations.
 
@@ -241,7 +241,12 @@ The results will consist of confusion matrices, roc_auc curves, precision-recall
 - [x] ~Updated the pipeline flow-chart and README descriptions~ 07/14/2022
 - [x] ~Added roc_auc as GridSearchCV scorer~ 07/20/2022
 - [x] ~Add Diagnostic Odds Ratio, balanced_accuracy, and matthews correlation coefficient as Cross-validation scorers~ 10/13/2022
-- [x] ~Add cross-validation roc-auc and precision-recall curve plots~ 10/13/2022 
+- [x] ~Add cross-validation roc-auc and precision-recall curve plots~ 10/13/2022
+- [ ] Add PCA or LDA plot with variances of data after RHCF if linear PCA or LDA is used as transformer
+- [ ] Enable tagging a specific subgroup of samples based on available features and visualize the performance within that group vs the other
+- [ ] For overall results in the group, draw confusion matrix with boxplots of target-related features in TP/TN/FP/FN groups
+- [ ] Correlation plots of features that remain after RHCF with the output feature (cramer & chi2, PBS)
+- [ ] Add ROC/PR curve of the splits that were effectively used during CV training, but also keep the random ones
 - [ ] Extend the pipeline to allow tree-based classification (e.g. RF, XGBoost)
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add QDA as non-linear supervised continuous transformer
