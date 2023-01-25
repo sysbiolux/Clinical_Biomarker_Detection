@@ -74,9 +74,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-# Suppress pingouin out of date warning
-OUTDATED_IGNORE = 1
-
 # Control output printing destination (original = console)
 orig_stdout = sys.__stdout__
 
