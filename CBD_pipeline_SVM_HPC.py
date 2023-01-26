@@ -297,13 +297,15 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
               resampling_tech, folder_prefix, pca_tech, da_tech, scaler_tech, scorer, feature_importance_method,
-              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features]
+              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features,
+              sample_tagging_feature]
 if not (all(isinstance(i, str) for i in config_str)):
     if not hasattr(kbest_tech, '__call__'):
         raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
                         'output_feature, split_feature, decision_func_shape, parallel_method, folder_prefix, pca_tech, '
                         'da_tech, scaler_tech, scorer, feature_importance_method, box_bar_figures, negative_class, '
-                        'positive_class, kbest_tech, drop_or_pass_non_treated_features. Got %s instead.' % config_str)
+                        'positive_class, kbest_tech, drop_or_pass_non_treated_features, sample_tagging_feature. '
+                        'Got %s instead.' % config_str)
 # Variables check that should strictly be a list of strings or str
 if not (all(isinstance(i, str) for i in output_related) or isinstance(output_related, list)):
     raise TypeError('One or multiple of the configured output features were not recognized as str or list of str: '
@@ -331,11 +333,12 @@ if not (isinstance(subgroups_to_keep, tuple) or all(isinstance(i, str) for i in 
                     % subgroups_to_keep)
 # RHCF threshold variables check if remove highly correlated features is enabled
 if enable_rhcf:
-    config_thresh_tuple = [thresh_cramer, thresh_spearman, thresh_pbs]
+    config_thresh_tuple = [thresh_cramer, thresh_spearman, thresh_pbs, tag_threshold]
     for i in config_thresh_tuple:
         if not isinstance(i, tuple):
             raise TypeError('The following configured variables must be tuples: '
-                            'thresh_cramer, thresh_spearman, thresh_pbs. Got %s instead.' % config_thresh_tuple)
+                            'thresh_cramer, thresh_spearman, thresh_pbs, tag_threshold. '
+                            'Got %s instead.' % config_thresh_tuple)
         if isinstance(i[1], str) and i[1] == 'decimal':
             if not isinstance(i[0], float):
                 raise TypeError('The following threshold variable for decimal cut-off must be float. Got %s '
@@ -560,6 +563,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Target output feature: {output_feature}\n"
       f"Names selected for the positive and negative classes respectively: {positive_class, negative_class}\n"
       f"Features directly linked to the target: {output_related}\n\n"
+      f"Feature and threshold used to tag specific samples: {sample_tagging_feature, tag_threshold}\n\n"
       f"Near-constant feature threshold: {thresh_near_constant}\n"
       f"Data set splitting enabled based on splitting feature: {enable_data_split, split_feature}\n"
       f"Prefix of engineered input features: {engineered_input_prefix}\n"
@@ -660,6 +664,25 @@ print('The shape of the original test set is:\n', test.shape)
 ######################################
 # ## Features and labels preparations
 ######################################
+# collecting indices of samples to be tagged if given
+if sample_tagging_feature is not '':
+    if sample_tagging_feature not in train.columns:
+        print(f'Could not find the respective sample tagging feature among the data set: {sample_tagging_feature}.')
+    print(f'\nCollecting indices of samples satisfying the following sample tagging condition: '
+          f'{sample_tagging_feature, tag_threshold}.')
+    sample_tag_idx = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+    print(f'Collected indices of {len(sample_tag_idx)} samples that satisfied the given condition in the '
+          f'complete data.')
+    if enable_data_split:
+        sample_tag_idx_male = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+        sample_tag_idx_female = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+        print(f'Collected indices of {len(sample_tag_idx_male)} male samples that satisfied the given condition in the '
+              f'complete data.')
+        print(f'Collected indices of {len(sample_tag_idx_female)} female samples that satisfied the given condition in '
+              f'the complete data.')
+    else:
+        sample_tag_idx_male, sample_tag_idx_female = 2 * [None]
+              
 # Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
 train = train.drop(columns=[out for out in output_related])
