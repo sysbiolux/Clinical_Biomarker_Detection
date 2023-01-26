@@ -1907,6 +1907,64 @@ def pbs_heatmap(pbs_corr, pbs_threshold, datatype, remaining_cats, remaining_con
     plt.close(pbserial_hm.figure)
 
 
+# draw correlation plots of the features that passed RHCF with the output feature
+def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, output_feature, correlation):
+    """
+    Function to plot the correlation of categorical features that passed RHCF with the output features using cramer's V.
+
+    Parameters
+    ----------
+    train_features : np.ndarray
+        array of the training features
+    train_labels : np.ndarray
+        array of the training labels
+    feature_list : list
+        list of feature names
+    col_idx : list
+        list of indices of features that are categorical or continuous, which is influencing the correlation methods
+    output_feature : str
+        name of the target feature
+    correlation : str
+        correlation to use
+    """
+    res = []
+    if correlation == 'cramer':
+        for col in col_idx:
+            tmp = cramers_corrected_stat(train_features[:, col], train_labels)
+            res.append(round(tmp, 6))
+    elif correlation == 'chi':
+        for col in col_idx:
+            conf_matrix = pd.crosstab(train_features[:, col], train_labels)
+            if conf_matrix.shape[0] == 2:
+                correct = False
+            else:
+                correct = True
+            tmp = ss.chi2_contingency(conf_matrix, correction=correct)[0]
+            n = sum(conf_matrix.sum())
+            final_chi = tmp / n
+            res.append(round(final_chi.__abs__(), 6))
+    elif correlation == 'pbs':
+        for col in col_idx:
+            tmp, _ = ss.pointbiserialr(train_features[:, col], train_labels)
+            res.append(round(tmp.__abs__(), 6))
+    # sort results
+    sorted_idx = np.array(res).argsort()
+    # plot
+    plt.figure(figsize=(10, 10) if correlation in ('cramer', 'chi') else (16, 16))
+    ax = plt.subplot()
+    plt.barh(np.array(feature_list)[np.array(col_idx)[sorted_idx]][np.array(res)[sorted_idx] > 0.01],
+             np.array(res)[sorted_idx][np.array(res)[sorted_idx] > 0.01])
+    plt.setp(ax.get_yticklabels(), ha='right', fontsize=8)
+    if correlation == 'cramer':
+        plt.title(f"Cramer's V correlation above 0.01 between remaining categorical features and {output_feature}")
+    if correlation == 'chi':
+        plt.title(f"Chi squared correlation above 0.01 between remaining categorical features and {output_feature}")
+    if correlation == 'pbs':
+        plt.title(f"Point bi-serial correlation above 0.01 between remaining continuous features and {output_feature}")
+    plt.tight_layout()
+    plt.show()
+    
+    
 ###################################################################
 # Function to plot top important features after feature importance
 ###################################################################
