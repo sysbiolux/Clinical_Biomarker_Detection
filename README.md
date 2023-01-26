@@ -245,7 +245,7 @@ The results will consist of confusion matrices, roc_auc curves, precision-recall
 - [x] ~Add Diagnostic Odds Ratio, balanced_accuracy, and matthews correlation coefficient as Cross-validation scorers~ 10/13/2022
 - [x] ~Add cross-validation roc-auc and precision-recall curve plots~ 10/13/2022
 - [x] ~Add PCA or LDA plot with variances of data after RHCF if linear PCA or LDA is used as transformer~ 01/26/2023
-- [ ] Enable tagging a specific subgroup of samples based on available features and visualize the performance within that group vs the other
+- [x] ~Enable tagging a specific subgroup of samples based on available features and visualize the performance within that group vs the other~ 01/26/2023
 - [ ] For overall results in the group, draw confusion matrix with boxplots of target-related features in TP/TN/FP/FN groups
 - [x] ~Correlation plots of features that remain after RHCF with the output feature (cramer & chi2, PBS)~ 01/26/2023
 - [ ] Add ROC/PR curve of the splits that were effectively used during CV training, but also keep the random ones
