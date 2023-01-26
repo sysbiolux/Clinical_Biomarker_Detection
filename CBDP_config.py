@@ -59,7 +59,7 @@ output_related = ['PM-Frailty_Score',
                   'PM-Frailty_weightloss',
                   'PM-Gripstrength_max']  # Output-related features, str (can be list)
 sample_tagging_feature = 'PM-Frailty_Score'  # Feature used to define samples to tag specifically, str
-tag_threshold = ('>=', '3')  # Threshold to define tagged samples,
+tag_threshold = ('>=', '3')  # Threshold to define samples to tag, tuple of str, first position must be math operator
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
