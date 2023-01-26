@@ -4,7 +4,7 @@
 # November 2021 - January 2023, University of Luxembourg, v.01/25/2023 (M/d/y) #########################################
 ########################################################################################################################
 
-# Configure up to 79 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 81 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -58,6 +58,8 @@ output_related = ['PM-Frailty_Score',
                   'PM-Frailty_gripstrength',
                   'PM-Frailty_weightloss',
                   'PM-Gripstrength_max']  # Output-related features, str (can be list)
+sample_tagging_feature = 'PM-Frailty_Score'  # Feature used to define samples to tag specifically, str
+tag_threshold = ('>=', '3')  # Threshold to define tagged samples,
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
