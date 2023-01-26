@@ -66,13 +66,11 @@ from ipyparallel.joblib import IPythonParallelBackend
 from joblib import cpu_count, register_parallel_backend
 from mlxtend.evaluate import feature_importance_permutation
 from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA, KernelPCA
+from sklearn.decomposition import KernelPCA
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.svm import SVC
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 # Control output printing destination (original = console)
 orig_stdout = sys.__stdout__
@@ -1100,6 +1098,66 @@ if enable_rhcf:
                           dpi=tiff_figure_dpi)
               plt.close()
 
+##########################################################################################
+# ## Plot PCA or LDA of the continuous features if one of them is selected as transformer
+##########################################################################################
+# Get the continuous and categorical idx in full, male and female data in case RHCF would be disabled
+continuous_idx, categorical_idx = get_cat_and_cont(train_features, test_features)
+if enable_data_split:
+    continuous_idx_male, categorical_idx_male = get_cat_and_cont(train_men_features, test_men_features)
+    continuous_idx_female, categorical_idx_female = get_cat_and_cont(train_female_features, test_female_features)
+else:
+    continuous_idx_male, categorical_idx_male, continuous_idx_female, categorical_idx_female = [None] * 4
+
+print(f"Plotting PCA or LDA analysis of remaining continuous features depending on transformation technique "
+      f"and colorize by {output_feature} ...\n")
+# if PCA
+if pca_tech == 'normal_pca':
+    # mixed
+    plot_PCA(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
+             title='Mixed BASE-II PCA analysis of continuous features that passed RHCF', comp=15, scaler=scaler_tech)
+    plt.savefig(folder_name + f'/full_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                dpi=tiff_figure_dpi)
+    plt.close()
+    if enable_data_split:
+        # male
+        plot_PCA(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
+                 color_by=output_feature, title='Male BASE-II PCA analysis of continuous features that passed RHCF',
+                 comp=15, scaler=scaler_tech)
+        plt.savefig(folder_name + f'/male_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        # female
+        plot_PCA(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
+                 color_by=output_feature, title='Female BASE-II PCA analysis of continuous features that passed RHCF',
+                 comp=15, scaler=scaler_tech)
+        plt.savefig(folder_name + f'/female_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+# if LDA
+if da_tech == 'lda':
+    # mixed
+    plot_LDA(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
+             title='Mixed BASE-II LDA analysis of continuous features that passed RHCF', scaler=scaler_tech)
+    plt.savefig(folder_name + f'/full_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                dpi=tiff_figure_dpi)
+    plt.close()
+    if enable_data_split:
+        # male
+        plot_LDA(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
+                 color_by=output_feature, title='Male BASE-II LDA analysis of continuous features that passed RHCF',
+                 scaler=scaler_tech)
+        plt.savefig(folder_name + f'/male_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        # female
+        plot_LDA(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
+                 color_by=output_feature, title='Female BASE-II LDA analysis of continuous features that passed RHCF',
+                 scaler=scaler_tech)
+        plt.savefig(folder_name + f'/female_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+              
 #########################################################################
 # ## Machine learning preparations including feature transformation (FT)
 #########################################################################
@@ -1114,14 +1172,6 @@ if enable_data_split:
 
 # Initialize pipeline steps for continuous and categorical features
 print(f'\nPreparing instances for the machine learning classification pipeline ...\n')
-
-# Get the continuous and categorical idx in full, male and female data
-continuous_idx, categorical_idx = get_cat_and_cont(train_features, test_features)
-if enable_data_split:
-    continuous_idx_male, categorical_idx_male = get_cat_and_cont(train_men_features, test_men_features)
-    continuous_idx_female, categorical_idx_female = get_cat_and_cont(train_female_features, test_female_features)
-else:
-    continuous_idx_male, categorical_idx_male, continuous_idx_female, categorical_idx_female = [None] * 4
 
 # Initialize resampling method if enabled
 sampler = 'passthrough'  # In case resampling is disabled
