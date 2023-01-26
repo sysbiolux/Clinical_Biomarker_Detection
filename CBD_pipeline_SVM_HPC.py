@@ -1058,6 +1058,47 @@ if enable_rhcf:
     print(f"The training and test sets as well as the feature lists are updated accordingly and ready to be passed "
           f"to the machine learning classification pipeline ...\n")
 
+    ##############################################
+    # Evaluation of the features that passed RHCF
+    ##############################################
+    # Draw correlation between remaining features and the output_feature (chi2, cramer if cat, else pbs)
+    print(f"Evaluating correlation between remaining features and the target feature {output_feature} ...\n")
+
+    # Get the continuous and categorical idx in full, male and female data after RHCF
+    continuous_idx, categorical_idx = get_cat_and_cont(train_features, test_features)
+    if enable_data_split:
+        continuous_idx_male, categorical_idx_male = get_cat_and_cont(train_men_features, test_men_features)
+        continuous_idx_female, categorical_idx_female = get_cat_and_cont(train_female_features, test_female_features)
+    else:
+        continuous_idx_male, categorical_idx_male, continuous_idx_female, categorical_idx_female = [None] * 4
+
+    # Plot the correlations of features remaining after RHCF with the output feature
+    if len(categorical_idx) >= 1 and len(continuous_idx) >= 1:
+        possible_correlations = ['cramer', 'chi', 'pbs']
+    elif len(categorical_idx) >= 1 and len(continuous_idx) == 0:
+        possible_correlations = ['cramer', 'chi']
+    else:
+        possible_correlations = ['pbs']
+        # start plotting the various correlation plots if valid
+    for corr in possible_correlations:
+        # mixed
+        draw_corr_after_rhcf(train_features, train_labels, feature_list, categorical_idx, output_feature, corr)
+        plt.savefig(folder_name + f'/full_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        # male
+        draw_corr_after_rhcf(train_men_features, train_men_labels, feature_list_male, categorical_idx_male,
+                             output_feature, corr)
+        plt.savefig(folder_name + f'/male_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+        # female
+        draw_corr_after_rhcf(train_female_features, train_female_labels, feature_list_female, categorical_idx_female,
+                             output_feature, corr)
+        plt.savefig(folder_name + f'/female_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
+                    dpi=tiff_figure_dpi)
+        plt.close()
+
 #########################################################################
 # ## Machine learning preparations including feature transformation (FT)
 #########################################################################
