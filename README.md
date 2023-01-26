@@ -248,7 +248,6 @@ The results will consist of confusion matrices, roc_auc curves, precision-recall
 - [x] ~Enable tagging a specific subgroup of samples based on available features and visualize the performance within that group vs the other~ 01/26/2023
 - [ ] For overall results in the group, draw confusion matrix with boxplots of target-related features in TP/TN/FP/FN groups
 - [x] ~Correlation plots of features that remain after RHCF with the output feature (cramer & chi2, PBS)~ 01/26/2023
-- [ ] Add ROC/PR curve of the splits that were effectively used during CV training, but also keep the random ones
 - [ ] Extend the pipeline to allow tree-based classification (e.g. RF, XGBoost)
 - [ ] Make the pipeline compatible with additional processing techniques, e.g. dimensionality reduction, feature selection, ...
 - [ ] Add QDA as non-linear supervised continuous transformer
