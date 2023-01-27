@@ -677,10 +677,14 @@ if sample_tagging_feature != '':
               f'train set and {sum(sample_tag_idx_test)} samples in the test set.')
         if enable_data_split:
             # 1 is male, 2 is female
-            sample_tag_idx_male_train = eval('train[sample_tagging_feature][train["PM-sex"] == 1]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_male_test = eval('test[sample_tagging_feature][test["PM-sex"] == 1]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_female_train = eval('train[sample_tagging_feature][train["PM-sex"] == 2]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_female_test = eval('test[sample_tagging_feature][test["PM-sex"] == 2]' + tag_threshold[0] + tag_threshold[1])
+            sample_tag_idx_male_train = \
+                eval('train[sample_tagging_feature][train["PM-sex"] == 1]' + tag_threshold[0] + tag_threshold[1])
+            sample_tag_idx_male_test = \
+                eval('test[sample_tagging_feature][test["PM-sex"] == 1]' + tag_threshold[0] + tag_threshold[1])
+            sample_tag_idx_female_train = \
+                eval('train[sample_tagging_feature][train["PM-sex"] == 2]' + tag_threshold[0] + tag_threshold[1])
+            sample_tag_idx_female_test = \
+                eval('test[sample_tagging_feature][test["PM-sex"] == 2]' + tag_threshold[0] + tag_threshold[1])
             print(f'Collected indices of {sum(sample_tag_idx_male_train)} male samples that satisfied the given '
                   f'condition in the train set and {sum(sample_tag_idx_male_test)} samples in the test set.')
             print(f'Collected indices of {sum(sample_tag_idx_female_train)} female samples that satisfied the given '
