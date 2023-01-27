@@ -1725,6 +1725,7 @@ for kern in kernels:
     # Confusion matrix of tagged samples in train and test combined, but also only train and only test if possible
     cm_tagged_train, cm_tagged_test, cm_tagged, cm_tagged_train_male, cm_tagged_test_male, cm_tagged_male, \
         cm_tagged_train_female, cm_tagged_test_female, cm_tagged_female = 9 * [None]
+    
     if sum(sample_tag_idx_train) != 0:
         cm_tagged_train = confusion_matrix(train_labels[sample_tag_idx_train], train_predictions[sample_tag_idx_train])
     if sum(sample_tag_idx_test) != 0:
@@ -1738,7 +1739,8 @@ for kern in kernels:
           f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
     plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix of tagged samples', normalize=True)
-    plt.savefig(folder_name + f'/full_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
+                bbox_inches='tight', dpi=tiff_figure_dpi)
     plt.close()
     if enable_data_split:
         # male
@@ -1757,7 +1759,8 @@ for kern in kernels:
               f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix of tagged samples', normalize=True)
-        plt.savefig(folder_name + f'/male_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
+                    bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # female
         if sum(sample_tag_idx_female_train) != 0:
@@ -1775,9 +1778,10 @@ for kern in kernels:
               f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix of tagged samples', normalize=True)
-        plt.savefig(folder_name + f'/female_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
+                    bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
-
+       
     # Turn the original feature lists into np arrays with technically just shorter names for later use
     features = np.array(feature_list)
     if enable_data_split:
