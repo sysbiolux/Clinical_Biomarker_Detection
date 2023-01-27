@@ -1339,13 +1339,27 @@ else:  # If FT is disabled, we only stick with the scaler for continuous feature
 
 # Additional pipeline properties including scoring, stratified k fold and parameters for all kernel and possible steps
 if scorer in ('balanced_accuracy', 'matthews_corrcoef'):
-    test_weights = [1 if y == 0 else round(np.bincount(test_labels)[0] / np.bincount(test_labels)[1], 3) for y in test_labels]
-    train_weights = [1 if y == 0 else round(np.bincount(train_labels)[0] / np.bincount(train_labels)[1], 3) for y in train_labels]
+    test_weights = \
+        [1 if y == 0 else round(np.bincount(test_labels)[0] / np.bincount(test_labels)[1], 3) for y in test_labels]
+    train_weights = \
+        [1 if y == 0 else round(np.bincount(train_labels)[0] / np.bincount(train_labels)[1], 3) for y in train_labels]
     if enable_data_split:
-        test_weights_male = [1 if y == 0 else round(np.bincount(test_men_labels)[0] / np.bincount(test_men_labels)[1], 3) for y in test_men_labels]
-        train_weights_male = [1 if y == 0 else round(np.bincount(train_men_labels)[0] / np.bincount(train_men_labels)[1], 3) for y in train_men_labels]
-        test_weights_female = [1 if y == 0 else round(np.bincount(test_female_labels)[0] / np.bincount(test_female_labels)[1], 3) for y in test_female_labels]
-        train_weights_female = [1 if y == 0 else round(np.bincount(train_female_labels)[0] / np.bincount(train_female_labels)[1], 3) for y in train_female_labels]
+        test_weights_male = \
+            [1 if y == 0 else 
+             round(np.bincount(test_men_labels)[0] / np.bincount(test_men_labels)[1], 3) for y in test_men_labels]
+        train_weights_male = \
+            [1 if y == 0 else 
+             round(np.bincount(train_men_labels)[0] / np.bincount(train_men_labels)[1], 3) for y in train_men_labels]
+        test_weights_female = \
+            [1 if y == 0 else 
+             round(
+                 np.bincount(test_female_labels)[0] / np.bincount(test_female_labels)[1], 3
+             ) for y in test_female_labels]
+        train_weights_female = \
+            [1 if y == 0 else 
+             round(
+                 np.bincount(train_female_labels)[0] / np.bincount(train_female_labels)[1], 3
+             ) for y in train_female_labels]
     else:
         test_weights_male, train_weights_male, test_weights_female, train_weights_female = [None] * 4
 else:
