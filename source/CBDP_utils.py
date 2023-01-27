@@ -2008,7 +2008,7 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
             scaler_tech = StandardScaler()
         X_scaled = scaler_tech.fit_transform(X)
         # fit PCA
-        pca = PCA(n_components=comp)
+        pca = PCA(n_components=comp, random_state=42)
         pca.fit(X_scaled)
         PCs = pca.fit_transform(X_scaled)
         PCdf = pd.DataFrame(data=PCs, columns=["PC"+str(i) for i in range(1, PCs.shape[1]+1)])
