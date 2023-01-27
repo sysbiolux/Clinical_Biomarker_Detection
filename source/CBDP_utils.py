@@ -1919,9 +1919,9 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
 
     Parameters
     ----------
-    train_features : np.ndarray
+    train_features : np.array
         array of the training features
-    train_labels : np.ndarray
+    train_labels : np.array
         array of the training labels
     feature_list : list
         list of feature names
@@ -1973,15 +1973,15 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
 ###############################################################################################################
 # Functions to plot PCA or LDA of remaining continuous features depending on selected transformation technique
 ###############################################################################################################
-def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None, title='my_plot',
+def plot_pca(train_features=None, train_labels=None, col_idx=None, color_by=None, title='my_plot',
              comp=15, scaler=None):
     """
     Function to calculate and plot PCA and to colorize by multiple target labels.
     Parameters
     ----------
-    train_features : np.ndarray
+    train_features : np.array
         Feature matrix
-    train_labels : np.ndarray
+    train_labels : np.array
         Target matrix
     col_idx : list
         List of columns that can undergo PCA (continuous)
@@ -1997,7 +1997,7 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
     if train_features is not None and train_labels is not None and color_by is not None and col_idx is not None and \
             scaler is not None:
         # format data
-        X = pd.DataFrame(train_features[:, col_idx])
+        x = pd.DataFrame(train_features[:, col_idx])
         y = pd.DataFrame({color_by: train_labels})
         # scale data according to used technique
         if scaler == 'minmax':
@@ -2006,12 +2006,12 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
             scaler_tech = RobustScaler()
         else:
             scaler_tech = StandardScaler()
-        X_scaled = scaler_tech.fit_transform(X)
+        x_scaled = scaler_tech.fit_transform(x)
         # fit PCA
         pca = PCA(n_components=comp, random_state=42)
-        pca.fit(X_scaled)
-        PCs = pca.fit_transform(X_scaled)
-        PCdf = pd.DataFrame(data=PCs, columns=["PC"+str(i) for i in range(1, PCs.shape[1]+1)])
+        pca.fit(x_scaled)
+        pcs = pca.fit_transform(x_scaled)
+        pcdf = pd.DataFrame(data=pcs, columns=["PC"+str(i) for i in range(1, pcs.shape[1]+1)])
 
         targets = list(set(y[color_by]))
         all_colors = ['b', 'r', 'g', 'c', 'm', 'y', 'k']
@@ -2020,31 +2020,31 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
             colors = all_colors[:len(targets)]
         else:
             # create gradient color map if continuous targets
-            cmap = {PCdf.index[m]: targets[m] for m in range(len(PCdf))}  # mapping correct color to correct point
+            cmap = {pcdf.index[m]: targets[m] for m in range(len(pcdf))}  # mapping correct color to correct point
             sm = ScalarMappable(norm=Normalize(vmin=min(list(cmap.values())), vmax=max(list(cmap.values()))),
                                 cmap=sns.cubehelix_palette(as_cmap=True))
-            colors = [sm.to_rgba(cmap[obsv_id]) for obsv_id in PCdf.index]
+            colors = [sm.to_rgba(cmap[obsv_id]) for obsv_id in pcdf.index]
 
         # draw the 4 PCA plots (PC1 vs PC2, PC2 vs PC3, PC1 vs PC3, % variance)
         f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
         for target, color in zip(targets, colors):
             idx = y[color_by] == target
             # pca plots
-            ax1.scatter(PCdf.loc[idx, 'PC1'], PCdf.loc[idx, 'PC2'], color=color, s=25)
+            ax1.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC2'], color=color, s=25)
             ax1.set_title('PC1 v PC2', fontsize=10)
             ax1.set_xlabel(f'PC1 ({"{:.2f}".format(round(pca.explained_variance_ratio_[0] * 100, 2))}%)')
             ax1.set_ylabel(f'PC2 ({"{:.2f}".format(round(pca.explained_variance_ratio_[1] * 100, 2))}%)')
-            ax2.scatter(PCdf.loc[idx, 'PC2'], PCdf.loc[idx, 'PC3'], color=color, s=25)
+            ax2.scatter(pcdf.loc[idx, 'PC2'], pcdf.loc[idx, 'PC3'], color=color, s=25)
             ax2.set_title('PC2 v PC3', fontsize=10)
             ax2.set_xlabel(f'PC2 ({"{:.2f}".format(round(pca.explained_variance_ratio_[1] * 100, 2))}%)')
             ax2.set_ylabel(f'PC3 ({"{:.2f}".format(round(pca.explained_variance_ratio_[2] * 100, 2))}%)')
-            ax3.scatter(PCdf.loc[idx, 'PC1'], PCdf.loc[idx, 'PC3'], color=color, s=25)
+            ax3.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC3'], color=color, s=25)
             ax3.set_title('PC1 v PC3', fontsize=10)
             ax3.set_xlabel(f'PC1 ({"{:.2f}".format(round(pca.explained_variance_ratio_[0] * 100, 2))}%)')
             ax3.set_ylabel(f'PC3 ({"{:.2f}".format(round(pca.explained_variance_ratio_[2] * 100, 2))}%)')
             # variance bar plot
-            ax4.bar(range(1, PCs.shape[1] + 1), pca.explained_variance_ratio_ * 100, color='skyblue')
-            for i in range(PCs.shape[1]):
+            ax4.bar(range(1, pcs.shape[1] + 1), pca.explained_variance_ratio_ * 100, color='skyblue')
+            for i in range(pcs.shape[1]):
                 ax4.annotate(str("{:.2f}".format(round(pca.explained_variance_ratio_[i] * 100, 2))),
                              xy=(i + 1, pca.explained_variance_ratio_[i] * 100), ha='center', va='bottom',
                              size=8, weight='normal')
@@ -2053,7 +2053,7 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
             ax4.set_ylabel('Variance [%]')
             # control ticks of axis 4
             plt.sca(ax4)
-            plt.xticks(range(1, PCs.shape[1] + 1))
+            plt.xticks(range(1, pcs.shape[1] + 1))
             plt.suptitle(title, fontsize=14)
             if len(targets) <= 7:
                 f.legend(targets, loc='upper right', ncol=2, fontsize=7)  # other font size to not overlap with titles
@@ -2070,14 +2070,14 @@ def plot_PCA(train_features=None, train_labels=None, col_idx=None, color_by=None
         raise ValueError('Either X or y or label is not set.')
 
 
-def plot_LDA(train_features=None, train_labels=None, col_idx=None, color_by=None, title='my_plot', scaler=None):
+def plot_lda(train_features=None, train_labels=None, col_idx=None, color_by=None, title='my_plot', scaler=None):
     """
     Function to calculate and plot LDA and to colorize by multiple target labels.
     Parameters
     ----------
-    train_features : np.ndarray
+    train_features : np.array
         Feature matrix
-    train_labels : np.ndarray
+    train_labels : np.array
         Target matrix
     col_idx : list
         List of columns that can undergo PCA (continuous)
@@ -2091,7 +2091,7 @@ def plot_LDA(train_features=None, train_labels=None, col_idx=None, color_by=None
     if train_features is not None and train_labels is not None and color_by is not None and col_idx is not None and \
             scaler is not None:
         # format data
-        X = pd.DataFrame(train_features[:, col_idx])
+        x = pd.DataFrame(train_features[:, col_idx])
         y = pd.DataFrame({color_by: train_labels})
         # scale data according to used technique
         if scaler == 'minmax':
@@ -2100,13 +2100,13 @@ def plot_LDA(train_features=None, train_labels=None, col_idx=None, color_by=None
             scaler_tech = RobustScaler()
         else:
             scaler_tech = StandardScaler()
-        X_scaled = scaler_tech.fit_transform(X)
+        x_scaled = scaler_tech.fit_transform(x)
         # find number of components (target classes - 1)
         comp = len(np.unique(train_labels)) - 1
         # fit LDA as supervised classifier
-        LDA = LinearDiscriminantAnalysis(n_components=comp)  # lda components = number of classes - 1 (only for subtypes)
-        LDAs = LDA.fit_transform(X_scaled, y[color_by])  # Make sure LDA is only fit to categorical subtypes
-        LDAdf = pd.DataFrame(data=LDAs, columns=[f'LD{number + 1}' for number in np.arange(comp)])
+        lda = LinearDiscriminantAnalysis(n_components=comp)  # lda components = number of classes-1 (only for subtypes)
+        ldas = lda.fit_transform(x_scaled, y[color_by])  # Make sure LDA is only fit to categorical subtypes
+        ldadf = pd.DataFrame(data=ldas, columns=[f'LD{number + 1}' for number in np.arange(comp)])
 
         targets = list(set(y[color_by]))
         all_colors = ['b', 'r', 'g', 'c', 'm', 'y', 'k']
@@ -2115,36 +2115,36 @@ def plot_LDA(train_features=None, train_labels=None, col_idx=None, color_by=None
             colors = all_colors[:len(targets)]
         else:
             # create gradient color map if continuous targets
-            cmap = {LDAdf.index[m]: targets[m] for m in range(len(LDAdf))}  # mapping correct color to correct point
+            cmap = {ldadf.index[m]: targets[m] for m in range(len(ldadf))}  # mapping correct color to correct point
             sm = ScalarMappable(norm=Normalize(vmin=min(list(cmap.values())), vmax=max(list(cmap.values()))),
                                 cmap=sns.cubehelix_palette(as_cmap=True))
-            colors = [sm.to_rgba(cmap[obsv_id]) for obsv_id in LDAdf.index]
+            colors = [sm.to_rgba(cmap[obsv_id]) for obsv_id in ldadf.index]
         # jitter y to avoid overlapping points in the 1 D plot
-        jittered_y = pd.DataFrame(np.zeros(len(LDAdf)) + 0.1 * np.random.rand(len(LDAdf)) - 0.05,
+        jittered_y = pd.DataFrame(np.zeros(len(ldadf)) + 0.1 * np.random.rand(len(ldadf)) - 0.05,
                                   columns=[f'LD{number + 1}' for number in np.arange(comp)])
         # draw the 2 LDA plot (LD1 % variance)
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
         for target, color in zip(targets, colors):
             idx = y[color_by] == target
             # lda plots (only 1)
-            ax1.scatter(LDAdf.loc[idx, 'LD1'], jittered_y.loc[idx, 'LD1'],  color=color, s=25, marker='*')
+            ax1.scatter(ldadf.loc[idx, 'LD1'], jittered_y.loc[idx, 'LD1'],  color=color, s=25, marker='*')
             ax1.set_title('LD1', fontsize=10)
-            ax1.set_xlabel(f'LD1 ({"{:.2f}".format(round(LDA.explained_variance_ratio_[0] * 100, 2))}%)')
+            ax1.set_xlabel(f'LD1 ({"{:.2f}".format(round(lda.explained_variance_ratio_[0] * 100, 2))}%)')
             ax1.set_ylabel('')
             ax1.set_ylim([-0.1, 0.1])
             ax1.set_yticks([])
             # variance bar plot
-            ax2.bar(range(1, LDAs.shape[1] + 1), LDA.explained_variance_ratio_ * 100, color='skyblue')
-            for i in range(LDAs.shape[1]):
-                ax2.annotate(str("{:.2f}".format(round(LDA.explained_variance_ratio_[i] * 100, 2))),
-                             xy=(i + 1, LDA.explained_variance_ratio_[i] * 100), ha='center', va='bottom',
+            ax2.bar(range(1, ldas.shape[1] + 1), lda.explained_variance_ratio_ * 100, color='skyblue')
+            for i in range(ldas.shape[1]):
+                ax2.annotate(str("{:.2f}".format(round(lda.explained_variance_ratio_[i] * 100, 2))),
+                             xy=(i + 1, lda.explained_variance_ratio_[i] * 100), ha='center', va='bottom',
                              size=8, weight='normal')
             ax2.set_title('Explained variance by linear discriminant components', fontsize=10)
             ax2.set_xlabel('Discriminant components')
             ax2.set_ylabel('Variance [%]')
             # control ticks of axis 2
             plt.sca(ax2)
-            plt.xticks(range(1, LDAs.shape[1] + 1))
+            plt.xticks(range(1, ldas.shape[1] + 1))
             plt.suptitle(title, fontsize=14)
             if len(targets) <= 7:
                 f.legend(targets, loc='upper right', ncol=2, fontsize=7)  # other font size to not overlap with titles
