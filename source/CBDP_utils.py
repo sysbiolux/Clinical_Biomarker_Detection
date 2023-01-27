@@ -396,7 +396,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
         plt.text(j, i, format(c_matrix[i, j] * 100, fmt) + '%' + '\n\n' +
                  format(true_matrix[i, j], 'd') if normalize else format(c_matrix[i, j], fmt), fontsize=20,
                  horizontalalignment="center", verticalalignment="center",
-                 color="white" if c_matrix[i, j] >= thresh else "black")
+                 color="white" if c_matrix[i, j] > thresh else "black")
     plt.grid(None)
     plt.tight_layout()
     plt.ylabel('True label', size=18)
