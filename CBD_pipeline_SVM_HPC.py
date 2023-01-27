@@ -1734,6 +1734,8 @@ for kern in kernels:
                                                  test_labels[sample_tag_idx_test])),
                                  np.concatenate((train_predictions[sample_tag_idx_train],
                                                  predictions[sample_tag_idx_test])))
+    print(f"\nFull data confusion matrix of tagged samples with "
+          f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
     plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix of tagged samples', normalize=True)
     plt.savefig(folder_name + f'/full_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -1751,6 +1753,8 @@ for kern in kernels:
                                                           test_men_labels[sample_tag_idx_male_test])),
                                           np.concatenate((train_male_predictions[sample_tag_idx_male_train],
                                                           male_predictions[sample_tag_idx_male_test])))
+        print(f"\nMale data confusion matrix of tagged samples with "
+              f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix of tagged samples', normalize=True)
         plt.savefig(folder_name + f'/male_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -1767,6 +1771,8 @@ for kern in kernels:
                                                             test_female_labels[sample_tag_idx_female_test])),
                                             np.concatenate((train_female_predictions[sample_tag_idx_female_train],
                                                             female_predictions[sample_tag_idx_female_test])))
+        print(f"\nFemale data confusion matrix of tagged samples with "
+              f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix of tagged samples', normalize=True)
         plt.savefig(folder_name + f'/female_{kern}_cm_tagged.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
