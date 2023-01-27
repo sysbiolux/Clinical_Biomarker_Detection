@@ -1101,9 +1101,9 @@ if enable_rhcf:
 
     # Plot the correlations of features remaining after RHCF with the output feature
     if len(categorical_idx) >= 1 and len(continuous_idx) >= 1:
-        possible_correlations = ['cramer', 'chi', 'pbs']
+        possible_correlations = ['cramer', 'pbs'] if kbest_tech == 'cramer' else ['chi', 'pbs']
     elif len(categorical_idx) >= 1 and len(continuous_idx) == 0:
-        possible_correlations = ['cramer', 'chi']
+        possible_correlations = ['cramer'] if kbest_tech == 'cramer' else ['chi']
     else:
         possible_correlations = ['pbs']
         # start plotting the various correlation plots if valid
