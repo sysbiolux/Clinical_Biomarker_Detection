@@ -1147,21 +1147,21 @@ print(f"Plotting PCA or LDA analysis of remaining continuous features depending 
 # if PCA
 if pca_tech == 'normal_pca':
     # mixed
-    plot_PCA(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
+    plot_pca(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
              title='Mixed BASE-II PCA analysis of continuous features that passed RHCF', comp=15, scaler=scaler_tech)
     plt.savefig(folder_name + f'/full_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
                 dpi=tiff_figure_dpi)
     plt.close()
     if enable_data_split:
         # male
-        plot_PCA(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
+        plot_pca(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
                  color_by=output_feature, title='Male BASE-II PCA analysis of continuous features that passed RHCF',
                  comp=15, scaler=scaler_tech)
         plt.savefig(folder_name + f'/male_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
         # female
-        plot_PCA(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
+        plot_pca(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
                  color_by=output_feature, title='Female BASE-II PCA analysis of continuous features that passed RHCF',
                  comp=15, scaler=scaler_tech)
         plt.savefig(folder_name + f'/female_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
@@ -1170,21 +1170,21 @@ if pca_tech == 'normal_pca':
 # if LDA
 if da_tech == 'lda':
     # mixed
-    plot_LDA(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
+    plot_lda(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
              title='Mixed BASE-II LDA analysis of continuous features that passed RHCF', scaler=scaler_tech)
     plt.savefig(folder_name + f'/full_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
                 dpi=tiff_figure_dpi)
     plt.close()
     if enable_data_split:
         # male
-        plot_LDA(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
+        plot_lda(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
                  color_by=output_feature, title='Male BASE-II LDA analysis of continuous features that passed RHCF',
                  scaler=scaler_tech)
         plt.savefig(folder_name + f'/male_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
         # female
-        plot_LDA(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
+        plot_lda(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
                  color_by=output_feature, title='Female BASE-II LDA analysis of continuous features that passed RHCF',
                  scaler=scaler_tech)
         plt.savefig(folder_name + f'/female_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
