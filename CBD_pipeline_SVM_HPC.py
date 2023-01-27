@@ -666,22 +666,23 @@ print('The shape of the original test set is:\n', test.shape)
 ######################################
 # collecting indices of samples to be tagged if given
 if sample_tagging_feature is not '':
-    if sample_tagging_feature not in train.columns:
-        print(f'Could not find the respective sample tagging feature among the data set: {sample_tagging_feature}.')
-    print(f'\nCollecting indices of samples satisfying the following sample tagging condition: '
-          f'{sample_tagging_feature, tag_threshold}.')
-    sample_tag_idx = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-    print(f'Collected indices of {len(sample_tag_idx)} samples that satisfied the given condition in the '
-          f'complete data.')
-    if enable_data_split:
-        sample_tag_idx_male = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-        sample_tag_idx_female = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-        print(f'Collected indices of {len(sample_tag_idx_male)} male samples that satisfied the given condition in the '
-              f'complete data.')
-        print(f'Collected indices of {len(sample_tag_idx_female)} female samples that satisfied the given condition in '
-              f'the complete data.')
+    if sample_tagging_feature not in test.columns:
+        print(f'Could not find the respective sample tagging feature among the test set: {sample_tagging_feature}.')
     else:
-        sample_tag_idx_male, sample_tag_idx_female = 2 * [None]
+        print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the test set: '
+              f'{sample_tagging_feature, tag_threshold}.')
+        sample_tag_idx = eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+        print(f'Collected indices of {len(sample_tag_idx)} samples that satisfied the given condition in the '
+              f'test set.')
+        if enable_data_split:
+            sample_tag_idx_male = eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+            sample_tag_idx_female = eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+            print(f'Collected indices of {len(sample_tag_idx_male)} male samples that satisfied the given condition in '
+                  f'the test set.')
+            print(f'Collected indices of {len(sample_tag_idx_female)} female samples that satisfied the given '
+                  f'condition in the test set.')
+        else:
+            sample_tag_idx_male, sample_tag_idx_female = 2 * [None]
               
 # Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
