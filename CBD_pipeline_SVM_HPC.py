@@ -325,19 +325,18 @@ if not all(isinstance(i, bool) for i in config_bool):
                     'linear_shuffle. '
                     'Got %s instead.' % config_bool)
 # Variables that could be str or tuple of str
-if not (isinstance(engineered_input_prefix, tuple) or all(isinstance(i, str) for i in engineered_input_prefix)):
-    raise TypeError('The following configured variable must be a tuple or str: engineered_input_prefix. Got %s instead.'
-                    % engineered_input_prefix)
-if not (isinstance(subgroups_to_keep, tuple) or all(isinstance(i, str) for i in subgroups_to_keep)):
-    raise TypeError('The following configured variable must be a tuple or str: subgroups_to_keep. Got %s instead.'
-                    % subgroups_to_keep)
+config_tuples = [engineered_input_prefix, subgroups_to_keep, tag_threshold]
+for i in config_tuples:
+    if not (isinstance(i, tuple) or all(isinstance(k, str) for k in i)):
+        raise TypeError('The following configured variable must be a tuple or str: engineered_input_prefix, '
+                        'subgroups_to_keep, tag_threshold. Got %s instead.' % i)
 # RHCF threshold variables check if remove highly correlated features is enabled
 if enable_rhcf:
-    config_thresh_tuple = [thresh_cramer, thresh_spearman, thresh_pbs, tag_threshold]
+    config_thresh_tuple = [thresh_cramer, thresh_spearman, thresh_pbs]
     for i in config_thresh_tuple:
         if not isinstance(i, tuple):
             raise TypeError('The following configured variables must be tuples: '
-                            'thresh_cramer, thresh_spearman, thresh_pbs, tag_threshold. '
+                            'thresh_cramer, thresh_spearman, thresh_pbs. '
                             'Got %s instead.' % config_thresh_tuple)
         if isinstance(i[1], str) and i[1] == 'decimal':
             if not isinstance(i[0], float):
