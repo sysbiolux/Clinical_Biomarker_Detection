@@ -40,6 +40,9 @@
 # ConvergenceWarning: Solver terminated early (max_iter=150000).  Consider pre-processing your data with StandardScaler
 # or MinMaxScaler. IGNORED, HAPPENS WHEN USING ROBUST SCALER OR MAX ITER OF THE CLASSIFIER IS REACHED (SEE CONFIG)
 
+# RuntimeWarning: invalid value encountered in true_divide c_matrix = c_matrix.astype('float') / c_matrix.sum(axis=1)
+# [:, np.newaxis]. IGNORED, APPEARS WHEN CONFUSION MATRICES OF TAGGED FEATURES ARE DRAWN OF ONLY POSITIVE TARGETS
+
 
 ########################################################################################################################
 # ## PART 0: SCRIPT START IMPORTING LIBRARIES ##########################################################################
