@@ -39,6 +39,77 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 ####################################
 # ## Features and labels separation
 ####################################
+def tag_samples(train, test, sample_tagging_feature, tag_threshold):
+    """
+    Function to extract indices of samples that satisfy the given tagging threshold(s) for one or multiple given
+    sample tagging features.
+
+    Parameters
+    ----------
+    train : pandas.DataFrame
+        model to use as prediction method, best estimator will be selected to update the feature lists
+    test : pandas.DataFrame
+        model to use as prediction method, best estimator will be selected to update the feature lists
+    sample_tagging_feature : str, list
+        number of correlation metrics to show in the legend
+    tag_threshold : tuple
+        correlation method to use (e.g. pearson)
+
+    Returns
+    -------
+    tagged_indices_train :dict of lists
+        dictionary of lists that include the indices of tagged samples in train (keys are the sample tagging features)
+    tagged_indices_test : dict of lists
+        dictionary of lists that include the indices of tagged samples in test (keys are the sample tagging features)
+    """
+    # Setting up the returned dictionaries
+    tagged_indices_train, tagged_indices_test = dict(), dict()
+    # Define if single or multiple features are given, and check if number of tag threshold tuples match
+    # if 1 single feature, test if valid
+    if isinstance(sample_tagging_feature, str) and len(sample_tagging_feature) != 0:
+        if sample_tagging_feature not in train.columns or sample_tagging_feature not in test.columns:
+            print(f'Could not find the respective sample tagging feature among the train and test data set: '
+                  f'{sample_tagging_feature}.')
+        if np.count_nonzero(tag_threshold) != np.count_nonzero(sample_tagging_feature) * 2:
+            print(f'Please double check the given tag threshold. It should be 1 tuple with a mathematical operator '
+                  f'and a value for the given single feature. Got {tag_threshold} instead.')
+        else:
+            # get indices of single tag feature
+            print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the '
+                  f'test and train set:\n{sample_tagging_feature, tag_threshold}.')
+            tagged_indices_train.update({
+                sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+            })
+            tagged_indices_test.update({
+                sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+            })
+            print(f'Collected indices of {sum(tagged_indices_train[sample_tagging_feature])} samples that satisfied '
+                  f'the above condition in the train set and {sum(tagged_indices_test[sample_tagging_feature])} '
+                  f'samples in the test set.')
+    # if multiple features, test if valid
+    if isinstance(sample_tagging_feature, list) and np.count_nonzero(sample_tagging_feature) != 0:
+        for num, tag_feat in enumerate(sample_tagging_feature):
+            if tag_feat not in train.columns or tag_feat not in test.columns:
+                print(f'Could not find the respective sample tagging feature among the train and test data set: '
+                      f'{tag_feat}.')
+            if np.count_nonzero(tag_threshold) != np.count_nonzero(sample_tagging_feature) * 2:
+                print(f'Please double check the given tag thresholds. It should be as many tuples in a tuple as given '
+                      f'features to tag. Each tuple should contain a mathematical operator and a value for the given '
+                      f'single feature. Got {tag_feat, [tag_threshold[num]]} instead.')
+            else:
+                # get indices of the multiple tag features
+                print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the '
+                      f'test and train set:\n{tag_feat, tag_threshold[num]}.')
+                tagged_indices_train.update({
+                    tag_feat: eval('train[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
+                })
+                tagged_indices_test.update({
+                    tag_feat: eval('test[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
+                })
+                print(f'Collected indices of {sum(tagged_indices_train[tag_feat])} samples that satisfied the above '
+                      f'condition in the train set and {sum(tagged_indices_test[tag_feat])} samples in the test set.')
+    # return both dicts
+    return tagged_indices_train, tagged_indices_test
 
 
 def separate_full_data(full_train, full_test, target_feature, splitting_feature=False):
