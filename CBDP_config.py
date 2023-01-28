@@ -4,7 +4,7 @@
 # November 2021 - January 2023, University of Luxembourg, v.01/25/2023 (M/d/y) #########################################
 ########################################################################################################################
 
-# Configure up to 82 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 83 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -36,6 +36,8 @@ pandas_col_display_option = 5  # Number of columns displayed in pandas dataframe
 tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
 # Other font sizes for titles, ticks, or labels are defined in the corresponding function
 # Later all fonts will be generalized
+debug = False  # Debug statement to decide if figures should be displayed for debugging, select False to avoid
+# 'RuntimeError: main thread is not in main loop' errors when the complete pipeline runs on local machine with threading
 
 #######################################################################################################
 # ## Data specific configurations like pathways, target features, related target features and prefixes
