@@ -547,6 +547,7 @@ for kern in kernels:
 backslash = '\\'
 newline = '\n'
 print("******************************************\nSCRIPT CONFIGURATION SUMMARY OF VARIABLES:\n\n"
+      f"Debugging mode: {debug}\n"
       f"Random number generator seed: {seed}\n"
       f"Fixed general figure font: {fix_font}\n"
       f"Font for feature importance figures: {imp_font}\n"
@@ -561,7 +562,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Target output feature: {output_feature}\n"
       f"Names selected for the positive and negative classes respectively: {positive_class, negative_class}\n"
       f"Features directly linked to the target: {output_related}\n\n"
-      f"Feature and threshold used to tag specific samples: {sample_tagging_feature, tag_threshold}\n\n"
+      f"Feature and threshold used to tag specific samples: {sample_tagging_feature, tag_threshold}\n"
       f"Near-constant feature threshold: {thresh_near_constant}\n"
       f"Data set splitting enabled based on splitting feature: {enable_data_split, split_feature}\n"
       f"Prefix of engineered input features: {engineered_input_prefix}\n"
