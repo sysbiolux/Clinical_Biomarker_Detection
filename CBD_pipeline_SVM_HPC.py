@@ -645,7 +645,7 @@ plt.rcParams.update({'figure.max_open_warning': fig_max_open_warning})
 # Pandas option for number of displayed columns
 pd.set_option('display.max_columns', pandas_col_display_option)
 # Ensure threading on multiple devices
-matplotlib.use('Agg')
+matplotlib.use('Agg' if parallel_method == 'ipyparallel' or debug else 'TkAgg')
 
 #####################################
 # ## Loading the train and test data
