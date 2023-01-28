@@ -297,8 +297,7 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
               resampling_tech, folder_prefix, pca_tech, da_tech, scaler_tech, scorer, feature_importance_method,
-              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features,
-              sample_tagging_feature]
+              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features]
 if not (all(isinstance(i, str) for i in config_str)):
     if not hasattr(kbest_tech, '__call__'):
         raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
