@@ -2038,7 +2038,6 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
     if correlation == 'pbs':
         plt.title(f"Point bi-serial correlation above 0.01 between remaining continuous features and {output_feature}")
     plt.tight_layout()
-    plt.show()
     
     
 ###############################################################################################################
@@ -2136,7 +2135,6 @@ def plot_pca(train_features=None, train_labels=None, col_idx=None, color_by=None
                 leg.legendHandles[0].set_color(min(zip(targets, colors))[1])
                 leg.legendHandles[1].set_color(max(zip(targets, colors))[1])
             f.tight_layout()
-            plt.show()
     else:
         raise ValueError('Either X or y or label is not set.')
 
@@ -2227,7 +2225,6 @@ def plot_lda(train_features=None, train_labels=None, col_idx=None, color_by=None
                 leg.legendHandles[0].set_color(min(zip(targets, colors))[1])
                 leg.legendHandles[1].set_color(max(zip(targets, colors))[1])
             f.tight_layout()
-            plt.show()
     else:
         raise ValueError('Either X or y or label is not set.')
         
