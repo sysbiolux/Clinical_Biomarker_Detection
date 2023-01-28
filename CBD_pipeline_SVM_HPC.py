@@ -1720,64 +1720,66 @@ for kern in kernels:
         cm_male, cm_female = [None] * 2
     
     # Confusion matrix of tagged samples in train and test combined, but also only train and only test if possible
-    cm_tagged_train, cm_tagged_test, cm_tagged, cm_tagged_train_male, cm_tagged_test_male, cm_tagged_male, \
-        cm_tagged_train_female, cm_tagged_test_female, cm_tagged_female = 9 * [None]
-    
-    if sum(sample_tag_idx_train) != 0:
-        cm_tagged_train = confusion_matrix(train_labels[sample_tag_idx_train], train_predictions[sample_tag_idx_train])
-    if sum(sample_tag_idx_test) != 0:
-        cm_tagged_test = confusion_matrix(test_labels[sample_tag_idx_test], predictions[sample_tag_idx_test])
-    # combine train and test
-    cm_tagged = confusion_matrix(np.concatenate((train_labels[sample_tag_idx_train],
-                                                 test_labels[sample_tag_idx_test])),
-                                 np.concatenate((train_predictions[sample_tag_idx_train],
-                                                 predictions[sample_tag_idx_test])))
-    print(f"\nFull data confusion matrix of tagged samples with "
-          f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
-    plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
-                          title='Confusion Matrix of tagged samples', normalize=True)
-    plt.savefig(folder_name + f'/full_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
-                bbox_inches='tight', dpi=tiff_figure_dpi)
-    plt.close()
-    if enable_data_split:
-        # male
-        if sum(sample_tag_idx_male_train) != 0:
-            cm_tagged_train_male = confusion_matrix(train_men_labels[sample_tag_idx_male_train],
-                                                    train_male_predictions[sample_tag_idx_male_train])
-        if sum(sample_tag_idx_male_test) != 0:
-            cm_tagged_test_male = confusion_matrix(test_men_labels[sample_tag_idx_male_test],
-                                                   male_predictions[sample_tag_idx_male_test])
+    for num, k in enumerate(sample_tagging_feature) if np.count_nonzero(sample_tagging_feature) > 1 else \
+            enumerate(sample_tagging_feature.split()):
+        if sum(sample_tag_idx_train[k]) != 0:
+            cm_tagged_train = confusion_matrix(train_labels[sample_tag_idx_train[k]],
+                                               train_predictions[sample_tag_idx_train[k]])
+        if sum(sample_tag_idx_test[k]) != 0:
+            cm_tagged_test = confusion_matrix(test_labels[sample_tag_idx_test[k]], predictions[sample_tag_idx_test[k]])
         # combine train and test
-        cm_tagged_male = confusion_matrix(np.concatenate((train_men_labels[sample_tag_idx_male_train],
-                                                          test_men_labels[sample_tag_idx_male_test])),
-                                          np.concatenate((train_male_predictions[sample_tag_idx_male_train],
-                                                          male_predictions[sample_tag_idx_male_test])))
-        print(f"\nMale data confusion matrix of tagged samples with "
-              f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
-        plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
-                              title='Confusion Matrix of tagged samples', normalize=True)
-        plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
+        cm_tagged = confusion_matrix(np.concatenate((train_labels[sample_tag_idx_train[k]],
+                                                     test_labels[sample_tag_idx_test[k]])),
+                                     np.concatenate((train_predictions[sample_tag_idx_train[k]],
+                                                     predictions[sample_tag_idx_test[k]])))
+        tag_op = f'{tag_threshold[0] if np.count_nonzero(tag_threshold) == 1 else tag_threshold[num][0]}'
+        tag_val = f'{tag_threshold[1] if np.count_nonzero(tag_threshold) == 1 else tag_threshold[num][1]}'
+        print(f"\nFull data confusion matrix of tagged samples with {k, tag_op, tag_val} for {kern.upper()} kernel:")
+        plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
+                              title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}', normalize=True)
+        plt.savefig(folder_name + f'/full_{kern}_cm_tagged_{k}.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
-        # female
-        if sum(sample_tag_idx_female_train) != 0:
-            cm_tagged_train_female = confusion_matrix(train_female_labels[sample_tag_idx_female_train],
-                                                      train_female_predictions[sample_tag_idx_female_train])
-        if sum(sample_tag_idx_female_test) != 0:
-            cm_tagged_test_female = confusion_matrix(test_female_labels[sample_tag_idx_female_test],
-                                                     female_predictions[sample_tag_idx_female_test])
-        # combine train and test
-        cm_tagged_female = confusion_matrix(np.concatenate((train_female_labels[sample_tag_idx_female_train],
-                                                            test_female_labels[sample_tag_idx_female_test])),
-                                            np.concatenate((train_female_predictions[sample_tag_idx_female_train],
-                                                            female_predictions[sample_tag_idx_female_test])))
-        print(f"\nFemale data confusion matrix of tagged samples with "
-              f"{sample_tagging_feature, tag_threshold[0], tag_threshold[1]} for {kern.upper()} kernel:")
-        plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
-                              title='Confusion Matrix of tagged samples', normalize=True)
-        plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{sample_tagging_feature}.tiff',
-                    bbox_inches='tight', dpi=tiff_figure_dpi)
-        plt.close()
+        # sub samples if enabled
+        if enable_data_split:
+            # male
+            if sum(sample_tag_idx_male_train[k]) != 0:
+                cm_tagged_train_male = confusion_matrix(train_men_labels[sample_tag_idx_male_train[k]],
+                                                        train_male_predictions[sample_tag_idx_male_train[k]])
+            if sum(sample_tag_idx_male_test[k]) != 0:
+                cm_tagged_test_male = confusion_matrix(test_men_labels[sample_tag_idx_male_test[k]],
+                                                       male_predictions[sample_tag_idx_male_test[k]])
+            # combine train and test
+            cm_tagged_male = confusion_matrix(np.concatenate((train_men_labels[sample_tag_idx_male_train[k]],
+                                                              test_men_labels[sample_tag_idx_male_test[k]])),
+                                              np.concatenate((train_male_predictions[sample_tag_idx_male_train[k]],
+                                                              male_predictions[sample_tag_idx_male_test[k]])))
+            print(f"\nMale data confusion matrix of tagged samples with {k, tag_op, tag_val} "
+                  f"for {kern.upper()} kernel:")
+            plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
+                                  title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}', normalize=True)
+            plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{k}.tiff',
+                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.close()
+            # female
+            if sum(sample_tag_idx_female_train[k]) != 0:
+                cm_tagged_train_female = confusion_matrix(train_female_labels[sample_tag_idx_female_train[k]],
+                                                          train_female_predictions[sample_tag_idx_female_train[k]])
+            if sum(sample_tag_idx_female_test[k]) != 0:
+                cm_tagged_test_female = confusion_matrix(test_female_labels[sample_tag_idx_female_test[k]],
+                                                         female_predictions[sample_tag_idx_female_test[k]])
+            # combine train and test
+            cm_tagged_female = confusion_matrix(np.concatenate((train_female_labels[sample_tag_idx_female_train[k]],
+                                                                test_female_labels[sample_tag_idx_female_test[k]])),
+                                                np.concatenate((train_female_predictions[
+                                                                    sample_tag_idx_female_train[k]],
+                                                                female_predictions[sample_tag_idx_female_test[k]])))
+            print(f"\nFemale data confusion matrix of tagged samples with {k, tag_op, tag_val} "
+                  f"for {kern.upper()} kernel:")
+            plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
+                                  title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}', normalize=True)
+            plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{k}.tiff',
+                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.close()
        
     # Turn the original feature lists into np arrays with technically just shorter names for later use
     features = np.array(feature_list)
