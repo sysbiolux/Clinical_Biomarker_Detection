@@ -61,7 +61,7 @@ output_related = ['PM-Frailty_Score',
                   'PM-Frailty_weightloss',
                   'PM-Gripstrength_max']  # Output-related features, str (can be list)
 sample_tagging_feature = ['PM-Frailty_Score', 'BF-VitDDef']  # Feature used to define samples to tag specifically, str or list of str
-tag_threshold = (('>=', '3'), ('==', '1'))  # Threshold to define samples to tag, tuple of str or tuple of tuples if multiple tagging features exist, first position must be math operator
+tag_threshold = (('>=', '3'), ('==', '1'))  # Threshold to define samples to tag, can be multiples, first position must be math operator, tuple of str or tuples
 features_of_interest = ['']  # Features of interest to investigate distributions in TP, TN, FP and FN, list of str or str
 
 ###################################################################################################################
