@@ -1113,20 +1113,24 @@ if enable_rhcf:
         # start plotting the various correlation plots if valid
     for corr in possible_correlations:
         # mixed
-        draw_corr_after_rhcf(train_features, train_labels, feature_list, categorical_idx, output_feature, corr)
+        draw_corr_after_rhcf(train_features, train_labels, feature_list,
+                             categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                             output_feature, corr)
         plt.savefig(folder_name + f'/full_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
                     dpi=tiff_figure_dpi)
         plt.close()
         if enable_data_split:
               # male
-              draw_corr_after_rhcf(train_men_features, train_men_labels, feature_list_male, categorical_idx_male,
+              draw_corr_after_rhcf(train_men_features, train_men_labels, feature_list_male,
+                                   categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
                                    output_feature, corr)
               plt.savefig(folder_name + f'/male_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
                           dpi=tiff_figure_dpi)
               plt.close()
               # female
               draw_corr_after_rhcf(train_female_features, train_female_labels, feature_list_female,
-                                   categorical_idx_female, output_feature, corr)
+                                   categorical_idx_female if corr in ('cramer', 'chi') else continuous_idx_female,
+                                   output_feature, corr)
               plt.savefig(folder_name + f'/female_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
                           dpi=tiff_figure_dpi)
               plt.close()
