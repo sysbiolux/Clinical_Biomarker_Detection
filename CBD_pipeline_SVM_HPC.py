@@ -679,6 +679,9 @@ if enable_data_split:
         tag_samples(train[train[split_feature] == 2],
                     test[test[split_feature] == 2],
                     sample_tagging_feature, tag_threshold)
+else:
+    sample_tag_idx_male_train, sample_tag_idx_male_test, \
+      sample_tag_idx_female_train, sample_tag_idx_female_test = 4 * [None]
               
 # Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
