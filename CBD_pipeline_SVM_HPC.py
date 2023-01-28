@@ -664,34 +664,21 @@ print('The shape of the original test set is:\n', test.shape)
 # ## Features and labels preparations
 ######################################
 # collecting indices of samples to be tagged if given
-sample_tag_idx_train, sample_tag_idx_test, sample_tag_idx_male_train, sample_tag_idx_male_test, \
-  sample_tag_idx_female_train, sample_tag_idx_female_test = 6 * [None]
-
-if sample_tagging_feature != '':
-    if sample_tagging_feature not in train.columns or sample_tagging_feature not in test.columns:
-        print(f'Could not find the respective sample tagging feature among the train and test data set: '
-              f'{sample_tagging_feature}.')
-    else:
-        print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the '
-              f'test and train set: {sample_tagging_feature, tag_threshold}.')
-        sample_tag_idx_train = eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-        sample_tag_idx_test = eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-        print(f'Collected indices of {sum(sample_tag_idx_train)} samples that satisfied the given condition in the '
-              f'train set and {sum(sample_tag_idx_test)} samples in the test set.')
-        if enable_data_split:
-            # 1 is male, 2 is female
-            sample_tag_idx_male_train = \
-                eval('train[sample_tagging_feature][train[split_feature] == 1]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_male_test = \
-                eval('test[sample_tagging_feature][test[split_feature] == 1]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_female_train = \
-                eval('train[sample_tagging_feature][train[split_feature] == 2]' + tag_threshold[0] + tag_threshold[1])
-            sample_tag_idx_female_test = \
-                eval('test[sample_tagging_feature][test[split_feature] == 2]' + tag_threshold[0] + tag_threshold[1])
-            print(f'Collected indices of {sum(sample_tag_idx_male_train)} male samples that satisfied the given '
-                  f'condition in the train set and {sum(sample_tag_idx_male_test)} samples in the test set.')
-            print(f'Collected indices of {sum(sample_tag_idx_female_train)} female samples that satisfied the given '
-                  f'condition in the train set and {sum(sample_tag_idx_female_test)} samples in the test set.')
+print(f'\nTagging samples in the mixed train and test sets...')
+sample_tag_idx_train, sample_tag_idx_test = \
+    tag_samples(train, test, sample_tagging_feature, tag_threshold)
+# in sub samples if selected
+if enable_data_split:
+    print(f'\nTagging samples in the female train and test sets...')
+    sample_tag_idx_male_train, sample_tag_idx_male_test = \
+        tag_samples(train[train[split_feature] == 1],
+                    test[test[split_feature] == 1],
+                    sample_tagging_feature, tag_threshold)
+    print(f'\nTagging samples in the female train and test sets...')
+    sample_tag_idx_female_train, sample_tag_idx_female_test = \
+        tag_samples(train[train[split_feature] == 2],
+                    test[test[split_feature] == 2],
+                    sample_tagging_feature, tag_threshold)
               
 # Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
