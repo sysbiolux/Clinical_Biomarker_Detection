@@ -47,13 +47,13 @@ def tag_samples(train, test, sample_tagging_feature, tag_threshold):
     Parameters
     ----------
     train : pandas.DataFrame
-        model to use as prediction method, best estimator will be selected to update the feature lists
+        train data set
     test : pandas.DataFrame
-        model to use as prediction method, best estimator will be selected to update the feature lists
+        test data set
     sample_tagging_feature : str, list
-        number of correlation metrics to show in the legend
+        list of features to be tagged
     tag_threshold : tuple
-        correlation method to use (e.g. pearson)
+        threshold of tagged feature, e.g., ('>=', 'np.nanpercentile(x, 20)')
 
     Returns
     -------
