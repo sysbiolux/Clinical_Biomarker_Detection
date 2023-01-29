@@ -34,6 +34,9 @@
 
 # /!\ CURRENT WARNINGS / ERRORS ENCOUNTERED: /!\ #
 # ---------------------------------------------- #
+# OutdatedPackageWarning: The package outdated is out of date. Your version is 0.2.1, the latest is 0.2.2.
+# Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. SUPPRESSED, MINOR CHANGES NOT WORTH UPDATING
+
 # OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.1.
 # Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. SUPPRESSED, MINOR CHANGES NOT WORTH UPDATING
 
