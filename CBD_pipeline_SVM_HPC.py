@@ -1718,7 +1718,31 @@ for kern in kernels:
         plt.close()
     else:
         cm_male, cm_female = [None] * 2
-    
+              
+    # Plot box plots / bar plots of interesting feature that we want to analyze in terms of TP, TN, FP, FN
+    if features_of_interest != '':
+        box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
+                                                                test_features, feature_list)
+        box_of_interest.savefig(folder_name + f'/full_box_of_interest.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        bar_of_interest.savefig(folder_name + f'/full_bar_of_interest.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        if enable_data_split:
+            # male
+            box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
+                                                                        features_of_interest, test_men_features,
+                                                                        feature_list_male)
+            box_of_interest_m.savefig(folder_name + f'/male_box_of_interest.tiff', bbox_inches='tight',
+                                      dpi=tiff_figure_dpi)
+            bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest.tiff', bbox_inches='tight',
+                                      dpi=tiff_figure_dpi)
+            # female
+            box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
+                                                                        features_of_interest, test_female_features,
+                                                                        feature_list_female)
+            box_of_interest_f.savefig(folder_name + f'/female_box_of_interest.tiff',
+                                      bbox_inches='tight', dpi=tiff_figure_dpi)
+            bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest.tiff',
+                                      bbox_inches='tight', dpi=tiff_figure_dpi)
+              
     # Confusion matrix of tagged samples in train and test combined, but also only train and only test if possible
     for num, k in enumerate(sample_tagging_feature) if np.count_nonzero(sample_tagging_feature) > 1 else \
             enumerate(sample_tagging_feature.split()):
