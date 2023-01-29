@@ -1722,30 +1722,6 @@ for kern in kernels:
     else:
         cm_male, cm_female = [None] * 2
               
-    # Plot box plots / bar plots of interesting feature that we want to analyze in terms of TP, TN, FP, FN
-    if features_of_interest != '':
-        box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
-                                                                test_features, feature_list)
-        box_of_interest.savefig(folder_name + f'/full_box_of_interest.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        bar_of_interest.savefig(folder_name + f'/full_bar_of_interest.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
-        if enable_data_split:
-            # male
-            box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
-                                                                        features_of_interest, test_men_features,
-                                                                        feature_list_male)
-            box_of_interest_m.savefig(folder_name + f'/male_box_of_interest.tiff', bbox_inches='tight',
-                                      dpi=tiff_figure_dpi)
-            bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest.tiff', bbox_inches='tight',
-                                      dpi=tiff_figure_dpi)
-            # female
-            box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
-                                                                        features_of_interest, test_female_features,
-                                                                        feature_list_female)
-            box_of_interest_f.savefig(folder_name + f'/female_box_of_interest.tiff',
-                                      bbox_inches='tight', dpi=tiff_figure_dpi)
-            bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest.tiff',
-                                      bbox_inches='tight', dpi=tiff_figure_dpi)
-              
     # Confusion matrix of tagged samples in train and test combined, but also only train and only test if possible
     for num, k in enumerate(sample_tagging_feature) if np.count_nonzero(sample_tagging_feature) > 1 else \
             enumerate(sample_tagging_feature.split()):
@@ -2104,6 +2080,54 @@ for kern in kernels:
                 if feature_importance_method in ('all', 'mlxtend'):
                     print('Top important features with mlxtend:',
                           features_female[indices_female[-ml_above_zero_imp_female:]][::-1], '\n')
+
+        # Plot box plots / bar plots of interesting permuted feature that we want to analyze in terms of TP, TN, FP, FN
+        perm_meths = ['sklearn', 'eli5', 'mlxtend'] if feature_importance_method == 'all' else \
+            [feature_importance_method]
+        for perm_meth in perm_meths:
+            features_of_interest = features[sorted_idx[-sk_above_zero_imp:]][::-1][:10] if perm_meth == 'sklearn' else \
+                features[sorted_idx_eli[-el_above_zero_imp:]][::-1][:10] if perm_meth == 'eli5' else \
+                features[indices[-ml_above_zero_imp:]][::-1][:10] if perm_meth == 'mlxtend' else ''
+            if enable_data_split:
+                features_of_interest_male = \
+                    features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1][:10] if perm_meth == 'sklearn' else \
+                    features_male[
+                        sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1][:10] if perm_meth == 'eli5' else \
+                    features_male[indices_male[-ml_above_zero_imp_male:]][::-1] if perm_meth == 'mlxtend' else ''
+                features_of_interest_female = \
+                    features_female[
+                        sorted_idx_female[-sk_above_zero_imp_female:]][::-1][:10] if perm_meth == 'sklearn' else \
+                    features_female[
+                        sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1][:10] if perm_meth == 'eli5' else \
+                    features_female[
+                        indices_female[-ml_above_zero_imp_female:]][::-1][:10] if perm_meth == 'mlxtend' else ''
+            else:
+                features_of_interest_male, features_of_interest_female = 2 * [None]
+            # draw the plots
+            box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
+                                                                    test_features, feature_list)
+            box_of_interest.savefig(folder_name + f'/full_box_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+                                    dpi=tiff_figure_dpi)
+            bar_of_interest.savefig(folder_name + f'/full_bar_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+                                    dpi=tiff_figure_dpi)
+            if enable_data_split:
+                # male
+                box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
+                                                                            features_of_interest_male,
+                                                                            test_men_features, feature_list_male)
+                box_of_interest_m.savefig(folder_name + f'/male_box_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+                                          dpi=tiff_figure_dpi)
+                bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+                                          dpi=tiff_figure_dpi)
+                # female
+                box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
+                                                                            features_of_interest_female,
+                                                                            test_female_features,
+                                                                            feature_list_female)
+                box_of_interest_f.savefig(folder_name + f'/female_box_of_interest_{perm_meth}.tiff',
+                                          bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest_{perm_meth}.tiff',
+                                          bbox_inches='tight', dpi=tiff_figure_dpi)
 
         ####################################################
         # ## Evaluate non-linear feature importance methods
@@ -2495,6 +2519,39 @@ for kern in kernels:
                 lin_out_features_male, lin_out_features_female,\
                 lin_out_real_idx_for_bbp_male, lin_out_real_idx_for_bbp_female,\
                 lin_imp_male, lin_imp_female = [None] * 10
+
+        # Plot box plots / bar plots of interesting linear feature that we want to analyze in terms of TP, TN, FP, FN
+        features_of_interest = lin_out_features[lin_idx][::-1][:10]
+        if enable_data_split:
+            features_of_interest_male = lin_out_features_male[lin_idx_male][::-1][:10]
+            features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:10]
+        else:
+            features_of_interest_male, features_of_interest_female = 2 * [None]
+
+        box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
+                                                                test_features, feature_list)
+        box_of_interest.savefig(folder_name + f'/full_box_of_interest_lin.tiff', bbox_inches='tight',
+                                dpi=tiff_figure_dpi)
+        bar_of_interest.savefig(folder_name + f'/full_bar_of_interest_lin.tiff', bbox_inches='tight',
+                                dpi=tiff_figure_dpi)
+        if enable_data_split:
+            # male
+            box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
+                                                                        features_of_interest_male, test_men_features,
+                                                                        feature_list_male)
+            box_of_interest_m.savefig(folder_name + f'/male_box_of_interest_lin.tiff', bbox_inches='tight',
+                                      dpi=tiff_figure_dpi)
+            bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest_lin.tiff', bbox_inches='tight',
+                                      dpi=tiff_figure_dpi)
+            # female
+            box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
+                                                                        features_of_interest_female,
+                                                                        test_female_features,
+                                                                        feature_list_female)
+            box_of_interest_f.savefig(folder_name + f'/female_box_of_interest_lin.tiff',
+                                      bbox_inches='tight', dpi=tiff_figure_dpi)
+            bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest_lin.tiff',
+                                      bbox_inches='tight', dpi=tiff_figure_dpi)
 
         ############################################################
         # ## Box and bar plots in case of linear feature importance
