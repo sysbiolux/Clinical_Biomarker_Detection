@@ -4,7 +4,7 @@
 # November 2021 - January 2023, University of Luxembourg, v.01/29/2023 (M/d/y) #########################################
 ########################################################################################################################
 
-# Configure up to 83 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 82 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -64,11 +64,6 @@ sample_tagging_feature = output_related + ['BF-VitDDef']  # Feature used to defi
 # Threshold to define samples to tag, can be multiples, first position must be math operator, tuple of str or tuples
 tag_threshold = (('>=', '3'), ('==', '1'), ('==', '1'), ('==', '1'),
                  ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1'))  # if percentile, give data as x
-features_of_interest = ['']  # Features of interest to investigate distributions in TP, TN, FP and FN, list of str or str
-# In general, tagged features should be features that do not enter the main classification pipeline. It is only to verify how these
-# specific samples are distributed within the correctly and wrongly classified samples.
-# Features of interest however should concern features that entered the classification pipeline (e.g. top 10 important feature) to
-# analyse their distributions and frequencies among the correctly and wrongly classified samples.
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
