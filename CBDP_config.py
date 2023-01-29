@@ -1,7 +1,7 @@
 ########################################################################################################################
 # CLINICAL BIOMARKER DETECTION - PIPELINE (CBD-P) CONFIGURATION FILE ###################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - January 2023, University of Luxembourg, v.01/25/2023 (M/d/y) #########################################
+# November 2021 - January 2023, University of Luxembourg, v.01/29/2023 (M/d/y) #########################################
 ########################################################################################################################
 
 # Configure up to 83 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
