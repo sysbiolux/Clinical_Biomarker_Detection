@@ -496,6 +496,110 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.ylabel('True label', size=18)
     plt.xlabel('Predicted label', size=18)
 
+    
+def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list):
+    """
+    Function to plot box and bar plots of interesting features in terms of true positive, true negative,
+    false positive, and false negative.
+
+    Parameters
+    ----------
+    test_labels : np.array
+        Array of test ground truths.
+    predictions : np.array
+        Array of predicted test samples.
+    features_of_interest : list
+        List of features of interest defined in config.
+    test_features : np.array
+        Array of test features.
+    feature_list : list
+        List of features.
+
+    Returns
+    -------
+    fig_cont : matplotlib.figure
+        Figure of continuous box plots of samples within confusion matrix.
+    fig_cat : matplotlib.figure
+        Figure of categorical bar plots of samples within confusion matrix.
+    """
+    # Collect indices of TP, TN, FP, and FN samples
+    tp, fp, tn, fn = [], [], [], []
+    for num, val in enumerate(test_labels):
+        if predictions[num] == val:
+            tp.append(num) if val == 1 else tn.append(num)
+        else:
+            fp.append(num) if val == 0 else fn.append(num)
+    # Collect the data of interest for those 4 groups
+    cont, cat = get_cat_and_cont(test_features)
+    cat_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
+    cont_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
+    for key in cat_dict.keys():  # will be the same keys for both dicts
+        tmp_cont, tmp_cat = dict(), dict()
+        for feature in features_of_interest:
+            if feature_list.index(feature) in cat:
+                tmp_cat.update({feature: np.bincount(test_features[eval('eval(key.lower())'), feature_list.index(feature)].astype(int), minlength=2)})
+                cat_dict[key] = tmp_cat
+            else:
+                tmp_cont.update({feature: test_features[eval('eval(key.lower())'), feature_list.index(feature)]})
+                cont_dict[key] = tmp_cont
+    # plot in 2 x 2 subplot with TN top left, TP bottom right, FN top right, FP bottom left, in each subplot, show the
+    # bars or boxes of each features of interest. Make 2 plots: one with only categories, one with only continuous
+
+    # plotting the continuous as box plot
+    fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+    ax1.boxplot(list(cont_dict['TN'].values()))  # TN
+    ax1.set_title(f'True negatives, n={len(tn)}')
+    ax1.set_xticklabels([])
+    ax1.set_ylabel('Non-frail')
+    ax2.boxplot(list(cont_dict['FP'].values()))  # FP
+    ax2.set_title(f'False positives, n={len(fp)}')
+    ax2.set_xticklabels([])
+    ax3.boxplot(list(cont_dict['FN'].values()))  # FN
+    ax3.set_title(f'False negatives, n={len(fn)}')
+    ax3.set_xticklabels(list(cont_dict['FP'].keys()), fontsize=10, rotation=30)
+    ax3.set_xlabel('Non-frail')
+    ax3.set_ylabel('Frail')
+    ax4.boxplot(list(cont_dict['TP'].values()))  # TP
+    ax4.set_title(f'True positives, n={len(tp)}')
+    ax4.set_xticklabels(list(cont_dict['TP'].keys()), fontsize=10, rotation=30)
+    ax4.set_xlabel('Frail')
+    fig_cont.supylabel('True label', size=18)
+    fig_cont.supxlabel('Predicted label', size=18)
+    fig_cont.tight_layout(pad=1)
+
+    # to plot categorical als bar plot, we first need to rearrange things....
+    x_axis = np.arange(len(list(cat_dict['TN'].keys())))
+    # rearrange dict so that for both bar calls, the first represents all 0 cases , second all 1 cases, etc
+    dict_of_arranged_axis = {}
+    for num, key in enumerate(cat_dict.keys()):
+        for pos in [0, 1]:
+            tmp = []
+            for feat in x_axis:
+                tmp.append(list(cat_dict[key].values())[feat][pos])
+            dict_of_arranged_axis["ax{0}_bar{1}".format(num + 1, pos + 1)] = tmp
+    # plotting the categorical as bar plot
+    fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10))
+    for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes instead of 2x2
+        for key, items in dict_of_arranged_axis.items():
+            if f'ax{num + 1}' in key:
+                message = 'unaffected' if f'{int(key[-1]) - 1}' == '0' else 'affected'  # message for the label (binary)
+                ax.bar(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2,
+                       items, 0.4, label=f'{int(key[-1]) - 1} - {message}' if num == 0 else '')
+                ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
+                             f'False positives, n={len(fp)}' if num == 1 else
+                             f'False negatives, n={len(fn)}' if num == 2 else
+                             f'True positives, n={len(tp)}')  # if num == 3
+                if num == 2 or num == 3:
+                    ax.set_xticks(x_axis, list(cat_dict['FP'].keys()), fontsize=10, rotation=30)
+                else:
+                    ax.set_xticks([])
+    fig_cat.legend(loc='lower right')
+    fig_cat.supylabel('True label', size=18)
+    fig_cat.supxlabel('Predicted label', size=18)
+    fig_cat.tight_layout(pad=1)
+    # return both figures
+    return fig_cont, fig_cat
+
 
 ###############################################################
 # ## Feature update after feature selection by fitted pipeline
