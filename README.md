@@ -87,7 +87,7 @@ Classification model of the selected output-target, model evaluation summaries a
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 83 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 82 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
 #### General Settings
 
@@ -116,7 +116,6 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
 | sample_tagging_feature | output_related + \['BF-VitDDef'] | Feature used to define samples to tag specifically | str or list of str |
 | tag_threshold | (('>=', '3'), ('==', '1'), ('==', '1'), ('==', '1'), ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1')) | Threshold to define samples to tag, can be multiples, first position must be math operator | tuple of str or tuples |
-| features_of_interest | \['BF-VitDDef', 'CH-Herzinsuffizienz', 'BF-CRPmgL'] | Features of interest to investigate distributions in TP, TN, FP and FN | list of str or str |
 
 #### Machine Learning Classifier-specific Fixed Parameters
 
