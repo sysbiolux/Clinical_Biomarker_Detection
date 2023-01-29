@@ -79,14 +79,14 @@ def tag_samples(train, test, sample_tagging_feature, tag_threshold):
                   f'test and train set:\n{sample_tagging_feature, tag_threshold}.')
             if tag_threshold[1].__contains__('percentile'):
                 tagged_indices_train.update({
-                    sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1], None,
-                                                 {'x': train[sample_tagging_feature], 'train': train,
-                                                  'sample_tagging_feature': sample_tagging_feature})
+                    sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1],
+                                                 None, {'x': train[sample_tagging_feature], 'train': train,
+                                                        'sample_tagging_feature': sample_tagging_feature})
                 })
                 tagged_indices_test.update({
-                    sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1], None,
-                                                 {'x': test[sample_tagging_feature], 'test': test,
-                                                  'sample_tagging_feature': sample_tagging_feature})
+                    sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1],
+                                                 None, {'x': test[sample_tagging_feature], 'test': test,
+                                                        'sample_tagging_feature': sample_tagging_feature})
                 })
             else:
                 tagged_indices_train.update({
@@ -537,7 +537,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         tmp_cont, tmp_cat = dict(), dict()
         for feature in features_of_interest:
             if feature_list.index(feature) in cat:
-                tmp_cat.update({feature: np.bincount(test_features[eval('eval(key.lower())'), feature_list.index(feature)].astype(int), minlength=2)})
+                tmp_cat.update({feature: np.bincount(
+                    test_features[eval('eval(key.lower())'), feature_list.index(feature)].astype(int), minlength=2)})
                 cat_dict[key] = tmp_cat
             else:
                 tmp_cont.update({feature: test_features[eval('eval(key.lower())'), feature_list.index(feature)]})
