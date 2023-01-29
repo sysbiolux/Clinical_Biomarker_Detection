@@ -114,8 +114,8 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | positive_class | 'frail' | Name to give the positive class of the output feature | str |
 | negative_class | 'non-frail' | Name to give the negative class of the output feature | str |
 | output_related | \['PM-Frailty_Score', 'PM-Frailty_gait', 'SV-Frailty_exhaustion', 'SV-Frailty_physicalactivity', 'PM-Frailty_gripstrength', 'PM-Gripstrength_max', 'PM-Frailty_weightloss'] | Output-related features | str, list |
-| sample_tagging_feature | \['PM-Frailty_Score', 'BF-VitDDef'] | Feature used to define samples to tag specifically | str or list of str |
-| tag_threshold | (('>=', '3'), ('==', '1')) | Threshold to define samples to tag, can be multiples, first position must be math operator | tuple of str or tuples |
+| sample_tagging_feature | output_related + \['BF-VitDDef'] | Feature used to define samples to tag specifically | str or list of str |
+| tag_threshold | (('>=', '3'), ('==', '1'), ('==', '1'), ('==', '1'), ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1')) | Threshold to define samples to tag, can be multiples, first position must be math operator | tuple of str or tuples |
 | features_of_interest | \['BF-VitDDef', 'CH-Herzinsuffizienz', 'BF-CRPmgL'] | Features of interest to investigate distributions in TP, TN, FP and FN | list of str or str |
 
 #### Machine Learning Classifier-specific Fixed Parameters
