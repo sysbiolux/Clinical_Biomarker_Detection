@@ -77,12 +77,25 @@ def tag_samples(train, test, sample_tagging_feature, tag_threshold):
             # get indices of single tag feature
             print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the '
                   f'test and train set:\n{sample_tagging_feature, tag_threshold}.')
-            tagged_indices_train.update({
-                sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-            })
-            tagged_indices_test.update({
-                sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
-            })
+            if tag_threshold[1].__contains__('percentile'):
+                tagged_indices_train.update({
+                    sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1], None,
+                                                 {'x': train[sample_tagging_feature], 'train': train,
+                                                  'sample_tagging_feature': sample_tagging_feature})
+                })
+                tagged_indices_test.update({
+                    sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1], None,
+                                                 {'x': test[sample_tagging_feature], 'test': test,
+                                                  'sample_tagging_feature': sample_tagging_feature})
+                })
+            else:
+                tagged_indices_train.update({
+                    sample_tagging_feature: eval('train[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1],
+                                                 )
+                })
+                tagged_indices_test.update({
+                    sample_tagging_feature: eval('test[sample_tagging_feature]' + tag_threshold[0] + tag_threshold[1])
+                })
             print(f'Collected indices of {sum(tagged_indices_train[sample_tagging_feature])} samples that satisfied '
                   f'the above condition in the train set and {sum(tagged_indices_test[sample_tagging_feature])} '
                   f'samples in the test set.')
@@ -100,12 +113,22 @@ def tag_samples(train, test, sample_tagging_feature, tag_threshold):
                 # get indices of the multiple tag features
                 print(f'\nCollecting indices of samples satisfying the following sample tagging condition in the '
                       f'test and train set:\n{tag_feat, tag_threshold[num]}.')
-                tagged_indices_train.update({
-                    tag_feat: eval('train[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
-                })
-                tagged_indices_test.update({
-                    tag_feat: eval('test[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
-                })
+                if tag_threshold[num][1].__contains__('percentile'):
+                    tagged_indices_train.update({
+                        tag_feat: eval('train[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1], None,
+                                       {'x': train[tag_feat], 'train': train, 'tag_feat': tag_feat})
+                    })
+                    tagged_indices_test.update({
+                        tag_feat: eval('test[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1], None,
+                                       {'x': test[tag_feat], 'test': test, 'tag_feat': tag_feat})
+                    })
+                else:
+                    tagged_indices_train.update({
+                        tag_feat: eval('train[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
+                    })
+                    tagged_indices_test.update({
+                        tag_feat: eval('test[tag_feat]' + tag_threshold[num][0] + tag_threshold[num][1])
+                    })
                 print(f'Collected indices of {sum(tagged_indices_train[tag_feat])} samples that satisfied the above '
                       f'condition in the train set and {sum(tagged_indices_test[tag_feat])} samples in the test set.')
     # return both dicts
