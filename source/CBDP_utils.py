@@ -2242,15 +2242,15 @@ def plot_pca(train_features=None, train_labels=None, col_idx=None, color_by=None
         for target, color in zip(targets, colors):
             idx = y[color_by] == target
             # pca plots
-            ax1.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC2'], color=color, s=25)
+            ax1.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC2'], color=color, s=15, alpha=0.5)
             ax1.set_title('PC1 v PC2', fontsize=10)
             ax1.set_xlabel(f'PC1 ({"{:.2f}".format(round(pca.explained_variance_ratio_[0] * 100, 2))}%)')
             ax1.set_ylabel(f'PC2 ({"{:.2f}".format(round(pca.explained_variance_ratio_[1] * 100, 2))}%)')
-            ax2.scatter(pcdf.loc[idx, 'PC2'], pcdf.loc[idx, 'PC3'], color=color, s=25)
+            ax2.scatter(pcdf.loc[idx, 'PC2'], pcdf.loc[idx, 'PC3'], color=color, s=15, alpha=0.5)
             ax2.set_title('PC2 v PC3', fontsize=10)
             ax2.set_xlabel(f'PC2 ({"{:.2f}".format(round(pca.explained_variance_ratio_[1] * 100, 2))}%)')
             ax2.set_ylabel(f'PC3 ({"{:.2f}".format(round(pca.explained_variance_ratio_[2] * 100, 2))}%)')
-            ax3.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC3'], color=color, s=25)
+            ax3.scatter(pcdf.loc[idx, 'PC1'], pcdf.loc[idx, 'PC3'], color=color, s=15, alpha=0.5)
             ax3.set_title('PC1 v PC3', fontsize=10)
             ax3.set_xlabel(f'PC1 ({"{:.2f}".format(round(pca.explained_variance_ratio_[0] * 100, 2))}%)')
             ax3.set_ylabel(f'PC3 ({"{:.2f}".format(round(pca.explained_variance_ratio_[2] * 100, 2))}%)')
