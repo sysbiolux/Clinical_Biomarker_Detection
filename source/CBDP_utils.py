@@ -2170,15 +2170,15 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
     # plot
     plt.figure(figsize=(10, 10) if correlation in ('cramer', 'chi') else (16, 16))
     ax = plt.subplot()
-    plt.barh(np.array(feature_list)[np.array(col_idx)[sorted_idx]][np.array(res)[sorted_idx] > 0.01],
-             np.array(res)[sorted_idx][np.array(res)[sorted_idx] > 0.01])
+    plt.barh(np.array(feature_list)[np.array(col_idx)[sorted_idx]][np.array(res)[sorted_idx] > 0.001],
+             np.array(res)[sorted_idx][np.array(res)[sorted_idx] > 0.001])
     plt.setp(ax.get_yticklabels(), ha='right', fontsize=8)
     if correlation == 'cramer':
-        plt.title(f"Cramer's V correlation above 0.01 between remaining categorical features and {output_feature}")
+        plt.title(f"Cramer's V correlation above 0.001 between remaining categorical features and {output_feature}")
     if correlation == 'chi':
-        plt.title(f"Chi squared correlation above 0.01 between remaining categorical features and {output_feature}")
+        plt.title(f"Chi squared correlation above 0.001 between remaining categorical features and {output_feature}")
     if correlation == 'pbs':
-        plt.title(f"Point bi-serial correlation above 0.01 between remaining continuous features and {output_feature}")
+        plt.title(f"Point bi-serial correlation above 0.001 between remaining continuous features and {output_feature}")
     plt.tight_layout()
     
     
