@@ -533,12 +533,16 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     cont, cat = get_cat_and_cont(test_features)
     cat_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
     cont_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
+    # get the longest list of unique categorical features
+    long = len(np.unique(
+        test_features[:,
+        [feature_list.index(feature) for feature in features_of_interest if feature_list.index(feature) in cat]]))
     for key in cat_dict.keys():  # will be the same keys for both dicts
         tmp_cont, tmp_cat = dict(), dict()
         for feature in features_of_interest:
             if feature_list.index(feature) in cat:
                 tmp_cat.update({feature: np.bincount(
-                    test_features[eval('eval(key.lower())'), feature_list.index(feature)].astype(int), minlength=2)})
+                    test_features[eval('eval(key.lower())'), feature_list.index(feature)].astype(int), minlength=long)})
                 cat_dict[key] = tmp_cat
             else:
                 tmp_cont.update({feature: test_features[eval('eval(key.lower())'), feature_list.index(feature)]})
@@ -548,19 +552,19 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
 
     # plotting the continuous as box plot
     fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
-    ax1.boxplot(list(cont_dict['TN'].values()))  # TN
+    ax1.boxplot(list(cont_dict['TN'].values()), vert=True, patch_artist=True, notch=True)  # TN
     ax1.set_title(f'True negatives, n={len(tn)}')
     ax1.set_xticklabels([])
     ax1.set_ylabel('Non-frail')
-    ax2.boxplot(list(cont_dict['FP'].values()))  # FP
+    ax2.boxplot(list(cont_dict['FP'].values()), vert=True, patch_artist=True, notch=True)  # FP
     ax2.set_title(f'False positives, n={len(fp)}')
     ax2.set_xticklabels([])
-    ax3.boxplot(list(cont_dict['FN'].values()))  # FN
+    ax3.boxplot(list(cont_dict['FN'].values()), vert=True, patch_artist=True, notch=True)  # FN
     ax3.set_title(f'False negatives, n={len(fn)}')
     ax3.set_xticklabels(list(cont_dict['FP'].keys()), fontsize=10, rotation=30)
     ax3.set_xlabel('Non-frail')
     ax3.set_ylabel('Frail')
-    ax4.boxplot(list(cont_dict['TP'].values()))  # TP
+    ax4.boxplot(list(cont_dict['TP'].values()), vert=True, patch_artist=True, notch=True)  # TP
     ax4.set_title(f'True positives, n={len(tp)}')
     ax4.set_xticklabels(list(cont_dict['TP'].keys()), fontsize=10, rotation=30)
     ax4.set_xlabel('Frail')
@@ -573,7 +577,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     # rearrange dict so that for both bar calls, the first represents all 0 cases , second all 1 cases, etc
     dict_of_arranged_axis = {}
     for num, key in enumerate(cat_dict.keys()):
-        for pos in [0, 1]:
+        for pos in np.arange(long):
             tmp = []
             for feat in x_axis:
                 tmp.append(list(cat_dict[key].values())[feat][pos])
@@ -583,18 +587,28 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes instead of 2x2
         for key, items in dict_of_arranged_axis.items():
             if f'ax{num + 1}' in key:
-                message = 'unaffected' if f'{int(key[-1]) - 1}' == '0' else 'affected'  # message for the label (binary)
+                message = 'unaffected' if f'{int(key.split("bar")[-1]) - 1}' == '0' else 'affected'  # label message
                 ax.bar(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2,
-                       items, 0.4, label=f'{int(key[-1]) - 1} - {message}' if num == 0 else '')
+                       items, 0.4,
+                       label=f'{int(key.split("bar")[-1]) - 1} - {message}' if (num == 0 and len(items) == 2) else
+                             f'{int(key.split("bar")[-1]) - 1}' if num == 0 else '')
                 ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
                              f'False positives, n={len(fp)}' if num == 1 else
                              f'False negatives, n={len(fn)}' if num == 2 else
                              f'True positives, n={len(tp)}')  # if num == 3
                 if num == 2 or num == 3:
-                    ax.set_xticks(x_axis, list(cat_dict['FP'].keys()), fontsize=10, rotation=30)
+                    ax.set_xticks(x_axis, list(cat_dict['FP'].keys()), fontsize=10, rotation=30,
+                                  horizontalalignment='right')
                 else:
                     ax.set_xticks([])
-    fig_cat.legend(loc='lower right')
+                if num == 0:
+                    ax.set_ylabel('Non-frail')
+                if num == 2:
+                    ax.set_ylabel('Frail')
+                    ax.set_xlabel('Non-frail')
+                if num == 3:
+                    ax.set_xlabel('Frail')
+    fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)))
     fig_cat.supylabel('True label', size=18)
     fig_cat.supxlabel('Predicted label', size=18)
     fig_cat.tight_layout(pad=1)
