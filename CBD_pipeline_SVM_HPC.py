@@ -2527,6 +2527,18 @@ for kern in kernels:
             features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:10]
         else:
             features_of_interest_male, features_of_interest_female = 2 * [None]
+       
+        # remove (PC ##) from feature names
+        for num, k in enumerate(features_of_interest):
+            if 'PC #' in k:
+                features_of_interest[num] = k.split(' ')[0]
+        if enable_data_split:
+            for num, k in enumerate(features_of_interest_male):
+                if 'PC #' in k:
+                    features_of_interest_male[num] = k.split(' ')[0]
+            for num, k in enumerate(features_of_interest_female):
+                if 'PC #' in k:
+                    features_of_interest_female[num] = k.split(' ')[0]
 
         box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
                                                                 test_features, feature_list)
