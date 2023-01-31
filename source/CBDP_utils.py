@@ -497,10 +497,10 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.xlabel('Predicted label', size=18)
 
     
-def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list):
+def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list, datatype, kern):
     """
     Function to plot box and bar plots of interesting features in terms of true positive, true negative,
-    false positive, and false negative.
+    false positive, and false negative. 1 plot per feature.
 
     Parameters
     ----------
@@ -514,13 +514,17 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         Array of test features.
     feature_list : list
         List of features.
+    datatype : str
+        Name of data subgroup to include in title.
+    kern : str
+        SVM kernel used, will be included in the title.
 
     Returns
     -------
-    fig_cont : matplotlib.figure
-        Figure of continuous box plots of samples within confusion matrix.
-    fig_cat : matplotlib.figure
-        Figure of categorical bar plots of samples within confusion matrix.
+    fig_cont : list
+        List of matplotlib continuous box plot figures of samples within confusion matrix.
+    fig_cat : list
+        List of matplotlib categorical bar plots figures of samples within confusion matrix.
     """
     # Collect indices of TP, TN, FP, and FN samples
     tp, fp, tn, fn = [], [], [], []
@@ -550,27 +554,34 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     # plot in 2 x 2 subplot with TN top left, TP bottom right, FN top right, FP bottom left, in each subplot, show the
     # bars or boxes of each features of interest. Make 2 plots: one with only categories, one with only continuous
 
-    # plotting the continuous as box plot
-    fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
-    ax1.boxplot(list(cont_dict['TN'].values()), vert=True, patch_artist=True, notch=True)  # TN
-    ax1.set_title(f'True negatives, n={len(tn)}')
-    ax1.set_xticklabels([])
-    ax1.set_ylabel('Non-frail')
-    ax2.boxplot(list(cont_dict['FP'].values()), vert=True, patch_artist=True, notch=True)  # FP
-    ax2.set_title(f'False positives, n={len(fp)}')
-    ax2.set_xticklabels([])
-    ax3.boxplot(list(cont_dict['FN'].values()), vert=True, patch_artist=True, notch=True)  # FN
-    ax3.set_title(f'False negatives, n={len(fn)}')
-    ax3.set_xticklabels(list(cont_dict['FP'].keys()), fontsize=10, rotation=30)
-    ax3.set_xlabel('Non-frail')
-    ax3.set_ylabel('Frail')
-    ax4.boxplot(list(cont_dict['TP'].values()), vert=True, patch_artist=True, notch=True)  # TP
-    ax4.set_title(f'True positives, n={len(tp)}')
-    ax4.set_xticklabels(list(cont_dict['TP'].keys()), fontsize=10, rotation=30)
-    ax4.set_xlabel('Frail')
-    fig_cont.supylabel('True label', size=18)
-    fig_cont.supxlabel('Predicted label', size=18)
-    fig_cont.tight_layout(pad=1)
+    # plotting the continuous as box plot, one figure for each feature
+    list_of_cont_figures = []
+    top = 1
+    for key in cont_dict['TN'].keys():
+        fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
+        ax1.boxplot(list(cont_dict['TN'][key]), vert=True, patch_artist=True, notch=True)  # TN
+        ax1.set_title(f'True negatives, n={len(tn)}')
+        ax1.set_xticklabels([])
+        ax1.set_ylabel('Non-frail')
+        ax2.boxplot(list(cont_dict['FP'][key]), vert=True, patch_artist=True, notch=True)  # FP
+        ax2.set_title(f'False positives, n={len(fp)}')
+        ax2.set_xticklabels([])
+        ax3.boxplot(list(cont_dict['FN'][key]), vert=True, patch_artist=True, notch=True)  # FN
+        ax3.set_title(f'False negatives, n={len(fn)}')
+        ax3.set_xticklabels([])
+        ax3.set_xlabel('Non-frail')
+        ax3.set_ylabel('Frail')
+        ax4.boxplot(list(cont_dict['TP'][key]), vert=True, patch_artist=True, notch=True)  # TP
+        ax4.set_title(f'True positives, n={len(tp)}')
+        ax4.set_xticklabels([])
+        ax4.set_xlabel('Frail')
+        fig_cont.suptitle(f'{datatype.capitalize()} #{top} important continuous feature by '
+                          f'{"linear" if kern == "linear" else "non-linear"} importance ({key})', size=18)
+        fig_cont.supylabel('True label', size=12)
+        fig_cont.supxlabel('Predicted label', size=12)
+        fig_cont.tight_layout(pad=1)
+        list_of_cont_figures.append(fig_cont)
+        top += 1
 
     # to plot categorical als bar plot, we first need to rearrange things....
     x_axis = np.arange(len(list(cat_dict['TN'].keys())))
@@ -583,37 +594,42 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                 tmp.append(list(cat_dict[key].values())[feat][pos])
             dict_of_arranged_axis["ax{0}_bar{1}".format(num + 1, pos + 1)] = tmp
     # plotting the categorical as bar plot
-    fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10))
-    for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes instead of 2x2
-        for key, items in dict_of_arranged_axis.items():
-            if f'ax{num + 1}' in key:
-                message = 'unaffected' if f'{int(key.split("bar")[-1]) - 1}' == '0' else 'affected'  # label message
-                ax.bar(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2,
-                       items, 0.4,
-                       label=f'{int(key.split("bar")[-1]) - 1} - {message}' if (num == 0 and len(items) == 2) else
-                             f'{int(key.split("bar")[-1]) - 1}' if num == 0 else '')
-                ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
-                             f'False positives, n={len(fp)}' if num == 1 else
-                             f'False negatives, n={len(fn)}' if num == 2 else
-                             f'True positives, n={len(tp)}')  # if num == 3
-                if num == 2 or num == 3:
-                    ax.set_xticks(x_axis, list(cat_dict['FP'].keys()), fontsize=10, rotation=30,
-                                  horizontalalignment='right')
-                else:
+    list_of_cat_figures = []
+    top = 1
+    for feat_num, feat in enumerate(cat_dict['TN'].keys()):
+        fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
+        for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes instead of 2x2
+            for key, items in dict_of_arranged_axis.items():
+                if f'ax{num + 1}' in key:
+                    message = 'unaffected' if f'{int(key.split("bar")[-1]) - 1}' == '0' else 'affected'  # label message
+                    ax.bar(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2,
+                           items[feat_num], 0.4,
+                           label=f'{int(key.split("bar")[-1]) - 1} - {message}' if (num == 0 and len(items) == 2) else
+                                 f'{int(key.split("bar")[-1]) - 1}' if num == 0 else '')
+                    ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
+                                 f'False positives, n={len(fp)}' if num == 1 else
+                                 f'False negatives, n={len(fn)}' if num == 2 else
+                                 f'True positives, n={len(tp)}')  # if num == 3
+                    ax.text(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2, items[feat_num] + 0.5,
+                            s=items[feat_num], fontsize=15)
                     ax.set_xticks([])
-                if num == 0:
-                    ax.set_ylabel('Non-frail')
-                if num == 2:
-                    ax.set_ylabel('Frail')
-                    ax.set_xlabel('Non-frail')
-                if num == 3:
-                    ax.set_xlabel('Frail')
-    fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)))
-    fig_cat.supylabel('True label', size=18)
-    fig_cat.supxlabel('Predicted label', size=18)
-    fig_cat.tight_layout(pad=1)
+                    if num == 0:
+                        ax.set_ylabel('Non-frail')
+                    if num == 2:
+                        ax.set_ylabel('Frail')
+                        ax.set_xlabel('Non-frail')
+                    if num == 3:
+                        ax.set_xlabel('Frail')
+        fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)))
+        fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
+                         f'{"linear" if kern == "linear" else "non-linear"} importance ({feat})', size=18)
+        fig_cat.supylabel('True label', size=12)
+        fig_cat.supxlabel('Predicted label', size=12)
+        fig_cat.tight_layout(pad=1)
+        list_of_cat_figures.append(fig_cat)
+        top += 1
     # return both figures
-    return fig_cont, fig_cat
+    return list_of_cont_figures, list_of_cat_figures
 
 
 ###############################################################
