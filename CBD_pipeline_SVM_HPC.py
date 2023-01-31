@@ -2106,27 +2106,27 @@ for kern in kernels:
             # draw the plots
             box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
                                                                     test_features, feature_list)
-            box_of_interest.savefig(folder_name + f'/full_box_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+            box_of_interest.savefig(folder_name + f'/full_{kern}_box_of_interest_{perm_meth}.tiff', bbox_inches='tight',
                                     dpi=tiff_figure_dpi)
-            bar_of_interest.savefig(folder_name + f'/full_bar_of_interest_{perm_meth}.tiff', bbox_inches='tight',
+            bar_of_interest.savefig(folder_name + f'/full_{kern}_bar_of_interest_{perm_meth}.tiff', bbox_inches='tight',
                                     dpi=tiff_figure_dpi)
             if enable_data_split:
                 # male
                 box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
                                                                             features_of_interest_male,
                                                                             test_men_features, feature_list_male)
-                box_of_interest_m.savefig(folder_name + f'/male_box_of_interest_{perm_meth}.tiff', bbox_inches='tight',
-                                          dpi=tiff_figure_dpi)
-                bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest_{perm_meth}.tiff', bbox_inches='tight',
-                                          dpi=tiff_figure_dpi)
+                box_of_interest_m.savefig(folder_name + f'/male_{kern}_box_of_interest_{perm_meth}.tiff',
+                                          bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_of_interest_m.savefig(folder_name + f'/male_{kern}_bar_of_interest_{perm_meth}.tiff',
+                                          bbox_inches='tight', dpi=tiff_figure_dpi)
                 # female
                 box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                             features_of_interest_female,
                                                                             test_female_features,
                                                                             feature_list_female)
-                box_of_interest_f.savefig(folder_name + f'/female_box_of_interest_{perm_meth}.tiff',
+                box_of_interest_f.savefig(folder_name + f'/female_{kern}_box_of_interest_{perm_meth}.tiff',
                                           bbox_inches='tight', dpi=tiff_figure_dpi)
-                bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest_{perm_meth}.tiff',
+                bar_of_interest_f.savefig(folder_name + f'/female_{kern}_bar_of_interest_{perm_meth}.tiff',
                                           bbox_inches='tight', dpi=tiff_figure_dpi)
 
         ####################################################
@@ -2542,27 +2542,27 @@ for kern in kernels:
 
         box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
                                                                 test_features, feature_list)
-        box_of_interest.savefig(folder_name + f'/full_box_of_interest_lin.tiff', bbox_inches='tight',
+        box_of_interest.savefig(folder_name + f'/full_box_of_interest_{kern}.tiff', bbox_inches='tight',
                                 dpi=tiff_figure_dpi)
-        bar_of_interest.savefig(folder_name + f'/full_bar_of_interest_lin.tiff', bbox_inches='tight',
+        bar_of_interest.savefig(folder_name + f'/full_bar_of_interest_{kern}.tiff', bbox_inches='tight',
                                 dpi=tiff_figure_dpi)
         if enable_data_split:
             # male
             box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
                                                                         features_of_interest_male, test_men_features,
                                                                         feature_list_male)
-            box_of_interest_m.savefig(folder_name + f'/male_box_of_interest_lin.tiff', bbox_inches='tight',
+            box_of_interest_m.savefig(folder_name + f'/male_box_of_interest_{kern}.tiff', bbox_inches='tight',
                                       dpi=tiff_figure_dpi)
-            bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest_lin.tiff', bbox_inches='tight',
+            bar_of_interest_m.savefig(folder_name + f'/male_bar_of_interest_{kern}.tiff', bbox_inches='tight',
                                       dpi=tiff_figure_dpi)
             # female
             box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                         features_of_interest_female,
                                                                         test_female_features,
                                                                         feature_list_female)
-            box_of_interest_f.savefig(folder_name + f'/female_box_of_interest_lin.tiff',
+            box_of_interest_f.savefig(folder_name + f'/female_box_of_interest_{kern}.tiff',
                                       bbox_inches='tight', dpi=tiff_figure_dpi)
-            bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest_lin.tiff',
+            bar_of_interest_f.savefig(folder_name + f'/female_bar_of_interest_{kern}.tiff',
                                       bbox_inches='tight', dpi=tiff_figure_dpi)
 
         ############################################################
