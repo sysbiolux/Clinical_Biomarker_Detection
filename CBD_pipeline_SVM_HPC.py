@@ -2106,7 +2106,7 @@ for kern in kernels:
                      
             # draw the plots
             box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
-                                                                    test_features, feature_list, 'full', kern)
+                                                                    test_features, feature_list, 'full', 'non-linear')
             for box_num, box_fig in enumerate(box_of_interest):
                 box_fig.savefig(folder_name + f'/full_{kern}_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
                                 bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -2118,7 +2118,7 @@ for kern in kernels:
                 box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
                                                                             features_of_interest_male,
                                                                             test_men_features, feature_list_male,
-                                                                            'male', kern)
+                                                                            'male', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_m):
                     box_fig.savefig(folder_name + f'/male_{kern}_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
                                     bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -2129,7 +2129,7 @@ for kern in kernels:
                 box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                             features_of_interest_female,
                                                                             test_female_features,
-                                                                            feature_list_female, 'female', kern)
+                                                                            feature_list_female, 'female', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_f):
                     box_fig.savefig(folder_name + f'/female_{kern}_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
                                     bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -2550,7 +2550,7 @@ for kern in kernels:
 
         # plotting
         box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
-                                                                test_features, feature_list, 'full', kern)
+                                                                test_features, feature_list, 'full', 'linear')
         for box_num, box_fig in enumerate(box_of_interest):
             box_fig.savefig(folder_name + f'/full_box_of_interest_{kern}_#{box_num + 1}.tiff', bbox_inches='tight',
                             dpi=tiff_figure_dpi)
@@ -2561,7 +2561,7 @@ for kern in kernels:
             # male
             box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
                                                                         features_of_interest_male, test_men_features,
-                                                                        feature_list_male, 'male', kern)
+                                                                        feature_list_male, 'male', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_m):
                 box_fig.savefig(folder_name + f'/male_box_of_interest_{kern}_#{box_num + 1}.tiff', bbox_inches='tight',
                                 dpi=tiff_figure_dpi)
@@ -2572,7 +2572,7 @@ for kern in kernels:
             box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                         features_of_interest_female,
                                                                         test_female_features,
-                                                                        feature_list_female, 'female', kern)
+                                                                        feature_list_female, 'female', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_f):
                 box_fig.savefig(folder_name + f'/female_box_of_interest_{kern}_#{box_num + 1}.tiff',
                                 bbox_inches='tight', dpi=tiff_figure_dpi)
