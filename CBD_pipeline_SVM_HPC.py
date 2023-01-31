@@ -25,9 +25,11 @@
 # Run script on HPC using 'sbatch HPC_SVM_launcher.sh CBD_pipeline_SVM_HPC.py' after the configurations in
 # CBDP_config.py are set to your needs.
 
-# REQUIRED FILES: CBD_pipeline_SVM_HPC.py, CBDP_utils.py, CBDP_config.py, HPC_SVM_launcher.sh,
-# requirements.txt, ./env/eli5/permutation_importance.py and ./env/mlxtend/evaluate/feature_importance_permutation.py
-# and ./env/mlxtend/evaluate/__init__.py adapted for parallelization, shuffle_me.py for explanation of shuffle numbers
+# REQUIRED FILES: CBD_pipeline_SVM_HPC.py, CBDP_utils.py, CBDP_config.py, HPC_SVM_launcher.sh, requirements.txt;
+# ./env/eli5/permutation_importance.py, ./env/mlxtend/evaluate/feature_importance_permutation.py,
+# ./env/mlxtend/evaluate/__init__.py adapted for parallelization and ./env/imblearn/base.py for updated SMOTENC,
+# shuffle_me.py for explanation of shuffle numbers. All necessary files can be found here:
+# https://github.com/sysbiolux/Clinical_Biomarker_Detection/tree/main/source
 
 # Global session is saved for each kernel in '-global-save.pkl' file, the main script execution output is collected
 # in the generated log file if running on HPC. Location: log/job_ID/code_jobID_execution.out
