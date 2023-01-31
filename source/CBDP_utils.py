@@ -521,9 +521,9 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
 
     Returns
     -------
-    fig_cont : list
+    list_of_cont_figures : list
         List of matplotlib continuous box plot figures of samples within confusion matrix.
-    fig_cat : list
+    list_of_cat_figures : list
         List of matplotlib categorical bar plots figures of samples within confusion matrix.
     """
     # Collect indices of TP, TN, FP, and FN samples
