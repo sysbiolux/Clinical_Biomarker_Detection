@@ -497,7 +497,7 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.xlabel('Predicted label', size=18)
 
     
-def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list, datatype, kern):
+def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list, datatype, perm):
     """
     Function to plot box and bar plots of interesting features in terms of true positive, true negative,
     false positive, and false negative. 1 plot per feature.
@@ -516,8 +516,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         List of features.
     datatype : str
         Name of data subgroup to include in title.
-    kern : str
-        SVM kernel used, will be included in the title.
+    perm : str
+        Permutation method included in title if the importance measurement comes from linear or non-linear methodology.
 
     Returns
     -------
@@ -575,7 +575,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         ax4.set_xticklabels([])
         ax4.set_xlabel('Frail')
         fig_cont.suptitle(f'{datatype.capitalize()} #{top} important continuous feature by '
-                          f'{"linear" if kern == "linear" else "non-linear"} importance ({key})', size=18)
+                          f'{"linear" if perm == "linear" else "non-linear"} importance ({key})', size=18)
         fig_cont.supylabel('True label', size=12)
         fig_cont.supxlabel('Predicted label', size=12)
         fig_cont.tight_layout(pad=1)
@@ -621,7 +621,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                         ax.set_xlabel('Frail')
         fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)))
         fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
-                         f'{"linear" if kern == "linear" else "non-linear"} importance ({feat})', size=18)
+                         f'{"linear" if perm == "linear" else "non-linear"} importance ({feat})', size=18)
         fig_cat.supylabel('True label', size=12)
         fig_cat.supxlabel('Predicted label', size=12)
         fig_cat.tight_layout(pad=1)
