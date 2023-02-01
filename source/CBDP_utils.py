@@ -538,8 +538,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     cat_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
     cont_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
     # get the longest list of unique categorical features
-    long = len(np.unique(test_features[:, [feature_list.index(
-        feature) for feature in features_of_interest if feature_list.index(feature) in cat]]))
+    long = int(np.max(np.unique(test_features[:, [feature_list.index(
+        feature) for feature in features_of_interest if feature_list.index(feature) in cat]]))) + 1
     for key in cat_dict.keys():  # will be the same keys for both dicts
         tmp_cont, tmp_cat = dict(), dict()
         for feature in features_of_interest:
@@ -584,7 +584,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
 
     # to plot categorical als bar plot, we first need to rearrange things....
     x_axis = np.arange(len(list(cat_dict['TN'].keys())))
-    # rearrange dict so that for both bar calls, the first represents all 0 cases , second all 1 cases, etc
+    # rearrange dict so that for both bar calls, the first represents all 0 cases , second all 1 cases, third all 2 etc
     dict_of_arranged_axis = {}
     for num, key in enumerate(cat_dict.keys()):
         for pos in np.arange(long):
@@ -595,22 +595,52 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     # plotting the categorical as bar plot
     list_of_cat_figures = []
     top = 1
-    for feat_num, feat in enumerate(cat_dict['TN'].keys()):
-        fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
-        for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes instead of 2x2
-            for key, items in dict_of_arranged_axis.items():
-                if f'ax{num + 1}' in key:
+    for feat_num, feat in enumerate(cat_dict['TN'].keys()):  # we loop through each feature
+        fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10), sharey='all')  # for each feature do a new figure
+        for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes, loop through the 4 axes
+            for key, items in dict_of_arranged_axis.items():  # for each possible case in dict (0, 1, 2, 3,...)
+                if f'ax{num + 1}' in key and items[feat_num] != 0:  # going through all saved axis
                     message = 'unaffected' if f'{int(key.split("bar")[-1]) - 1}' == '0' else 'affected'  # label message
-                    ax.bar(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2,
-                           items[feat_num], 0.4,
+                    ax.bar(x_axis[feat_num] - 0.2 if message == 'unaffected' else x_axis[feat_num] + 0.2,  # x position
+                           items[feat_num], 0.4,  # bar to plot and width
+                           # bottom is 0 if we start plotting case 0 or case 1, as soon as case 2 or above are plotted,
+                           # the bottom should be the sum of the previous cases excluding case 0 and 1
+                           bottom=sum(cat_dict['TN'][feat][1:int(key.split("bar")[-1]) - 1]) if (
+                                   num == 0 and f'{int(key.split("bar")[-1]) - 1}' > '1') else
+                           sum(cat_dict['FP'][feat][1:int(key.split("bar")[-1]) - 1]) if (
+                                   num == 1 and f'{int(key.split("bar")[-1]) - 1}' > '1') else
+                           sum(cat_dict['FN'][feat][1:int(key.split("bar")[-1]) - 1]) if (
+                                   num == 2 and f'{int(key.split("bar")[-1]) - 1}' > '1') else
+                           sum(cat_dict['TP'][feat][1:int(key.split("bar")[-1]) - 1]) if (
+                                   num == 3 and f'{int(key.split("bar")[-1]) - 1}' > '1') else 0,
                            label=f'{int(key.split("bar")[-1]) - 1} - {message}' if (num == 0 and len(items) == 2) else
-                                 f'{int(key.split("bar")[-1]) - 1}' if num == 0 else '')
+                                 f'{int(key.split("bar")[-1]) - 1}' if num == 0 else '')  # define label
+                    # define title for each axis
                     ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
                                  f'False positives, n={len(fp)}' if num == 1 else
                                  f'False negatives, n={len(fn)}' if num == 2 else
                                  f'True positives, n={len(tp)}')  # if num == 3
-                    ax.text(x_axis - 0.2 if message == 'unaffected' else x_axis + 0.2, items[feat_num] + 0.5,
-                            s=items[feat_num], fontsize=15)
+                    # add text on top of box bars, sum if case 1 or above (x position, y position, text)
+                    ax.text(x_axis[feat_num] - 0.2 if message == 'unaffected' else x_axis[feat_num] + 0.2,
+                            items[feat_num] + 0.5 if f'{int(key.split("bar")[-1]) - 1}' == '0' else
+                            sum(cat_dict['TN'][feat][1:]) + 0.5 if (
+                                    num == 0 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['FP'][feat][1:]) + 0.5 if (
+                                    num == 1 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['FN'][feat][1:]) + 0.5 if (
+                                    num == 2 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['TP'][feat][1:]) + 0.5 if (
+                                    num == 3 and f'{int(key.split("bar")[-1]) - 1}' == '1') else 0,
+                            s=items[feat_num] if f'{int(key.split("bar")[-1]) - 1}' == '0' else  # show all 0 cases
+                            sum(cat_dict['TN'][feat][1:]) if (
+                                    num == 0 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['FP'][feat][1:]) if (
+                                    num == 1 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['FN'][feat][1:]) if (
+                                    num == 2 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
+                            sum(cat_dict['TP'][feat][1:]) if (
+                                    num == 3 and f'{int(key.split("bar")[-1]) - 1}' == '1') else '',
+                            fontsize=15)
                     ax.set_xticks([])
                     if num == 0:
                         ax.set_ylabel('Non-frail')
@@ -619,7 +649,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                         ax.set_xlabel('Non-frail')
                     if num == 3:
                         ax.set_xlabel('Frail')
-        fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)))
+        fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)) - 1)  # TODO LEGEND STILL FOUL HERE
         fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
                          f'{"linear" if perm == "linear" else "non-linear"} importance ({feat})', size=18)
         fig_cat.supylabel('True label', size=12)
