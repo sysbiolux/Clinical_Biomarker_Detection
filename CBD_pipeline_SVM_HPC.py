@@ -2545,17 +2545,36 @@ for kern in kernels:
         else:
             features_of_interest_male, features_of_interest_female = 2 * [None]
        
-        # remove (PC ##) from feature names
-        for num, k in enumerate(features_of_interest):
-            if 'PC #' in k:
+        # remove (PC ##) from feature names, if LDA, we need to put it in a list if it is alone
+        for num, k in enumerate(features_of_interest if isinstance(features_of_interest, list) else
+                                features_of_interest.split("'")):
+            if 'PC #' in k:  # for pca
                 features_of_interest[num] = k.split(' ')[0]
+            elif '\n' in k:  # if lda
+                tmp = k.split('\n')
+                more_tmp = []
+                for p in np.arange(len(tmp)):
+                    more_tmp.append(tmp[p].split(' ')[0])
+                features_of_interest = more_tmp
         if enable_data_split:
             for num, k in enumerate(features_of_interest_male):
                 if 'PC #' in k:
                     features_of_interest_male[num] = k.split(' ')[0]
+                elif '\n' in k:  # if lda
+                    tmp = k.split('\n')
+                    more_tmp = []
+                    for p in np.arange(len(tmp)):
+                        more_tmp.append(tmp[p].split(' ')[0])
+                    features_of_interest_male = more_tmp
             for num, k in enumerate(features_of_interest_female):
                 if 'PC #' in k:
                     features_of_interest_female[num] = k.split(' ')[0]
+                elif '\n' in k:  # if lda
+                    tmp = k.split('\n')
+                    more_tmp = []
+                    for p in np.arange(len(tmp)):
+                        more_tmp.append(tmp[p].split(' ')[0])
+                    features_of_interest_female = more_tmp
 
         # plotting
         box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
