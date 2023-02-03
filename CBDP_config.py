@@ -60,10 +60,11 @@ output_related = ['PM-Frailty_Score',
                   'PM-Frailty_gripstrength',
                   'PM-Frailty_weightloss',
                   'PM-Gripstrength_max']  # Output-related features, str (can be list)
-sample_tagging_feature = output_related + ['BF-VitDDef']  # Feature used to define samples to tag specifically, str or list of str
+sample_tagging_feature = output_related + ['BF-VitDDef']  # Feature used to define samples to tag, str or list of str
 # Threshold to define samples to tag, can be multiples, first position must be math operator, tuple of str or tuples
+# if percentile, give data as x
 tag_threshold = (('>=', '3'), ('==', '1'), ('==', '1'), ('==', '1'),
-                 ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1'))  # if percentile, give data as x
+                 ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1'))
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
