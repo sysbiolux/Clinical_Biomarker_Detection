@@ -26,7 +26,6 @@ import numpy as np
 ########################################################################################
 # ## General settings like random seed, plotting style, library options and figures dpi
 ########################################################################################
-# TODO REWRITE VARIABLE DESCRIPTION PROPERLY
 seed = 42  # Random seed, 42, int
 fix_font = 18  # Fix font size for general plots, 18, int
 imp_font = 8  # Specific font size for feature importance plots, 8, int
