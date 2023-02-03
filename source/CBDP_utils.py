@@ -496,7 +496,34 @@ def plot_confusion_matrix(c_matrix, classes, normalize=False, title='Confusion m
     plt.ylabel('True label', size=18)
     plt.xlabel('Predicted label', size=18)
 
-    
+
+def unique_legend_handles(list_of_containers, list_of_labels):
+    """
+    Function to collect unique legend handles and labels in case of categorical bar plots in terms of confusion matrix
+    classification classes (TP, FP, FN, TP).
+
+    Parameters
+    ----------
+    list_of_containers : list
+        List of all containers per figure.
+    list_of_labels : list
+        List of all labels corresponding to the above containers.
+
+    Returns
+    -------
+    common_unique_leg_handles : tuple
+        Tuple containing common unique legend handles and labels (containers, labels).
+    """
+    # something like: store each ax container with its labels per feature (should then be 4)]
+    # Within these 4 lists of lists, probably zipped, retain the unique ones only
+    # add them finally as fig_cat.legend(handles, labels) instead of ax.legend, as we want 1 legend per figure
+    unnested_containers = np.concatenate(np.concatenate(list_of_containers))
+    unnested_labels = np.concatenate(list_of_labels)
+    unique_labels, unique_labels_index = np.unique(unnested_labels, return_index=True)
+    common_unique_leg_handles = tuple((unnested_containers[unique_labels_index], unique_labels))
+    return common_unique_leg_handles
+
+
 def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_features, feature_list, datatype, perm):
     """
     Function to plot box and bar plots of interesting features in terms of true positive, true negative,
@@ -592,17 +619,31 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
             for feat in x_axis:
                 tmp.append(list(cat_dict[key].values())[feat][pos])
             dict_of_arranged_axis["ax{0}_bar{1}".format(num + 1, pos + 1)] = tmp
+    # Create consistent color maps for sets larger and smaller than 20
+    cm = plt.get_cmap('twilight')
+    consistent_cmap = [cm(count*15) for count in np.arange(long)] if long > 15 else \
+        [cm(count*25) for count in np.arange(long)]
+    cm_small = plt.get_cmap('tab20')  # only if 20 or less
     # plotting the categorical as bar plot
     list_of_cat_figures = []
     top = 1
     for feat_num, feat in enumerate(cat_dict['TN'].keys()):  # we loop through each feature
         fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10), sharey='all')  # for each feature do a new figure
+        containers = []
+        labels = []
         for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes, loop through the 4 axes
             for key, items in dict_of_arranged_axis.items():  # for each possible case in dict (0, 1, 2, 3,...)
                 if f'ax{num + 1}' in key and items[feat_num] != 0:  # going through all saved axis
                     message = 'unaffected' if f'{int(key.split("bar")[-1]) - 1}' == '0' else 'affected'  # label message
                     ax.bar(x_axis[feat_num] - 0.2 if message == 'unaffected' else x_axis[feat_num] + 0.2,  # x position
                            items[feat_num], 0.4,  # bar to plot and width
+                           color=consistent_cmap[int(key.split("bar")[-1]) - 1] if (len(
+                               [i for i, e in enumerate(cat_dict['TN'][feat]) if e != 0]) >= 20 or len(
+                               [i for i, e in enumerate(cat_dict['FP'][feat]) if e != 0]) >= 20 or len(
+                               [i for i, e in enumerate(cat_dict['FN'][feat]) if e != 0]) >= 20 or len(
+                               [i for i, e in enumerate(cat_dict['TP'][feat]) if e != 0]) >= 20) else
+                           cm_small(int(key.split("bar")[-1]) - 1),
+                           edgecolor='black',
                            # bottom is 0 if we start plotting case 0 or case 1, as soon as case 2 or above are plotted,
                            # the bottom should be the sum of the previous cases excluding case 0 and 1
                            bottom=sum(cat_dict['TN'][feat][1:int(key.split("bar")[-1]) - 1]) if (
@@ -649,12 +690,20 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                         ax.set_xlabel('Non-frail')
                     if num == 3:
                         ax.set_xlabel('Frail')
-        fig_cat.legend(loc='lower right', ncol=int(np.sqrt(long)) - 1)  # TODO LEGEND STILL FOUL HERE
+            containers.append(ax.containers)
+            labels.append([i for i, e in enumerate(cat_dict['TN'][feat]) if e != 0] if num == 0 else
+                          [i for i, e in enumerate(cat_dict['FP'][feat]) if e != 0] if num == 1 else
+                          [i for i, e in enumerate(cat_dict['FN'][feat]) if e != 0] if num == 2 else
+                          [i for i, e in enumerate(cat_dict['TP'][feat]) if e != 0])
+        # get the unique legends across all 4 plots for one single legend containing all possible cases
+        final_legend_handles = unique_legend_handles(containers, labels)
+        fig_cat.legend(final_legend_handles[0], final_legend_handles[1], loc=1, bbox_to_anchor=(1, 0.93),
+                       ncol=int(np.sqrt(len(np.unique(np.concatenate(labels))))))
         fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
                          f'{"linear" if perm == "linear" else "non-linear"} importance ({feat})', size=18)
         fig_cat.supylabel('True label', size=12)
         fig_cat.supxlabel('Predicted label', size=12)
-        fig_cat.tight_layout(pad=1)
+        plt.tight_layout(pad=1)
         list_of_cat_figures.append(fig_cat)
         top += 1
     # return both figures
