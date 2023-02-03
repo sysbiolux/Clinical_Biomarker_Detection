@@ -2546,8 +2546,8 @@ for kern in kernels:
             features_of_interest_male, features_of_interest_female = 2 * [None]
        
         # remove (PC ##) from feature names, if LDA, we need to put it in a list if it is alone
-        for num, k in enumerate(features_of_interest if isinstance(features_of_interest, list) else
-                                features_of_interest.split("'")):
+        for num, k in enumerate(features_of_interest.split("'") if isinstance(features_of_interest, str) else
+                                features_of_interest):
             if 'PC #' in k:  # for pca
                 features_of_interest[num] = k.split(' ')[0]
             elif '\n' in k:  # if lda
