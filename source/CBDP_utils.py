@@ -268,7 +268,7 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title(f'{data_group.capitalize()} ROC AUC Curve')
+    plt.title(f'{data_group.capitalize()} ROC AUC Curve in test: %3.f' % float(results['ROC']))
 
     
 def plot_pr(prob, testlabels, fontsize, data_group):
@@ -294,7 +294,7 @@ def plot_pr(prob, testlabels, fontsize, data_group):
     plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(f'{data_group.capitalize()} PR AUC Curve')
+    plt.title(f'{data_group.capitalize()} PR AUC Curve in test: %3.f' % float(average_precision_score(testlabels, prob)))
 
 
 #####################################
@@ -682,7 +682,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                             sum(cat_dict['TP'][feat][1:]) if (
                                     num == 3 and f'{int(key.split("bar")[-1]) - 1}' == '1') else '',
                             fontsize=15)
-                    ax.set_xticks([])
+                    ax.set_xticks(['unaffected', 'affected'])
                     if num == 0:
                         ax.set_ylabel('Non-frail')
                     if num == 2:
