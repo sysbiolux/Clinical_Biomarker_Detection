@@ -294,7 +294,8 @@ def plot_pr(prob, testlabels, fontsize, data_group):
     plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(f'{data_group.capitalize()} PR AUC Curve in test: %3.f' % float(average_precision_score(testlabels, prob)))
+    plt.title(f'{data_group.capitalize()} PR AUC Curve in test: %3.f'
+              % float(average_precision_score(testlabels, prob)))
 
 
 #####################################
