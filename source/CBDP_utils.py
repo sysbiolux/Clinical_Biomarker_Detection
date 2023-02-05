@@ -683,7 +683,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                             sum(cat_dict['TP'][feat][1:]) if (
                                     num == 3 and f'{int(key.split("bar")[-1]) - 1}' == '1') else '',
                             fontsize=15)
-                    ax.set_xticks(['unaffected', 'affected'])
+                    ax.set_xticks([])
                     if num == 0:
                         ax.set_ylabel('Non-frail')
                     if num == 2:
