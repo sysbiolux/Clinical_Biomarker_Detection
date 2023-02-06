@@ -518,7 +518,7 @@ def unique_legend_handles(list_of_containers, list_of_labels):
     # something like: store each ax container with its labels per feature (should then be 4)]
     # Within these 4 lists of lists, probably zipped, retain the unique ones only
     # add them finally as fig_cat.legend(handles, labels) instead of ax.legend, as we want 1 legend per figure
-    unnested_containers = np.hstack(np.column_stack(list_of_containers))
+    unnested_containers = np.hstack([i for sublist in list_of_containers for i in sublist])
     unnested_labels = np.concatenate(list_of_labels)
     unique_labels, unique_labels_index = np.unique(unnested_labels, return_index=True)
     common_unique_leg_handles = tuple((unnested_containers[unique_labels_index], unique_labels))
