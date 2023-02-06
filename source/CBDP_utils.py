@@ -567,7 +567,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     cont_dict = dict.fromkeys(['TN', 'FP', 'FN', 'TP'], {})
     # get the longest list of unique categorical features
     long = int(np.max(np.unique(test_features[:, [feature_list.index(
-        feature) for feature in features_of_interest if feature_list.index(feature) in cat]]))) + 1
+        feature) for feature in features_of_interest if feature_list.index(feature) in cat]])) if len(cat) > 1 else
+               0) + 1
     for key in cat_dict.keys():  # will be the same keys for both dicts
         tmp_cont, tmp_cat = dict(), dict()
         for feature in features_of_interest:
