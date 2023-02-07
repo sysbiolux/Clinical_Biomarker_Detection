@@ -268,7 +268,7 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title(f'{data_group.capitalize()} ROC AUC Curve in test: %3.f' % float(results['ROC']))
+    plt.title(f'{data_group.capitalize()} ROC AUC Curve in test: %.2f' % float(results['ROC']))
 
     
 def plot_pr(prob, testlabels, fontsize, data_group):
@@ -294,7 +294,7 @@ def plot_pr(prob, testlabels, fontsize, data_group):
     plt.legend(fontsize=8, loc='lower right')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(f'{data_group.capitalize()} PR AUC Curve in test: %3.f'
+    plt.title(f'{data_group.capitalize()} PR AUC Curve in test: %.2f'
               % float(average_precision_score(testlabels, prob)))
 
 
