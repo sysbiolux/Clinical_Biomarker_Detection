@@ -603,9 +603,9 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         ax4.set_xticklabels([])
         ax4.set_xlabel('Frail')
         fig_cont.suptitle(f'{datatype.capitalize()} #{top} important continuous feature by '
-                          f'{"linear" if perm == "linear" else "non-linear"} importance ({key})', size=18)
-        fig_cont.supylabel('True label', size=12)
-        fig_cont.supxlabel('Predicted label', size=12)
+                          f'{"linear" if perm == "linear" else "non-linear"} importance\n({key})', size=20)
+        fig_cont.supylabel('True label', size=14)
+        fig_cont.supxlabel('Predicted label', size=14)
         fig_cont.tight_layout(pad=1)
         list_of_cont_figures.append(fig_cont)
         top += 1
@@ -701,9 +701,9 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         fig_cat.legend(final_legend_handles[0], final_legend_handles[1], loc=1, bbox_to_anchor=(1, 0.93),
                        ncol=int(np.sqrt(len(np.unique(np.concatenate(labels))))))
         fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
-                         f'{"linear" if perm == "linear" else "non-linear"} importance ({feat})', size=18)
-        fig_cat.supylabel('True label', size=12)
-        fig_cat.supxlabel('Predicted label', size=12)
+                         f'{"linear" if perm == "linear" else "non-linear"} importance\n({feat})', size=20)
+        fig_cat.supylabel('True label', size=14)
+        fig_cat.supxlabel('Predicted label', size=14)
         plt.tight_layout(pad=1)
         list_of_cat_figures.append(fig_cat)
         top += 1
