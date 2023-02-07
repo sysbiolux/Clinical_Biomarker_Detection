@@ -929,9 +929,9 @@ def scatter_comparison(kernel, datatype, mean1, mean2, mean3, new_feat_idx, metr
         list of correlation metrics to show in the plot legend
     """
     fig, axe = plt.subplots(figsize=(12, 12))
-    axe.scatter(range(len(new_feat_idx)), mean1[new_feat_idx], marker='o', s=12, label='sklearn, S.')
-    axe.scatter(range(len(new_feat_idx)), mean2[new_feat_idx], marker='^', s=12, label='eli5, E.')
-    axe.scatter(range(len(new_feat_idx)), mean3[new_feat_idx], marker='+', s=12, label='mlxtend, M.')
+    axe.scatter(range(len(new_feat_idx)), mean1[new_feat_idx], marker='o', s=20, label='sklearn, S.')
+    axe.scatter(range(len(new_feat_idx)), mean2[new_feat_idx], marker='^', s=20, label='eli5, E.')
+    axe.scatter(range(len(new_feat_idx)), mean3[new_feat_idx], marker='+', s=20, label='mlxtend, M.')
     axe.legend(loc='best')
     corr1 = pg.corr(mean1[new_feat_idx], mean2[new_feat_idx]).round(3)[metric_list]
     corr2 = pg.corr(mean1[new_feat_idx], mean3[new_feat_idx]).round(3)[metric_list]
@@ -941,10 +941,10 @@ def scatter_comparison(kernel, datatype, mean1, mean2, mean3, new_feat_idx, metr
     text3 = f'EvsM\t\t{array_for_legend(corr3, 3, "pearson")}'.expandtabs()
     text = '\n' + text1 + '\n' + text2 + '\n' + text3
     plt.plot([], label=text)
-    plt.legend(handlelength=0, fontsize=12, borderpad=2)
+    plt.legend(handlelength=0, fontsize=14, borderpad=2)
     plt.title(f'{datatype} {kernel} combined scatter plot of feature importance methods', size=18)
-    plt.xlabel("Feature number", fontsize=12)
-    plt.ylabel("Feature importance mean", fontsize=12)
+    plt.xlabel("Feature number", fontsize=14)
+    plt.ylabel("Feature importance mean", fontsize=14)
     plt.tight_layout()
 
 
