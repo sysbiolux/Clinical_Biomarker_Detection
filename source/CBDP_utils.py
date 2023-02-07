@@ -587,19 +587,19 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     for key in cont_dict['TN'].keys():
         fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
         ax1.boxplot(list(cont_dict['TN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TN
-        ax1.set_title(f'True negatives, n={len(tn)}')
+        ax1.set_title(f'True negatives, n={len(tn)}', fontsize=14)
         ax1.set_xticklabels([])
         ax1.set_ylabel('Non-frail')
         ax2.boxplot(list(cont_dict['FP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FP
-        ax2.set_title(f'False positives, n={len(fp)}')
+        ax2.set_title(f'False positives, n={len(fp)}', fontsize=14)
         ax2.set_xticklabels([])
         ax3.boxplot(list(cont_dict['FN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FN
-        ax3.set_title(f'False negatives, n={len(fn)}')
+        ax3.set_title(f'False negatives, n={len(fn)}', fontsize=14)
         ax3.set_xticklabels([])
         ax3.set_xlabel('Non-frail')
         ax3.set_ylabel('Frail')
         ax4.boxplot(list(cont_dict['TP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TP
-        ax4.set_title(f'True positives, n={len(tp)}')
+        ax4.set_title(f'True positives, n={len(tp)}', fontsize=14)
         ax4.set_xticklabels([])
         ax4.set_xlabel('Frail')
         fig_cont.suptitle(f'{datatype.capitalize()} #{top} important continuous feature by '
@@ -661,7 +661,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                     ax.set_title(f'True negatives, n={len(tn)}' if num == 0 else
                                  f'False positives, n={len(fp)}' if num == 1 else
                                  f'False negatives, n={len(fn)}' if num == 2 else
-                                 f'True positives, n={len(tp)}')  # if num == 3
+                                 f'True positives, n={len(tp)}',  # if num == 3
+                                 fontsize=14)
                     # add text on top of box bars, sum if case 1 or above (x position, y position, text)
                     ax.text(x_axis[feat_num] - 0.2 if message == 'unaffected' else x_axis[feat_num] + 0.2,
                             items[feat_num] + 0.5 if f'{int(key.split("bar")[-1]) - 1}' == '0' else
