@@ -586,19 +586,19 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     top = 1
     for key in cont_dict['TN'].keys():
         fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
-        ax1.boxplot(list(cont_dict['TN'][key]), vert=True, patch_artist=True, notch=True)  # TN
+        ax1.boxplot(list(cont_dict['TN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TN
         ax1.set_title(f'True negatives, n={len(tn)}')
         ax1.set_xticklabels([])
         ax1.set_ylabel('Non-frail')
-        ax2.boxplot(list(cont_dict['FP'][key]), vert=True, patch_artist=True, notch=True)  # FP
+        ax2.boxplot(list(cont_dict['FP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FP
         ax2.set_title(f'False positives, n={len(fp)}')
         ax2.set_xticklabels([])
-        ax3.boxplot(list(cont_dict['FN'][key]), vert=True, patch_artist=True, notch=True)  # FN
+        ax3.boxplot(list(cont_dict['FN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FN
         ax3.set_title(f'False negatives, n={len(fn)}')
         ax3.set_xticklabels([])
         ax3.set_xlabel('Non-frail')
         ax3.set_ylabel('Frail')
-        ax4.boxplot(list(cont_dict['TP'][key]), vert=True, patch_artist=True, notch=True)  # TP
+        ax4.boxplot(list(cont_dict['TP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TP
         ax4.set_title(f'True positives, n={len(tp)}')
         ax4.set_xticklabels([])
         ax4.set_xlabel('Frail')
