@@ -2094,22 +2094,22 @@ for kern in kernels:
         perm_meths = ['sklearn', 'eli5', 'mlxtend'] if feature_importance_method == 'all' else \
             [feature_importance_method]
         for perm_meth in perm_meths:
-            features_of_interest = features[sorted_idx[-sk_above_zero_imp:]][::-1][:10] if perm_meth == 'sklearn' else \
-                features[sorted_idx_eli[-el_above_zero_imp:]][::-1][:10] if perm_meth == 'eli5' else \
-                features[indices[-ml_above_zero_imp:]][::-1][:10] if perm_meth == 'mlxtend' else ''
+            features_of_interest = features[sorted_idx[-sk_above_zero_imp:]][::-1][:40] if perm_meth == 'sklearn' else \
+                features[sorted_idx_eli[-el_above_zero_imp:]][::-1][:40] if perm_meth == 'eli5' else \
+                features[indices[-ml_above_zero_imp:]][::-1][:40] if perm_meth == 'mlxtend' else ''
             if enable_data_split:
                 features_of_interest_male = \
-                    features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1][:10] if perm_meth == 'sklearn' else \
+                    features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1][:40] if perm_meth == 'sklearn' else \
                     features_male[
-                        sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1][:10] if perm_meth == 'eli5' else \
-                    features_male[indices_male[-ml_above_zero_imp_male:]][::-1] if perm_meth == 'mlxtend' else ''
+                        sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1][:40] if perm_meth == 'eli5' else \
+                    features_male[indices_male[-ml_above_zero_imp_male:]][::-1][:40] if perm_meth == 'mlxtend' else ''
                 features_of_interest_female = \
                     features_female[
-                        sorted_idx_female[-sk_above_zero_imp_female:]][::-1][:10] if perm_meth == 'sklearn' else \
+                        sorted_idx_female[-sk_above_zero_imp_female:]][::-1][:40] if perm_meth == 'sklearn' else \
                     features_female[
-                        sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1][:10] if perm_meth == 'eli5' else \
+                        sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1][:40] if perm_meth == 'eli5' else \
                     features_female[
-                        indices_female[-ml_above_zero_imp_female:]][::-1][:10] if perm_meth == 'mlxtend' else ''
+                        indices_female[-ml_above_zero_imp_female:]][::-1][:40] if perm_meth == 'mlxtend' else ''
             else:
                 features_of_interest_male, features_of_interest_female = 2 * [None]
                      
@@ -2538,10 +2538,10 @@ for kern in kernels:
                 lin_imp_male, lin_imp_female = [None] * 10
 
         # Plot box plots / bar plots of interesting linear feature that we want to analyze in terms of TP, TN, FP, FN
-        features_of_interest = lin_out_features[lin_idx][::-1][:10]
+        features_of_interest = lin_out_features[lin_idx][::-1][:40]
         if enable_data_split:
-            features_of_interest_male = lin_out_features_male[lin_idx_male][::-1][:10]
-            features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:10]
+            features_of_interest_male = lin_out_features_male[lin_idx_male][::-1][:40]
+            features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:40]
         else:
             features_of_interest_male, features_of_interest_female = 2 * [None]
        
