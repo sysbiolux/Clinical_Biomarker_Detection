@@ -1132,6 +1132,44 @@ if enable_rhcf:
               plt.savefig(folder_name + f'/female_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
                           dpi=tiff_figure_dpi)
               plt.close()
+              
+              # if data split enable, produce combined correlation figure grouped by features showing full, male & female
+              # if ranked by mixed
+              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                            train_men_features, train_men_labels, feature_list_male,
+                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                            train_female_features, train_female_labels, feature_list_female,
+                                            categorical_idx_female if corr in ('cramer', 'chi') else
+                                            continuous_idx_female,
+                                            output_feature, corr, 'full', 40)
+              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"full"}.tiff',
+                          bbox_inches='tight', dpi=tiff_figure_dpi)
+              plt.close()
+              # if ranked by male
+              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                            train_men_features, train_men_labels, feature_list_male,
+                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                            train_female_features, train_female_labels, feature_list_female,
+                                            categorical_idx_female if corr in ('cramer', 'chi') else
+                                            continuous_idx_female,
+                                            output_feature, corr, 'male', 40)
+              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"male"}.tiff',
+                          bbox_inches='tight', dpi=tiff_figure_dpi)
+              plt.close()
+              # if ranked by female
+              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                            train_men_features, train_men_labels, feature_list_male,
+                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                            train_female_features, train_female_labels, feature_list_female,
+                                            categorical_idx_female if corr in ('cramer', 'chi') else
+                                            continuous_idx_female,
+                                            output_feature, corr, 'female', 40)
+              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"female"}.tiff',
+                          bbox_inches='tight', dpi=tiff_figure_dpi)
+              plt.close()
 
 ##########################################################################################
 # ## Plot PCA or LDA of the continuous features if one of them is selected as transformer
