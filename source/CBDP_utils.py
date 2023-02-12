@@ -2718,6 +2718,42 @@ def importance_plot(datatype, method, kern, idx_sorted, features_list, importanc
     plt.tight_layout()
 
 
+# write the importances into text file
+def write_importance(datatype, method, idx_sorted, features_list, importance_mean,
+                     importance_above_zero, importance_std, directory, folder):
+    """
+    Function to write the sorted permuted feature importance of the most important features.
+
+    Parameters
+    ----------
+    datatype : str
+        string referring to the data set being analyzed (e.g. full, male, female)
+    method : str
+        string referring to the feature importance method to be analysed (sklearn, mlxtend, eli5)
+    idx_sorted : list
+        list of sorted indices of mean feature importance (from lowest to highest)
+    features_list : np.array
+        array of feature names
+    importance_mean : np.array
+        array of calculated mean feature importance after shuffling with sklearn, mlxtend, and eli5
+    importance_above_zero : int
+        number of important features with importance above zero
+    importance_std : np.array
+        array of calculated feature importance standard deviation if enabled (disabled by setting to None)
+    directory : str
+        current directory
+    folder : str
+        destination folder of the correlation states
+    """
+    f = open(directory + '/' + folder + '/' + f'{datatype}_feature_importance_{method}.txt', 'w')
+    f.write(f"Feature importance score using {method} score for the {datatype} data set\n\n\n")
+    for feat in [idx_sorted[-importance_above_zero:]]:
+            f.write(f'{features_list[feat]}\t{importance_mean[feat]}'
+                    f'{" +- " + importance_std[feat] if importance_std is not None else ""}\n')
+    f.close()
+    print("Writing done!")
+    
+    
 ###################################################################
 # Function to plot box and bar plot of the most important features
 ###################################################################
