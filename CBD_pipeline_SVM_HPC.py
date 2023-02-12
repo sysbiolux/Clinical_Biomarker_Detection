@@ -1142,7 +1142,7 @@ if enable_rhcf:
                                             train_female_features, train_female_labels, feature_list_female,
                                             categorical_idx_female if corr in ('cramer', 'chi') else
                                             continuous_idx_female,
-                                            output_feature, corr, 'full', 40)
+                                            output_feature, corr, 'full', top_features)
               plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"full"}.tiff',
                           bbox_inches='tight', dpi=tiff_figure_dpi)
               plt.close()
@@ -1154,7 +1154,7 @@ if enable_rhcf:
                                             train_female_features, train_female_labels, feature_list_female,
                                             categorical_idx_female if corr in ('cramer', 'chi') else
                                             continuous_idx_female,
-                                            output_feature, corr, 'male', 40)
+                                            output_feature, corr, 'male', top_features)
               plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"male"}.tiff',
                           bbox_inches='tight', dpi=tiff_figure_dpi)
               plt.close()
@@ -1166,7 +1166,7 @@ if enable_rhcf:
                                             train_female_features, train_female_labels, feature_list_female,
                                             categorical_idx_female if corr in ('cramer', 'chi') else
                                             continuous_idx_female,
-                                            output_feature, corr, 'female', 40)
+                                            output_feature, corr, 'female', top_features)
               plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"female"}.tiff',
                           bbox_inches='tight', dpi=tiff_figure_dpi)
               plt.close()
@@ -1931,7 +1931,7 @@ for kern in kernels:
                                                          y=train_labels, random_state=seed, n_repeats=shuffle_all,
                                                          n_jobs=n_jobs)
             sorted_idx, sk_above_zero_imp = sorted_above_zero(importance_mean=perm_importance.importances_mean,
-                                                              bar_cap=40)
+                                                              bar_cap=top_features)
             # Figure of most important features
             importance_plot(datatype='full', method='sklearn', kern=kern, idx_sorted=sorted_idx, features_list=features,
                             importance_mean=perm_importance.importances_mean, importance_above_zero=sk_above_zero_imp,
@@ -1947,7 +1947,7 @@ for kern in kernels:
                                                                   train_men_labels, random_state=seed,
                                                                   n_repeats=shuffle_male, n_jobs=n_jobs)
                 sorted_idx_male, sk_above_zero_imp_male = sorted_above_zero(
-                    importance_mean=perm_importance_male.importances_mean, bar_cap=40)
+                    importance_mean=perm_importance_male.importances_mean, bar_cap=top_features)
                 # Figure of the most important features
                 importance_plot(datatype='male', method='sklearn', kern=kern, idx_sorted=sorted_idx_male,
                                 features_list=features_male,
@@ -1965,7 +1965,7 @@ for kern in kernels:
                                                                     train_female_labels, random_state=seed,
                                                                     n_repeats=shuffle_female, n_jobs=n_jobs)
                 sorted_idx_female, sk_above_zero_imp_female = sorted_above_zero(
-                    importance_mean=perm_importance_female.importances_mean, bar_cap=40)
+                    importance_mean=perm_importance_female.importances_mean, bar_cap=top_features)
                 # Figure of the most important features
                 importance_plot(datatype='female', method='sklearn', kern=kern, idx_sorted=sorted_idx_female,
                                 features_list=features_female,
@@ -1990,7 +1990,7 @@ for kern in kernels:
                 perm_all, perm_mean = get_score_importances(score_func=grid_imba.best_estimator_, X=train_features,
                                                             y=train_labels, n_iter=shuffle_all, random_state=seed,
                                                             n_jobs=n_jobs)  # use classifier score
-            sorted_idx_eli, el_above_zero_imp = sorted_above_zero(importance_mean=perm_mean, bar_cap=40)
+            sorted_idx_eli, el_above_zero_imp = sorted_above_zero(importance_mean=perm_mean, bar_cap=top_features)
             std_perm = np.std(perm_all, axis=1)
             # Figure of most important features
             importance_plot(datatype='full', method='eli5', kern=kern, idx_sorted=sorted_idx_eli,
@@ -2008,7 +2008,7 @@ for kern in kernels:
                                                                           n_iter=shuffle_male, random_state=seed,
                                                                           n_jobs=n_jobs)  # use classifier score
                 sorted_idx_eli_male, el_above_zero_imp_male = sorted_above_zero(importance_mean=perm_mean_male,
-                                                                                bar_cap=40)
+                                                                                bar_cap=top_features)
                 std_perm_male = np.std(perm_all_male, axis=1)
                 # Figure of most important features
                 importance_plot(datatype='male', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_male,
@@ -2026,7 +2026,7 @@ for kern in kernels:
                         score_func=grid_imba_female.best_estimator_, X=train_female_features, y=train_female_labels,
                         n_iter=shuffle_female, random_state=seed, n_jobs=n_jobs)  # use classifier score
                 sorted_idx_eli_female, el_above_zero_imp_female = sorted_above_zero(importance_mean=perm_mean_female,
-                                                                                    bar_cap=40)
+                                                                                    bar_cap=top_features)
                 std_perm_female = np.std(perm_all_female, axis=1)
                 # Figure of most important features
                 importance_plot(datatype='female', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_female,
@@ -2052,7 +2052,7 @@ for kern in kernels:
                     X=train_features, y=train_labels, predict_method=grid_imba.best_estimator_, num_rounds=shuffle_all,
                     seed=seed, n_jobs=n_jobs)
             std = np.std(imp_all, axis=1)
-            indices, ml_above_zero_imp = sorted_above_zero(importance_mean=imp_vals, bar_cap=40)
+            indices, ml_above_zero_imp = sorted_above_zero(importance_mean=imp_vals, bar_cap=top_features)
             # Figure of most important features
             importance_plot(datatype='full', method='mlxtend', kern=kern, idx_sorted=indices, features_list=features,
                             importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std)
@@ -2067,7 +2067,8 @@ for kern in kernels:
                         X=train_men_features, y=train_men_labels, predict_method=grid_imba_male.best_estimator_,
                         num_rounds=shuffle_male, seed=seed, n_jobs=n_jobs)
                 std_male = np.std(imp_all_male, axis=1)
-                indices_male, ml_above_zero_imp_male = sorted_above_zero(importance_mean=imp_vals_male, bar_cap=40)
+                indices_male, ml_above_zero_imp_male = sorted_above_zero(importance_mean=imp_vals_male,
+                                                                         bar_cap=top_features)
                 # Figure of most important features
                 importance_plot(datatype='male', method='mlxtend', kern=kern, idx_sorted=indices_male,
                                 features_list=features_male,
@@ -2085,7 +2086,7 @@ for kern in kernels:
                         num_rounds=shuffle_female, seed=seed, n_jobs=n_jobs)
                 std_female = np.std(imp_all_female, axis=1)
                 indices_female, ml_above_zero_imp_female = sorted_above_zero(importance_mean=imp_vals_female,
-                                                                             bar_cap=40)
+                                                                             bar_cap=top_features)
                 # Figure of most important features
                 importance_plot(datatype='female', method='mlxtend', kern=kern, idx_sorted=indices_female,
                                 features_list=features_female,
@@ -2174,22 +2175,29 @@ for kern in kernels:
         perm_meths = ['sklearn', 'eli5', 'mlxtend'] if feature_importance_method == 'all' else \
             [feature_importance_method]
         for perm_meth in perm_meths:
-            features_of_interest = features[sorted_idx[-sk_above_zero_imp:]][::-1][:40] if perm_meth == 'sklearn' else \
-                features[sorted_idx_eli[-el_above_zero_imp:]][::-1][:40] if perm_meth == 'eli5' else \
-                features[indices[-ml_above_zero_imp:]][::-1][:40] if perm_meth == 'mlxtend' else ''
+            features_of_interest = \
+                features[sorted_idx[-sk_above_zero_imp:]][::-1][:top_features] if perm_meth == 'sklearn' else \
+                features[sorted_idx_eli[-el_above_zero_imp:]][::-1][:top_features] if perm_meth == 'eli5' else \
+                features[indices[-ml_above_zero_imp:]][::-1][:top_features] if perm_meth == 'mlxtend' else ''
             if enable_data_split:
                 features_of_interest_male = \
-                    features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1][:40] if perm_meth == 'sklearn' else \
                     features_male[
-                        sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1][:40] if perm_meth == 'eli5' else \
-                    features_male[indices_male[-ml_above_zero_imp_male:]][::-1][:40] if perm_meth == 'mlxtend' else ''
+                        sorted_idx_male[-sk_above_zero_imp_male:]][::-1][:top_features] if perm_meth == 'sklearn' else \
+                    features_male[
+                        sorted_idx_eli_male[
+                            -el_above_zero_imp_male:]][::-1][:top_features] if perm_meth == 'eli5' else \
+                    features_male[indices_male[
+                                  -ml_above_zero_imp_male:]][::-1][:top_features] if perm_meth == 'mlxtend' else ''
                 features_of_interest_female = \
                     features_female[
-                        sorted_idx_female[-sk_above_zero_imp_female:]][::-1][:40] if perm_meth == 'sklearn' else \
+                        sorted_idx_female[
+                            -sk_above_zero_imp_female:]][::-1][:top_features] if perm_meth == 'sklearn' else \
                     features_female[
-                        sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1][:40] if perm_meth == 'eli5' else \
+                        sorted_idx_eli_female[
+                            -el_above_zero_imp_female:]][::-1][:top_features] if perm_meth == 'eli5' else \
                     features_female[
-                        indices_female[-ml_above_zero_imp_female:]][::-1][:40] if perm_meth == 'mlxtend' else ''
+                        indices_female[
+                            -ml_above_zero_imp_female:]][::-1][:top_features] if perm_meth == 'mlxtend' else ''
             else:
                 features_of_interest_male, features_of_interest_female = 2 * [None]
                      
@@ -2470,7 +2478,7 @@ for kern in kernels:
         # Full data
         print("In the full data...\n")
         lin_imp = grid_imba.best_estimator_.named_steps['clf'].coef_[0]
-        lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=40)
+        lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp, bar_cap=top_features)
         # linear output features
         # in case of pca, do it by the function
         # in case of kernel pca, this step is skipped anyhow
@@ -2515,14 +2523,15 @@ for kern in kernels:
         write_importance('Mixed', 'SVM_coef', 'linear', idx_sorted=lin_idx, features_list=lin_out_features,
                          importance_mean=lin_imp, importance_above_zero=lin_above_zero_imp,
                          importance_std=None, directory=curr_dir, folder=folder_name)
-        print('Full data top important features with linear kernel (limited to top 40):\n\n',
-              lin_out_features[lin_idx][::-1][:40], '\n')
+        print(f'Full data top important features with linear kernel (limited to top {top_features}):\n\n',
+              lin_out_features[lin_idx][::-1][:top_features], '\n')
 
         # male data
         if enable_data_split:
             print("In the male data...\n")
             lin_imp_male = grid_imba_male.best_estimator_.named_steps['clf'].coef_[0]
-            lin_idx_male, lin_above_zero_imp_male = sorted_above_zero(importance_mean=lin_imp_male, bar_cap=40)
+            lin_idx_male, lin_above_zero_imp_male = sorted_above_zero(importance_mean=lin_imp_male,
+                                                                      bar_cap=top_features)
             lin_out_features_male, sum_of_variance_male = \
                 linear_svm_get_features(grid_imba_male.best_estimator_, lin_idx_male, categorical_idx_male,
                                         continuous_idx_male, features_male,
@@ -2568,13 +2577,14 @@ for kern in kernels:
             write_importance('Male', 'SVM_coef', 'linear', idx_sorted=lin_idx_male, features_list=lin_out_features_male,
                              importance_mean=lin_imp_male, importance_above_zero=lin_above_zero_imp_male,
                              importance_std=None, directory=curr_dir, folder=folder_name)
-            print('Male data top important features with linear kernel (limited to top 40):\n\n',
-                  lin_out_features_male[lin_idx_male][::-1][:40], '\n')
+            print(f'Male data top important features with linear kernel (limited to top {top_features}):\n\n',
+                  lin_out_features_male[lin_idx_male][::-1][:top_features], '\n')
 
             # Female data
             print("In the female data...\n")
             lin_imp_female = grid_imba_female.best_estimator_.named_steps['clf'].coef_[0]
-            lin_idx_female, lin_above_zero_imp_female = sorted_above_zero(importance_mean=lin_imp_female, bar_cap=40)
+            lin_idx_female, lin_above_zero_imp_female = sorted_above_zero(importance_mean=lin_imp_female,
+                                                                          bar_cap=top_features)
             lin_out_features_female, sum_of_variance_female = \
                 linear_svm_get_features(grid_imba_female.best_estimator_, lin_idx_female,
                                         categorical_idx_female, continuous_idx_female, features_female,
@@ -2621,8 +2631,8 @@ for kern in kernels:
                              features_list=lin_out_features_female,
                              importance_mean=lin_imp_female, importance_above_zero=lin_above_zero_imp_female,
                              importance_std=None, directory=curr_dir, folder=folder_name)
-            print('Female data top important features with linear kernel (limited to top 40):\n\n',
-                  lin_out_features_female[lin_idx_female][::-1][:40], '\n')
+            print(f'Female data top important features with linear kernel (limited to top {top_features}):\n\n',
+                  lin_out_features_female[lin_idx_female][::-1][:top_features], '\n')
         else:
             lin_idx_male, lin_above_zero_imp_male,\
                 lin_idx_female, lin_above_zero_imp_female,\
@@ -2631,10 +2641,10 @@ for kern in kernels:
                 lin_imp_male, lin_imp_female = [None] * 10
 
         # Plot box plots / bar plots of interesting linear feature that we want to analyze in terms of TP, TN, FP, FN
-        features_of_interest = lin_out_features[lin_idx][::-1][:40]
+        features_of_interest = lin_out_features[lin_idx][::-1][:top_features]
         if enable_data_split:
-            features_of_interest_male = lin_out_features_male[lin_idx_male][::-1][:40]
-            features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:40]
+            features_of_interest_male = lin_out_features_male[lin_idx_male][::-1][:top_features]
+            features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:top_features]
         else:
             features_of_interest_male, features_of_interest_female = 2 * [None]
        
@@ -2716,7 +2726,8 @@ for kern in kernels:
             if pca_tech == 'kernel_pca' and len(lin_idx) != len(lin_out_real_idx_for_bbp):
                 # remove the kernel components importance for the final box and bar plot
                 to_remove = np.arange(grid_imba.best_params_["features__continuous__pca__n_components"])
-                lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp[len(to_remove):], bar_cap=40)
+                lin_idx, lin_above_zero_imp = sorted_above_zero(importance_mean=lin_imp[len(to_remove):],
+                                                                bar_cap=top_features)
             # In case of LDA: renew real idx of features including only the first one of the LDA
             if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features]):  # only if 1 comp
                 lin_out_real_idx_for_bbp = \
@@ -2735,7 +2746,7 @@ for kern in kernels:
                     # remove kernel pca components
                     to_remove_male = np.arange(grid_imba_male.best_params_["features__continuous__pca__n_components"])
                     lin_idx_male, lin_above_zero_imp_male = \
-                        sorted_above_zero(importance_mean=lin_imp_male[len(to_remove_male):], bar_cap=40)
+                        sorted_above_zero(importance_mean=lin_imp_male[len(to_remove_male):], bar_cap=top_features)
                 # In case of LDA: renew real idx of features including only the first one of the LDA
                 if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features_male]):
                     lin_out_real_idx_for_bbp_male = \
@@ -2753,7 +2764,7 @@ for kern in kernels:
                     to_remove_female = \
                         np.arange(grid_imba_female.best_params_["features__continuous__pca__n_components"])
                     lin_idx_female, lin_above_zero_imp_female = \
-                        sorted_above_zero(importance_mean=lin_imp_female[len(to_remove_female):], bar_cap=40)
+                        sorted_above_zero(importance_mean=lin_imp_female[len(to_remove_female):], bar_cap=top_features)
                 # In case of LDA: renew real idx of features including only the first one of the LDA
                 if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features_female]):
                     lin_out_real_idx_for_bbp_female = \
