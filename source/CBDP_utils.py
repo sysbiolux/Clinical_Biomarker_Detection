@@ -2719,7 +2719,7 @@ def importance_plot(datatype, method, kern, idx_sorted, features_list, importanc
 
 
 # write the importances into text file
-def write_importance(datatype, method, idx_sorted, features_list, importance_mean,
+def write_importance(datatype, method, kern, idx_sorted, features_list, importance_mean,
                      importance_above_zero, importance_std, directory, folder):
     """
     Function to write the sorted permuted feature importance of the most important features.
@@ -2730,6 +2730,8 @@ def write_importance(datatype, method, idx_sorted, features_list, importance_mea
         string referring to the data set being analyzed (e.g. full, male, female)
     method : str
         string referring to the feature importance method to be analysed (sklearn, mlxtend, eli5)
+    kern : str
+        string referring to the current SVC kernel tested, appears in title
     idx_sorted : list
         list of sorted indices of mean feature importance (from lowest to highest)
     features_list : np.array
@@ -2745,7 +2747,7 @@ def write_importance(datatype, method, idx_sorted, features_list, importance_mea
     folder : str
         destination folder of the correlation states
     """
-    f = open(directory + '/' + folder + '/' + f'{datatype}_feature_importance_{method}.txt', 'w')
+    f = open(directory + '/' + folder + '/' + f'{datatype}_feature_importance_{kern}_{method}.txt', 'w')
     f.write(f"Feature importance score using {method} score for the {datatype} data set\n\n\n")
     for feat in [idx_sorted[-importance_above_zero:]]:
             f.write(f'{features_list[feat]}\t{importance_mean[feat]}'
