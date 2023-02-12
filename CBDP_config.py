@@ -4,7 +4,7 @@
 # November 2021 - January 2023, University of Luxembourg, v.01/31/2023 (M/d/y) #########################################
 ########################################################################################################################
 
-# Configure up to 82 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 83 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -127,6 +127,7 @@ kbest_tech = 'cramer'  # Select score function for kbest technique, 'chi2', or c
 pipeline_order = 'samples->features'  # Order of the steps either 'samples->features' or 'features->samples', first, str
 drop_or_pass_non_treated_features = 'drop'  # Either 'drop' or 'passthrough' untransformed features, str
 enable_feature_importance = True  # Change to True to enable & False to disable feature importance, default True, bool
+top_features = 40  # Top integer positions of most important features for deeper analysis, default 40, int
 feature_importance_method = 'all'  # Change to 'eli5', 'mlxtend', 'sklearn', or 'all' to enable methods, def. 'all', str
 enable_box_bar_plots = True  # True to enable box and bar plots of most important features, default True, bool
 box_bar_figures = 'combined'  # Whether the box and bar plots should be separated or combined figure, 'combined', str
