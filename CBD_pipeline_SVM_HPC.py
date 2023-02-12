@@ -2037,10 +2037,10 @@ for kern in kernels:
                 plt.close()
             else:
                 sorted_idx_eli_male, el_above_zero_imp_male,\
-                    sorted_idx_eli_female, el_above_zero_imp_female = [None] * 4
+                    sorted_idx_eli_female, el_above_zero_imp_female, std_perm_male, std_perm_female = [None] * 6
         else:
             sorted_idx_eli, el_above_zero_imp, sorted_idx_eli_male, el_above_zero_imp_male,\
-                sorted_idx_eli_female, el_above_zero_imp_female = [None] * 6
+                sorted_idx_eli_female, el_above_zero_imp_female, std_perm, std_perm_male, std_perm_female = [None] * 9
 
         # FEATURE IMPORTANCE BY MLXTEND (modified MLXTEND scripts)
         if feature_importance_method in ('all', 'mlxtend'):
@@ -2096,10 +2096,11 @@ for kern in kernels:
                             bbox_inches='tight', dpi=tiff_figure_dpi)
                 plt.close()
             else:
-                indices_male, ml_above_zero_imp_male, indices_female, ml_above_zero_imp_female = [None] * 4
+                indices_male, ml_above_zero_imp_male, indices_female, ml_above_zero_imp_female,\
+                    std_male, std_female = [None] * 6
         else:
             indices, ml_above_zero_imp, indices_male, ml_above_zero_imp_male,\
-                indices_female, ml_above_zero_imp_female = [None] * 6
+                indices_female, ml_above_zero_imp_female, std, std_male, std_female = [None] * 9
 
         # Print summary
         if enable_feature_importance:
