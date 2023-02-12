@@ -2276,6 +2276,192 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
     if correlation == 'pbs':
         plt.title(f"Point bi-serial correlation above 0.001 between remaining continuous features and {output_feature}")
     plt.tight_layout()
+
+    
+# draw grouped correlation plots for cont-target and cat-target of features that go through pipeline after RHCF
+# sort by male or female?
+def draw_grouped_correlation_plot(train_features, train_labels, feature_list, col_idx,
+                                  train_features_one, train_labels_one, feature_list_one, col_idx_one,
+                                  train_features_two, train_labels_two, feature_list_two, col_idx_two,
+                                  output_feature, correlation, rank_by, top):
+    """
+    Function to plot the grouped correlation of features that passed RHCF with the output features. Only possible if
+    the data is split.
+
+    Parameters
+    ----------
+    train_features : np.array
+        array of the training features
+    train_labels : np.array
+        array of the training labels
+    feature_list : list
+        list of feature names
+    col_idx : list
+        list of indices of features that are categorical or continuous, which is influencing the correlation methods
+    train_features_one : np.array
+        array of the training features
+    train_labels_one : np.array
+        array of the training labels
+    feature_list_one : list
+        list of feature names
+    col_idx_one : list
+        list of indices of features that are categorical or continuous, which is influencing the correlation methods
+    train_features_two : np.array
+        array of the training features
+    train_labels_two : np.array
+        array of the training labels
+    feature_list_two : list
+        list of feature names
+    col_idx_two : list
+        list of indices of features that are categorical or continuous, which is influencing the correlation methods
+    output_feature : str
+        name of the target feature
+    correlation : str
+        correlation to use
+    rank_by : str
+        group by which to rank, either full, group1, or group2
+    top : int
+        show the top features only
+    """
+    res = []
+    res_one = []
+    res_two = []
+    if correlation == 'cramer':
+        for col in col_idx:
+            tmp = cramers_corrected_stat(train_features[:, col], train_labels)
+            res.append(round(tmp, 6))
+        for col in col_idx_one:
+            tmp = cramers_corrected_stat(train_features_one[:, col], train_labels_one)
+            res_one.append(round(tmp, 6))
+        for col in col_idx_two:
+            tmp = cramers_corrected_stat(train_features_two[:, col], train_labels_two)
+            res_two.append(round(tmp, 6))
+    elif correlation == 'chi':
+        for col in col_idx:
+            conf_matrix = pd.crosstab(train_features[:, col], train_labels)
+            if conf_matrix.shape[0] == 2:
+                correct = False
+            else:
+                correct = True
+            tmp = ss.chi2_contingency(conf_matrix, correction=correct)[0]
+            n = sum(conf_matrix.sum())
+            final_chi = tmp / n
+            res.append(round(final_chi.__abs__(), 6))
+        for col in col_idx_one:
+            conf_matrix = pd.crosstab(train_features_one[:, col], train_labels_one)
+            if conf_matrix.shape[0] == 2:
+                correct = False
+            else:
+                correct = True
+            tmp = ss.chi2_contingency(conf_matrix, correction=correct)[0]
+            n = sum(conf_matrix.sum())
+            final_chi = tmp / n
+            res_one.append(round(final_chi.__abs__(), 6))
+        for col in col_idx_two:
+            conf_matrix = pd.crosstab(train_features_two[:, col], train_labels_two)
+            if conf_matrix.shape[0] == 2:
+                correct = False
+            else:
+                correct = True
+            tmp = ss.chi2_contingency(conf_matrix, correction=correct)[0]
+            n = sum(conf_matrix.sum())
+            final_chi = tmp / n
+            res_two.append(round(final_chi.__abs__(), 6))
+    elif correlation == 'pbs':
+        for col in col_idx:
+            tmp, _ = ss.pointbiserialr(train_features[:, col], train_labels)
+            res.append(round(tmp.__abs__(), 6))
+        for col in col_idx_one:
+            tmp, _ = ss.pointbiserialr(train_features_one[:, col], train_labels_one)
+            res_one.append(round(tmp.__abs__(), 6))
+        for col in col_idx_two:
+            tmp, _ = ss.pointbiserialr(train_features_two[:, col], train_labels_two)
+            res_two.append(round(tmp.__abs__(), 6))
+    # before sorting, we have to rearrange those non-identical lists into one big ... dict
+    union = set(np.array(feature_list)[col_idx]).union(np.array(feature_list_one)[col_idx_one]
+                                                       ).union(np.array(feature_list_two)[col_idx_two])
+    rearranged_dict = dict().fromkeys(union, [])
+    for key in rearranged_dict.keys():
+        # add nan if key not in feature list (can use equal sign as it will be the first dictionary writing)
+        if key in feature_list:
+            rearranged_dict[key] = [np.array(res)[col_idx.index(feature_list.index(key))]]  # mixed
+        else:
+            rearranged_dict[key] = [np.nan]
+        if key in feature_list_one:
+            rearranged_dict[key].append(np.array(res_one)[col_idx_one.index(feature_list_one.index(key))])  # group one
+        else:
+            rearranged_dict[key].append(np.nan)
+        if key in feature_list_two:
+            rearranged_dict[key].append(np.array(res_two)[col_idx_two.index(feature_list_two.index(key))])  # group two
+        else:
+            rearranged_dict[key].append(np.nan)
+    # sort results by following criteria: features with 3 entries, then 2, then 1, within each layer,
+    # first will be highest subgroup as it will be the most interesting one
+    sorted_idx = np.array(res).argsort()
+    sorted_idx_one = np.array(res_one).argsort()
+    sorted_idx_two = np.array(res_two).argsort()
+    rank = []
+    rank_one = []
+    rank_two = []
+    for key, items in rearranged_dict.items():
+        rank.append([1 if sum(~np.isnan(items)) == 3 else 2 if sum(~np.isnan(items)) == 2 else 3,
+                     int(np.where(sorted_idx[::-1] == col_idx.index(
+                         feature_list.index(key)))[0]) if key in feature_list else np.nan, key])
+        rank_one.append([1 if sum(~np.isnan(items)) == 3 else 2 if sum(~np.isnan(items)) == 2 else 3,
+                        int(np.where(sorted_idx_one[::-1] == col_idx_one.index(
+                            feature_list_one.index(key)))[0]) if key in feature_list_one else np.nan, key])
+        rank_two.append([1 if sum(~np.isnan(items)) == 3 else 2 if sum(~np.isnan(items)) == 2 else 3,
+                        int(np.where(sorted_idx_two[::-1] == col_idx_two.index(
+                            feature_list_two.index(key)))[0]) if key in feature_list_two else np.nan, key])
+    sorted_rank = np.array(pd.DataFrame(rank).sort_values([0, 1]))
+    sorted_rank_one = np.array(pd.DataFrame(rank_one).sort_values([0, 1]))
+    sorted_rank_two = np.array(pd.DataFrame(rank_two).sort_values([0, 1]))
+    final_ranks = sorted_rank if rank_by == 'full' else sorted_rank_one if rank_by == 'male' else sorted_rank_two
+    # plot
+    bar_height = 0.25
+    # Set position of bar on X axis
+    r2 = np.arange(len(final_ranks))
+    r1 = [x - bar_height for x in r2]
+    r3 = [x + bar_height for x in r2]
+    # set bars according to ranking
+    bar1 = []  # all
+    bar2 = []  # group1
+    bar3 = []  # group2
+    for feat in pd.DataFrame(final_ranks)[2]:
+        bar1.append(rearranged_dict[feat][0])
+        bar2.append(rearranged_dict[feat][1])
+        bar3.append(rearranged_dict[feat][2])
+    plt.figure(figsize=(10, 10) if correlation in ('cramer', 'chi') else (16, 16))
+    ax = plt.subplot()
+    ax.barh(r1[:top],
+            bar1[:top][::-1] if rank_by == 'full' else bar2[:top][::-1] if rank_by == 'male' else bar3[:top][::-1],
+            bar_height, label=f"{'Mixed' if rank_by == 'full' else rank_by.capitalize()}",
+            color='#a9a9a9' if rank_by == 'full' else '#ffd500' if rank_by == 'male' else '#005bbb', edgecolor='black')
+    ax.barh(r2[:top],
+            bar2[:top][::-1] if rank_by == 'full' else bar3[:top][::-1] if rank_by == 'male' else bar1[:top][::-1],
+            bar_height,
+            label=f"{'Male' if rank_by == 'full' else 'Female' if rank_by == 'male' else 'Mixed'}",
+            color='#ffd500' if rank_by == 'full' else '#005bbb' if rank_by == 'male' else '#a9a9a9', edgecolor='black')
+    ax.barh(r3[:top],
+            bar3[:top][::-1] if rank_by == 'full' else bar1[:top][::-1] if rank_by == 'male' else bar2[:top][::-1],
+            bar_height,
+            label=f"{'Female' if rank_by == 'full' else 'Mixed' if rank_by == 'male' else 'Male'}",
+            color='#005bbb' if rank_by == 'full' else '#a9a9a9' if rank_by == 'male' else '#ffd500', edgecolor='black')
+    labels = list(pd.DataFrame(final_ranks)[2])
+    ax.set_yticks(r2[:top])
+    ax.set_yticklabels(labels[:top][::-1])
+    plt.setp(ax.get_yticklabels(), ha='right', fontsize=8)
+    plt.legend()
+    if correlation == 'cramer':
+        plt.title(f"Grouped Cramer's V correlation between remaining categorical features and {output_feature}\n"
+                  f"ranked by: {'Mixed' if rank_by == 'full' else rank_by.capitalize()}, showing top {top}")
+    if correlation == 'chi':
+        plt.title(f"Grouped Chi squared correlation between remaining categorical features and {output_feature}\n"
+                  f"ranked by: {'Mixed' if rank_by == 'full' else rank_by.capitalize()}, showing top {top}")
+    if correlation == 'pbs':
+        plt.title(f"Grouped Point bi-serial correlation between remaining continuous features and {output_feature}\n"
+                  f"ranked by: {'Mixed' if rank_by == 'full' else rank_by.capitalize()}, showing top {top}")
+    plt.tight_layout()
     
     
 ###############################################################################################################
