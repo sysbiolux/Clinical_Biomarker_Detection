@@ -2750,7 +2750,7 @@ def write_importance(datatype, method, kern, idx_sorted, features_list, importan
     f = open(directory + '/' + folder + '/' + f'{datatype}_feature_importance_{kern}_{method}.txt', 'w')
     f.write(f"Feature importance score using {method} score for the {datatype} data set\n\n")
     for feat in idx_sorted[-importance_above_zero:]:
-        f.write(f'{np.round(features_list[feat], 5)}\t{np.round(importance_mean[feat], 5)}'
+        f.write(f'{features_list[feat]}\t{np.round(importance_mean[feat], 5)}'
                 f'{" +- " + str(np.round(importance_std[feat], 5)) if importance_std is not None else ""}\n')
     f.close()
     print("Writing done!")
