@@ -2105,18 +2105,18 @@ for kern in kernels:
         if enable_feature_importance:
             print('\n******************************************\nFull feature importance summary:\n')
             if feature_importance_method in ('all', 'sklearn'):
-                write_importance('Mixed', 'sklearn', idx_sorted=sorted_idx, features_list=features,
+                write_importance('Mixed', 'sklearn', kern, idx_sorted=sorted_idx, features_list=features,
                                  importance_mean=perm_importance.importances_mean,
                                  importance_above_zero=sk_above_zero_imp,
                                  importance_std=perm_importance.importances_std, directory=curr_dir, folder=folder_name)
                 print('Top important features with sklearn:', features[sorted_idx[-sk_above_zero_imp:]][::-1], '\n')
             if feature_importance_method in ('all', 'eli5'):
-                write_importance('Mixed', 'eli5', idx_sorted=sorted_idx_eli, features_list=features,
+                write_importance('Mixed', 'eli5', kern, idx_sorted=sorted_idx_eli, features_list=features,
                                  importance_mean=perm_mean, importance_above_zero=el_above_zero_imp,
                                  importance_std=std_perm, directory=curr_dir, folder=folder_name)
                 print('Top important features with eli5:', features[sorted_idx_eli[-el_above_zero_imp:]][::-1], '\n')
             if feature_importance_method in ('all', 'mlxtend'):
-                write_importance('Mixed', 'mlxtend', idx_sorted=indices, features_list=features,
+                write_importance('Mixed', 'mlxtend', kern, idx_sorted=indices, features_list=features,
                                  importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std,
                                  directory=curr_dir, folder=folder_name)
                 print('Top important features with mlxtend:', features[indices[-ml_above_zero_imp:]][::-1], '\n')
@@ -2124,7 +2124,7 @@ for kern in kernels:
                 print('******************************************')
                 print('Male feature importance summary:\n')
                 if feature_importance_method in ('all', 'sklearn'):
-                    write_importance('Male', 'sklearn', idx_sorted=sorted_idx_male, features_list=features_male,
+                    write_importance('Male', 'sklearn', kern, idx_sorted=sorted_idx_male, features_list=features_male,
                                      importance_mean=perm_importance_male.importances_mean,
                                      importance_above_zero=sk_above_zero_imp_male,
                                      importance_std=perm_importance_male.importances_std,
@@ -2132,13 +2132,13 @@ for kern in kernels:
                     print('Top important features with sklearn:',
                           features_male[sorted_idx_male[-sk_above_zero_imp_male:]][::-1], '\n')
                 if feature_importance_method in ('all', 'eli5'):
-                    write_importance('Male', 'eli5', idx_sorted=sorted_idx_eli_male, features_list=features_male,
+                    write_importance('Male', 'eli5', kern, idx_sorted=sorted_idx_eli_male, features_list=features_male,
                                      importance_mean=perm_mean_male, importance_above_zero=el_above_zero_imp_male,
                                      importance_std=std_perm_male, directory=curr_dir, folder=folder_name)
                     print('Top important features with eli5:',
                           features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]][::-1], '\n')
                 if feature_importance_method in ('all', 'mlxtend'):
-                    write_importance('Male', 'mlxtend', idx_sorted=indices_male, features_list=features_male,
+                    write_importance('Male', 'mlxtend', kern, idx_sorted=indices_male, features_list=features_male,
                                      importance_mean=imp_vals_male, importance_above_zero=ml_above_zero_imp_male,
                                      importance_std=std_male, directory=curr_dir, folder=folder_name)
                     print('Top important features with mlxtend:',
@@ -2146,7 +2146,8 @@ for kern in kernels:
 
                 print('******************************************\nFemale feature importance summary:\n')
                 if feature_importance_method in ('all', 'sklearn'):
-                    write_importance('Female', 'sklearn', idx_sorted=sorted_idx_female, features_list=features_female,
+                    write_importance('Female', 'sklearn', kern, idx_sorted=sorted_idx_female,
+                                     features_list=features_female,
                                      importance_mean=perm_importance_female.importances_mean,
                                      importance_above_zero=sk_above_zero_imp_female,
                                      importance_std=perm_importance_female.importances_std,
@@ -2154,13 +2155,15 @@ for kern in kernels:
                     print('Top important features with sklearn:',
                           features_female[sorted_idx_female[-sk_above_zero_imp_female:]][::-1], '\n')
                 if feature_importance_method in ('all', 'eli5'):
-                    write_importance('Female', 'eli5', idx_sorted=sorted_idx_eli_female, features_list=features_female,
+                    write_importance('Female', 'eli5', kern, idx_sorted=sorted_idx_eli_female,
+                                     features_list=features_female,
                                      importance_mean=perm_mean_female, importance_above_zero=el_above_zero_imp_female,
                                      importance_std=std_perm_female, directory=curr_dir, folder=folder_name)
                     print('Top important features with eli5:',
                           features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]][::-1], '\n')
                 if feature_importance_method in ('all', 'mlxtend'):
-                    write_importance('Female', 'mlxtend', idx_sorted=indices_female, features_list=features_female,
+                    write_importance('Female', 'mlxtend', kern, idx_sorted=indices_female,
+                                     features_list=features_female,
                                      importance_mean=imp_vals_female, importance_above_zero=ml_above_zero_imp_female,
                                      importance_std=std_female, directory=curr_dir, folder=folder_name)
                     print('Top important features with mlxtend:',
@@ -2508,7 +2511,7 @@ for kern in kernels:
                     dpi=tiff_figure_dpi)
         plt.close()
         # write feature importance
-        write_importance('Mixed', 'SVM_coef', idx_sorted=lin_idx, features_list=lin_out_features,
+        write_importance('Mixed', 'SVM_coef', 'linear', idx_sorted=lin_idx, features_list=lin_out_features,
                          importance_mean=lin_imp, importance_above_zero=lin_above_zero_imp,
                          importance_std=None, directory=curr_dir, folder=folder_name)
         print('Full data top important features with linear kernel (limited to top 40):\n\n',
@@ -2561,7 +2564,7 @@ for kern in kernels:
                         dpi=tiff_figure_dpi)
             plt.close()
             # write feature importance
-            write_importance('Male', 'SVM_coef', idx_sorted=lin_idx_male, features_list=lin_out_features_male,
+            write_importance('Male', 'SVM_coef', 'linear', idx_sorted=lin_idx_male, features_list=lin_out_features_male,
                              importance_mean=lin_imp_male, importance_above_zero=lin_above_zero_imp_male,
                              importance_std=None, directory=curr_dir, folder=folder_name)
             print('Male data top important features with linear kernel (limited to top 40):\n\n',
@@ -2613,7 +2616,8 @@ for kern in kernels:
                         dpi=tiff_figure_dpi)
             plt.close()
             # write feature importance
-            write_importance('Female', 'SVM_coef', idx_sorted=lin_idx_female, features_list=lin_out_features_female,
+            write_importance('Female', 'SVM_coef', 'linear', idx_sorted=lin_idx_female,
+                             features_list=lin_out_features_female,
                              importance_mean=lin_imp_female, importance_above_zero=lin_above_zero_imp_female,
                              importance_std=None, directory=curr_dir, folder=folder_name)
             print('Female data top important features with linear kernel (limited to top 40):\n\n',
