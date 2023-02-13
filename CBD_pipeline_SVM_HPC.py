@@ -599,6 +599,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"PCA technique selected: {pca_tech.replace('_', ' ') if pca_tech != '' and enable_ft else None}\n"
       f"If PCA is disabled, DA technique selected: {da_tech if da_tech != '' and enable_ft else None}\n"
       f"Feature importance methods and visualizations enabled: {enable_feature_importance, feature_importance_method}\n"
+      f"Amount of most important features to show: {top_features}\n"
       f"Box and bar plotting enabled and selected method: {enable_box_bar_plots, box_bar_figures}\n"
       f"Order of steps in the pipeline if FT or resampling are enabled: {pipeline_order}\n"
       f"Decision to drop or pass through features that are not transformed: {drop_or_pass_non_treated_features}\n"
