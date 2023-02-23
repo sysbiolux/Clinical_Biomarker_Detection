@@ -2620,7 +2620,7 @@ def plot_lda(train_features=None, train_labels=None, col_idx=None, color_by=None
         for target, color in zip(targets, colors):
             idx = y[color_by] == target
             # lda plots (only 1)
-            ax1.scatter(ldadf.loc[idx, 'LD1'], jittered_y.loc[idx, 'LD1'],  color=color, s=15, marker='*', , alpha=0.3)
+            ax1.scatter(ldadf.loc[idx, 'LD1'], jittered_y.loc[idx, 'LD1'],  color=color, s=15, marker='*', alpha=0.3)
             ax1.set_title('LD1', fontsize=10)
             ax1.set_xlabel(f'LD1 ({"{:.2f}".format(round(lda.explained_variance_ratio_[0] * 100, 2))}%)')
             ax1.set_ylabel('')
