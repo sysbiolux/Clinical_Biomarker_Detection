@@ -148,7 +148,7 @@ def separate_full_data(full_train, full_test, target_feature, splitting_feature=
         The full test data set
     target_feature : str
         the target feature (binary) based on which the data should be split
-    splitting_feature : bool
+    splitting_feature : bool or str
         whether or not the full data should be split (default False), if false, only the full data labels and feature
         list will be returned
 
