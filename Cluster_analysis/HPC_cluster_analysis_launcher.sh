@@ -7,7 +7,7 @@
 #SBATCH --time=01-06:00:00
 #SBATCH -p batch
 #SBATCH --mail-type=END,FAIL
-##SBATCH --mail-use=username@domain.extension
+##SBATCH --mail-use=john.doe@example.com  # complete and uncomment if desired
 
 # Safeguard for NOT running this launcher on access/login nodes
 print_error_and_exit() { echo "***ERROR*** $*"; exit 1; }
