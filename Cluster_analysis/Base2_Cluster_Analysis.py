@@ -175,6 +175,64 @@ n_perplexity = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 n_neighbors = [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
 
+#########################################################
+# ## Loop to test only No transformation and Scaler Only
+#########################################################
+for num, data in enumerate(data_sets):
+    print(f'\n\n*** Analysing {data_sets_verbosity[num]}... *** \n\n')
+    folder_name = data_sets_verbosity[num].replace(' ', '_')
+    if os.path.isdir(curr_dir + '/' + folder_name) is False:
+        os.mkdir(curr_dir + '/' + folder_name)
+    #########################
+    # ## Retaining subgroups
+    #########################
+    for subs in subgroups:
+        print(f'Retaining the following subgroups: {subs}\n')
+        if subs == 'ALL':
+            data_sg = data.copy()
+            new_feature_list_sg = feature_lists[num].copy()
+        else:
+            data_sg = pd.DataFrame(data, columns=feature_lists[num])  # from array in to pandas to easily drop
+            new_feature_list_sg = \
+                [feature_lists[num][x] for x in range(len(feature_lists[num])) if feature_lists[num][x].startswith(subs)]
+            data_sg = np.array(data_sg[new_feature_list_sg])  # drop and back to np array
+            print(f'The shape of the {data_sets_verbosity[num]} set with selected subgroups is:\n{data_sg.shape}\n')
+        # plot PCA While nothing is transformed
+        plot_PCA(X=pd.DataFrame(data_sg, columns=new_feature_list_sg),
+                 y=pd.DataFrame(target_labels[num], columns=[output_feature]),
+                 label=output_feature,
+                 title=f'BASE-II PCA analysis\n'
+                       f'{data_sets_verbosity[num]}, before RHCF, no continuous threshold, {subs} subgroup(s), '
+                       f'no scaler', seed=seed)
+        plt.savefig(f'./{folder_name}/Untransformed_PCA_{subs}',
+                    bbox_inches='tight')
+        plt.close()
+        for scaler in scalers:
+            data_scaled = None
+            if scaler == 'standard':
+                data_scaled = StandardScaler().fit_transform(data_sg)
+                print('Processing standard scaling.\n')
+            if scaler == 'robust':
+                data_scaled = RobustScaler().fit_transform(data_sg)
+                print('Processing robust scaling.\n')
+            if scaler == 'minmax':
+                data_scaled = MinMaxScaler().fit_transform(data_sg)
+                print('Processing minmax scaling.\n')
+            plot_PCA(X=pd.DataFrame(data_scaled, columns=new_feature_list_sg),
+                     y=pd.DataFrame(target_labels[num], columns=[output_feature]),
+                     label=output_feature,
+                     title=f'BASE-II PCA analysis\n'
+                           f'{data_sets_verbosity[num]}, before RHCF, '
+                           f'no continuous threshold, {subs} subgroup(s), {scaler} scaled', seed=seed)
+            plt.savefig(f'./{folder_name}/{scaler}_scaled_only_PCA_{subs}',
+                        bbox_inches='tight')
+            plt.close()
+print('Analysis of untransformed or scaled only PCA in all subgroups done!')
+###################################
+# ## End None and Scaler Only Loop
+###################################
+
+
 ########################################
 # ## Starting the Cluster analysis loop
 ########################################
