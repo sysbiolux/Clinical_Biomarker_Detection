@@ -27,9 +27,7 @@ import scipy.stats as stats
 
 # util functions
 sys.path.append('../')
-# from source.CBDP_utils import separate_full_data, get_cat_and_cont
-from machine_learning.Remastered_pipeline_with_utils_and_config_210222.CBDP_utils import separate_full_data, \
-    get_cat_and_cont
+from source.CBDP_utils import separate_full_data, get_cat_and_cont
 
 
 ########################
@@ -177,39 +175,42 @@ comp_features_female = np.concatenate((comp_features_female, comp_frailty_female
 # Testing for: Statistical correlation tests in mixed, male, female for frailty index as well as for the 5 frailty
 # phenotypes in relation to age, WHR, height, BMI, ALM, ALM-BMI ratio, among others (could go through all continuous
 # features, and select the ones with the best correlations or p values).
-data_sets = [# train_features, test_features,
+data_sets = [train_features, test_features,
              comp_features,
-             # train_men_features, test_men_features,
+             train_men_features, test_men_features,
              comp_features_male,
-             # train_female_features, test_female_features,
+             train_female_features, test_female_features,
              comp_features_female]
-data_sets_verbosity = [# 'mixed training', 'mixed test',
+data_sets_verbosity = ['mixed training', 'mixed test',
                        'mixed complete',
-                       # 'male training', 'male test',
+                       'male training', 'male test',
                        'male complete',
-                       # 'female training', 'female test',
+                       'female training', 'female test',
                        'female complete']
-target_labels = [# train_labels, test_labels,
+target_labels = [train_labels, test_labels,
                  np.concatenate((train_labels, test_labels)),
-                 # train_men_labels, test_men_labels,
+                 train_men_labels, test_men_labels,
                  np.concatenate((train_men_labels, test_men_labels)),
-                 # train_female_labels, test_female_labels,
+                 train_female_labels, test_female_labels,
                  np.concatenate((train_female_labels, test_female_labels))]
-feature_lists = [# feature_list, feature_list,
+feature_lists = [feature_list, feature_list,
                  feature_list,
-                 # feature_list_male, feature_list_male,
+                 feature_list_male, feature_list_male,
                  feature_list_male,
-                 # feature_list_female, feature_list_female,
+                 feature_list_female, feature_list_female,
                  feature_list_female]
 features_of_interest = ['PM-age_Charite', 'PM-WHR', 'PM-height', 'PM-BMI', 'PM-ALM', 'PM-ALM_BMI']
 y_label_boxes = ['Age [years]', 'Waist-hip ratio', 'Height [cm]', 'Body Mass Index [kg/m\N{SUPERSCRIPT TWO}]',
                  'Appendicular Lean Mass [kg]', 'BMI-adjusted ALM']
+
 sns.set_style("whitegrid")
 plt.rcParams["font.family"] = "serif"
 
 #########################################
 # Starting loop for inferential analysis
 #########################################
+dict_to_capture_all_corr = dict.fromkeys(data_sets_verbosity, [])
+dict_to_capture_all_pval = dict.fromkeys(data_sets_verbosity, [])
 for num, data in enumerate(data_sets):
     print(f'Processing inferential analysis in {data_sets_verbosity[num]}...\n')
     folder_name = data_sets_verbosity[num].replace(' ', '_') + '_inferential'
@@ -288,11 +289,81 @@ for num, data in enumerate(data_sets):
         plt.tight_layout()
         plt.savefig(f'./{folder_name}/{tar}/bar_plot_of_p_values.png')
         plt.close()
+    # update the capturing dict
+    dict_to_capture_all_corr[data_sets_verbosity[num]].append({data_sets_verbosity[num]: correl_dict_per_data})
+    dict_to_capture_all_pval[data_sets_verbosity[num]].append({data_sets_verbosity[num]: p_val_dict_per_data})
     print(f'Processing inferential analysis ended in {data_sets_verbosity[num]}.\n')
 print('Inferential analysis in BASE-II completed!')
 ####################################
 # Loop for inferential analysis end
 ####################################
+
+# create a bar plot of p-values for each target in combined figure, sorted by the overall stronges signal
+# Dictionary captured each run individually for each key, so it is enough to look into one single key to get all data
+
+mixed_frailty = []
+male_frailty = []
+female_frailty = []
+lists = [mixed_frailty, male_frailty, female_frailty]
+for pos in range(len(dict_to_capture_all_pval['mixed complete'])):
+    for key, item in dict_to_capture_all_pval['mixed complete'][pos].items():
+        for tar in statistical_targets:
+            for feat in features_of_interest:
+                for it in item['p-values']:
+                    if tar in it and tar == 'PM-Frailty_Index':
+                        if feat in it[tar]:
+                            lists[pos].append(it[tar][1])
+# plot for frailty index only feature
+colors = dict({0: '#a9a9a9',
+              1: '#ffd500',
+              2: '#005bbb'})
+bar_height = 0.25
+# Set position of bar on X axis
+ref = np.arange(len(features_of_interest))
+r1 = [x - 0.25 for x in ref]
+r2 = [x + 0.25 for x in ref]
+# get order (say, order of highest in all)
+all = []
+for data in lists:
+    tmp = -np.log10(data)
+    all.append(tmp)
+highest_per_feature = np.zeros(len(features_of_interest))
+final_rank = np.zeros(len(features_of_interest))
+for case in range(np.array(all).shape[0]):
+    for fe in range(len(features_of_interest)):
+        if all[case][fe] >= highest_per_feature[fe]:
+            highest_per_feature[fe] = all[case][fe]
+final_rank = np.argsort(highest_per_feature)[::-1]
+# plot
+plt.subplots(figsize=(12, 4))
+ax1 = plt.subplot()
+ax1.bar(r1,
+        -np.log10(lists[0])[final_rank],
+        bar_height, label='Mixed',
+        color=colors[0],
+        edgecolor='black')
+ax1.bar(ref,
+        -np.log10(male_frailty)[final_rank],
+        bar_height, label='Male',
+        color=colors[1],
+        edgecolor='black')
+ax1.bar(r2,
+        -np.log10(female_frailty)[final_rank],
+        bar_height, label='Female',
+        color=colors[2],
+        edgecolor='black')
+ax1.hlines(-np.log10(0.05), xmin=-0.5, xmax=len(features_of_interest) - 0.5, color='black',
+           linestyles='--', linewidth=1.5, label='sign. threshold')
+ax1.set_xticks(ref)
+ax1.set_xticklabels(labels=np.array(features_of_interest)[final_rank], fontsize=12, fontweight='bold')
+ax1.set_ylabel(ylabel='-log10(p-value)', fontsize=12, fontweight='bold')
+plt.xticks(fontsize=10, fontweight='bold', rotation=15 if len(features_of_interest) > 6 else 0)
+plt.title("Welch's unequal variance T-test of hallmark risk factors between non-frail and frail patients",
+          fontsize=14, fontweight='bold')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.savefig(f'./combined_bar_plot_of_p_values.png')
+plt.close()
 
 
 ########################################################################################################################
