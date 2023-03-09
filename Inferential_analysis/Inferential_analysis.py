@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import scipy.stats as stats
 
 # util functions
@@ -298,6 +299,10 @@ print('Inferential analysis in BASE-II completed!')
 # Loop for inferential analysis end
 ####################################
 
+
+##################################################
+# Combining the interesting ones after inspection
+##################################################
 # create a bar plot of p-values for each target in combined figure, sorted by the overall stronges signal
 # Dictionary captured each run individually for each key, so it is enough to look into one single key to get all data
 
@@ -364,6 +369,80 @@ plt.legend(loc='best')
 plt.tight_layout()
 plt.savefig(f'./combined_bar_plot_of_p_values.png')
 plt.close()
+
+# after inspection , we want to show some that are common and unique in male and female
+# sorted by p value: PM-ALM_BMI, PM-age_Charite, PM-ALM, PM-WHR
+features_to_boxplot_in_order = ['PM-ALM_BMI', 'PM-age_Charite', 'PM-ALM', 'PM-WHR']
+y_label_boxplot = ['BMI-adjusted ALM', 'Age [years]', 'Appendicular Lean Mass [kg]', 'Waist-hip ratio']
+# get that data
+data_sets_boxplot = [comp_features,
+                     comp_features_male,
+                     comp_features_female]
+
+mixed_frailty_bp = []
+male_frailty_bp = []
+female_frailty_bp = []
+lists_bp = [mixed_frailty_bp, male_frailty_bp, female_frailty_bp]
+for num, data in enumerate(data_sets_boxplot):
+    for num_int, interest in enumerate(features_to_boxplot_in_order):
+        data_int = pd.DataFrame(data, columns=feature_lists[num])
+        continuous_feature = data_int[interest]
+        for target in statistical_targets:
+            if target == 'PM-Frailty_Index':
+                binary_outcome = pd.DataFrame(target_labels[num], columns=[target])
+                # split the continuous feature into two groups based on the binary outcome
+                unaffected = continuous_feature[binary_outcome[target] == 0]
+                affected = continuous_feature[binary_outcome[target] == 1]
+                lists_bp[num].append([unaffected, affected])
+# create combined box plots
+colors = ['#a9a9a9', '#ffd500', '#005bbb']
+fig, axes = plt.subplots(1, len(features_to_boxplot_in_order), figsize=(16, 6))
+for num, ax in enumerate(axes):
+    box1 = ax.boxplot(lists_bp[0][num][0], positions=[0], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    box2 = ax.boxplot(lists_bp[1][num][0], positions=[1.25], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    box3 = ax.boxplot(lists_bp[2][num][0], positions=[2.5], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    box4 = ax.boxplot(lists_bp[0][num][1], positions=[0.5], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    box5 = ax.boxplot(lists_bp[1][num][1], positions=[1.75], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    box6 = ax.boxplot(lists_bp[2][num][1], positions=[3.0], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+    for (patch1, patch2, patch3, patch4, patch5, patch6) in \
+            zip(box1['boxes'], box2['boxes'], box3['boxes'], box4['boxes'], box5['boxes'], box6['boxes']):
+        # patch 1-3 unaffected, patch 4-6 affected
+        patch1.set_facecolor(colors[0])
+        patch2.set_facecolor(colors[1])
+        patch3.set_facecolor(colors[2])
+        patch4.set_facecolor(colors[0])
+        patch4.set_hatch('++++')
+        patch5.set_facecolor(colors[1])
+        patch5.set_hatch('++++')
+        patch6.set_facecolor(colors[2])
+        patch6.set_hatch('++++')
+    ax.set_xticks([])
+    if 'PM-ALM' in features_to_boxplot_in_order:
+        if num == features_to_boxplot_in_order.index('PM-ALM'):
+            ticks_transformed = ax.get_yticks() / 1000
+            ax.set_yticklabels([int(x) for x in ticks_transformed])
+    ax.set_ylabel(ylabel=y_label_boxplot[num], fontsize=12, fontweight='bold')
+    ax.set_title(f'{features_to_boxplot_in_order[num]}', fontsize=14, fontweight='bold')
+# generate a legend based on legend from any of the above acxes
+lgd = plt.legend(loc='lower right', bbox_to_anchor=(1, -0.15), fontsize=12)
+handles, labs = lgd.axes.get_legend_handles_labels()
+handles.append(Patch(facecolor='white', edgecolor='black', hatch='++++'))
+labs.append('Frail')
+handles.append(Patch(facecolor='white', edgecolor='black'))
+labs.append('Non-frail')
+lgd.set_title('Conditions')
+lgd._legend_box = None
+lgd._init_legend_box(handles, labs)
+lgd._set_loc(lgd._loc)
+lgd.set_title(lgd.get_title().get_text())
+for text in lgd.get_texts():
+    text.set_weight('bold')
+fig.tight_layout()
+plt.savefig(f'./combined_box_plot_of_significant_features.png')
+plt.close()
+######################################################
+# END Combining the interesting ones after inspection
+######################################################
 
 
 ########################################################################################################################
