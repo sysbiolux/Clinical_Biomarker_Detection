@@ -204,6 +204,30 @@ features_of_interest = ['PM-age_Charite', 'PM-WHR', 'PM-height', 'PM-BMI', 'PM-A
 y_label_boxes = ['Age [years]', 'Waist-hip ratio', 'Height [cm]', 'Body Mass Index [kg/m\N{SUPERSCRIPT TWO}]',
                  'Appendicular Lean Mass [kg]', 'BMI-adjusted ALM']
 
+# while above settings would be for the usual hallmarks check, the below settings would give us inferential results
+# for the claimed top predictive features
+
+statistical_targets = ['PM-Frailty_Index',
+                       # 'PM-Frailty_gait',
+                       # 'SV-Frailty_exhaustion',
+                       # 'SV-Frailty_physicalactivity',
+                       # 'PM-Frailty_gripstrength',
+                       # 'PM-Frailty_weightloss'
+                       ]
+features_of_interest = ['PM-age_Charite', 'PM-height', 'BF-MCHCgdL', 'PM-HEAD_FAT', 'BF-TestosteronngmL',
+                        'BF-NatriummmolL', 'PM-T_S_AREA', 'BF-ChloridmmolL', 'PM-ALM_kg', 'PM-HEAD_LEAN',
+                        'BF-ApoBgL', 'CG-Trail_B', 'NT-ZV', 'BF-VitD_zscore_merged', 'BF-BilirubinindirektmgdL',
+                        'BF-EstradiolpmolL', 'BF-MonozytenGL', 'BF-EosinophileGL', 'BF-LeukozytenGL',
+                        'BF-Insulin2.ProbeµUmL', 'BF-HDLCholesterinmgdL', 'BF-CirculatingILzehn', 'BF-INR',
+                        'BF-ZinkµmolL']
+y_label_boxes = ['Age [years]', 'Height [cm]', 'Mean corpuscular hemoglobin conc. [g/dL]', 'Head fat mass [g]',
+                 'Testosterone levels [ng/mL]', 'Natrium levels [mmol/L]', 'Thoracic spine area [cm<sup>2</sup>]',
+                 'Chlorid levels [mmol/L]', 'Appendicular Lean Mass [kg]', 'Head lean mass [g]',
+                 'Apolipoprotein B [g/L]', 'Trail Making Test Score [Trail B]', 'Kitchen waste [g]',
+                 'Vitamin D [merged z-score]', 'Bilirubin indirect [mg/dL]', 'Estradiol [pmol/L]', 'Monocytes [g/L]',
+                 'Eosinophils [g/L]', 'Leukocytes [g/L]', 'Insulin, second probe [µU/mL]', 'HDL-cholesterol [mg/dL]',
+                 'Circulating IL-10 [pg/mL]', 'International normalization ratio', 'Zinc levels [µmol/L]']
+
 sns.set_style("whitegrid")
 plt.rcParams["font.family"] = "serif"
 
@@ -306,6 +330,7 @@ print('Inferential analysis in BASE-II completed!')
 # create a bar plot of p-values for each target in combined figure, sorted by the overall stronges signal
 # Dictionary captured each run individually for each key, so it is enough to look into one single key to get all data
 
+# Use this for the 6 hallmark features analysed at the beginning of project
 mixed_frailty = []
 male_frailty = []
 female_frailty = []
@@ -440,6 +465,210 @@ for text in lgd.get_texts():
 fig.tight_layout()
 plt.savefig(f'./combined_box_plot_of_significant_features.png')
 plt.close()
+######################################################
+# END Combining the interesting ones after inspection
+######################################################
+
+
+########################################################################################
+# Combining the male-specific and female-specific ones we claim as potential biomarkers
+########################################################################################
+# create a bar plot of p-values for each target in combined figure, sorted by the overall strongest signal
+# Dictionary captured each run individually for each key, so it is enough to look into one single key to get all data
+
+# Use this for the 10+ important features that we claim as potential sex-specific biomarkers
+features_of_interest_male = ['PM-age_Charite', 'PM-height', 'BF-MCHCgdL', 'PM-HEAD_FAT', 'BF-TestosteronngmL',
+                             'CG-Trail_B', 'BF-NatriummmolL', 'PM-T_S_AREA', 'BF-ChloridmmolL', 'PM-ALM_kg',
+                             'PM-HEAD_LEAN']
+features_of_interest_female = ['BF-ApoBgL', 'CG-Trail_B', 'NT-ZV', 'BF-VitD_zscore_merged', 'BF-BilirubinindirektmgdL',
+                               'BF-EstradiolpmolL', 'BF-MonozytenGL', 'BF-EosinophileGL', 'BF-LeukozytenGL',
+                               'BF-Insulin2.ProbeµUmL', 'BF-HDLCholesterinmgdL', 'BF-CirculatingILzehn', 'BF-INR',
+                               'BF-ZinkµmolL']
+y_label_boxes_male = ['Age [years]', 'Height [cm]', 'Mean corpuscular hemoglobin conc. [g/dL]', 'Head fat mass [g]',
+                      'Testosterone levels [ng/mL]', 'Trail Making Test Score [Trail B]', 'Natrium levels [mmol/L]',
+                      'Thoracic spine area [cm<sup>2</sup>]', 'Chlorid levels [mmol/L]', 'Appendicular Lean Mass [kg]',
+                      'Head lean mass [g]']
+y_label_boxes_female = ['Apolipoprotein B [g/L]', 'Trail Making Test Score [Trail B]', 'Kitchen waste [g]',
+                        'Vitamin D [merged z-score]', 'Bilirubin indirect [mg/dL]', 'Estradiol [pmol/L]',
+                        'Monocytes [g/L]', 'Eosinophils [g/L]', 'Leukocytes [g/L]', 'Insulin, second probe [µU/mL]',
+                        'HDL-cholesterol [mg/dL]', 'Circulating IL-10 [pg/mL]', 'International normalization ratio',
+                        'Zinc levels [µmol/L]']
+runs = ['male', 'female']
+
+for run in runs:
+    mixed_frailty = []
+    male_frailty = []
+    female_frailty = []
+    lists = [mixed_frailty, male_frailty, female_frailty]
+    for pos in range(len(dict_to_capture_all_pval['mixed complete'])):
+        for key, item in dict_to_capture_all_pval['mixed complete'][pos].items():
+            for tar in statistical_targets:
+                for feat in features_of_interest_male if run == 'male' else features_of_interest_female:
+                    for it in item['p-values']:
+                        if tar in it and tar == 'PM-Frailty_Index':
+                            if feat in it[tar]:
+                                lists[pos].append(it[tar][1])
+    # plot for frailty index only feature
+    colors = dict({0: '#a9a9a9',
+                   1: '#ffd500',
+                   2: '#005bbb'})
+    bar_height = 0.25
+    # Set position of bar on X axis
+    ref = np.arange(len(features_of_interest_male if run == 'male' else features_of_interest_female))
+    r1 = [x - 0.25 for x in ref]
+    r2 = [x + 0.25 for x in ref]
+    # get order (say, order of highest in all)
+    all = []
+    for data in lists:
+        tmp = -np.log10(data)
+        all.append(tmp)
+    highest_per_feature = np.zeros(len(features_of_interest_male if run == 'male' else features_of_interest_female))
+    final_rank = np.zeros(len(features_of_interest_male if run == 'male' else features_of_interest_female))
+    for case in range(np.array(all).shape[0]):
+        for fe in range(len(features_of_interest_male if run == 'male' else features_of_interest_female)):
+            if all[case][fe] >= highest_per_feature[fe]:
+                highest_per_feature[fe] = all[case][fe]
+    final_rank = np.argsort(highest_per_feature)[::-1]
+    # plot
+    plt.subplots(figsize=(12, 4))
+    ax1 = plt.subplot()
+    ax1.bar(r1,
+            -np.log10(lists[0])[final_rank],
+            bar_height, label='Mixed',
+            color=colors[0],
+            edgecolor='black')
+    ax1.bar(ref,
+            -np.log10(male_frailty)[final_rank],
+            bar_height, label='Male',
+            color=colors[1],
+            edgecolor='black')
+    ax1.bar(r2,
+            -np.log10(female_frailty)[final_rank],
+            bar_height, label='Female',
+            color=colors[2],
+            edgecolor='black')
+    ax1.hlines(-np.log10(0.05), xmin=-0.4, xmax=len(features_of_interest_male if run == 'male' else
+                                                    features_of_interest_female) - 0.6, color='black',
+               linestyles='--', linewidth=1.5, label='sign. threshold')
+    ax1.set_xticks(ref)
+    ax1.set_xticklabels(labels=np.array(features_of_interest_male if run == 'male' else
+                                        features_of_interest_female)[final_rank], fontsize=12, fontweight='bold')
+    ax1.set_ylabel(ylabel='-log10(p-value)', fontsize=12, fontweight='bold')
+    ax1.set_xlim([-0.4, len(features_of_interest_male if run == 'male' else features_of_interest_female) - 0.6])
+    plt.xticks(fontsize=10, fontweight='bold', rotation=15 if len(features_of_interest_male if run == 'male' else
+                                                                  features_of_interest_female) > 6 else 0)
+    plt.title(f"{run.capitalize()}: Welch's unequal variance T-test of detected biomarkers between non-frail and frail "
+              f"patients",
+              fontsize=14, fontweight='bold')
+    plt.legend(loc='best')
+    plt.tight_layout()
+    plt.savefig(f'./{run}_combined_bar_plot_of_p_values_biomarkers.png')
+    plt.close()
+
+# after inspection , we want to show them as boxplot as well
+# sorted by p value: male: PM-age_Charite, PM-height, PM-ALM_kg, PM-T_S_AREA, CG-Trail_B, BF-TestosteronngmL,
+# PM-HEAD_FAT, BF-NatriummmolL, PM-HEAD_LEAN, BF-MCHCgdL, BF-ChloridmmolL
+# sorted by p value: female: BF-VitD_zscore_merged, CG-Trail_B, BF-EosinophileGL, BF-LeukozytenGL, BF-CirculatingILzehn,
+# BF-MonozytenGL, BF-ZinkµmolL, BF-HDLCholesterinmgdL, BF-EstradiolpmolL, BF-BilirubinindirektmgdL, BF-INR,
+# BF-Insulin2.ProbeµUmL, BF-ApoBgL, NT-ZV
+
+features_to_boxplot_in_order_male = ['PM-age_Charite', 'PM-height', 'PM-ALM_kg', 'PM-T_S_AREA', 'CG-Trail_B',
+                                     'BF-TestosteronngmL', 'PM-HEAD_FAT', 'BF-NatriummmolL', 'PM-HEAD_LEAN',
+                                     'BF-MCHCgdL', 'BF-ChloridmmolL']
+features_to_boxplot_in_order_female = ['BF-VitD_zscore_merged', 'CG-Trail_B', 'BF-EosinophileGL', 'BF-LeukozytenGL',
+                                       'BF-CirculatingILzehn', 'BF-MonozytenGL', 'BF-ZinkµmolL',
+                                       'BF-HDLCholesterinmgdL', 'BF-EstradiolpmolL', 'BF-BilirubinindirektmgdL',
+                                       'BF-INR', 'BF-Insulin2.ProbeµUmL', 'BF-ApoBgL', 'NT-ZV']
+y_label_boxplot_in_order_male = ['Age [years]', 'Height [cm]', 'Appendicular Lean Mass [kg]',
+                                 'Thoracic spine area [cm<sup>2</sup>]', 'Trail Making Test Score [Trail B]',
+                                 'Testosterone levels [ng/mL]', 'Head fat mass [g]', 'Natrium levels [mmol/L]',
+                                 'Head lean mass [g]', 'Mean corpuscular hemoglobin conc. [g/dL]',
+                                 'Chlorid levels [mmol/L]']
+y_label_boxplot_in_order_female = ['Vitamin D [merged z-score]', 'Trail Making Test Score [Trail B]',
+                                   'Eosinophils [g/L]', 'Leukocytes [g/L]', 'Circulating IL-10 [pg/mL]',
+                                   'Monocytes [g/L]', 'Zinc levels [µmol/L]', 'HDL-cholesterol [mg/dL]',
+                                   'Estradiol [pmol/L]', 'Bilirubin indirect [mg/dL]',
+                                   'International normalization ratio', 'Insulin, second probe [µU/mL]',
+                                   'Apolipoprotein B [g/L]', 'Kitchen waste [g]']
+runs = ['male', 'female']
+# get that data
+data_sets_boxplot = [# train_features, test_features,
+                     comp_features,
+                     # train_men_features,
+                     # test_men_features,
+                     comp_features_male,
+                     # train_female_features, test_female_features,
+                     comp_features_female
+]
+
+for run in runs:
+    mixed_frailty_bp = []
+    male_frailty_bp = []
+    female_frailty_bp = []
+    lists_bp = [mixed_frailty_bp, male_frailty_bp, female_frailty_bp]
+    for num, data in enumerate(data_sets_boxplot):
+        for num_int, interest in enumerate(features_to_boxplot_in_order_male if run == 'male' else
+                                           features_to_boxplot_in_order_female):
+            data_int = pd.DataFrame(data, columns=feature_lists[num])
+            continuous_feature = data_int[interest]
+            for target in statistical_targets:
+                if target == 'PM-Frailty_Index':
+                    binary_outcome = pd.DataFrame(target_labels[num], columns=[target])
+                    # split the continuous feature into two groups based on the binary outcome
+                    unaffected = continuous_feature[binary_outcome[target] == 0]
+                    affected = continuous_feature[binary_outcome[target] == 1]
+                    lists_bp[num].append([unaffected, affected])
+    # create combined box plots
+    colors = ['#a9a9a9', '#ffd500', '#005bbb']
+    fig, axes = plt.subplots(2 if run == 'male' else 3, 6 if run == 'male' else 5, figsize=(17, 6) if run == 'male' else (16, 9))
+    num = 0
+    for ax in axes:
+        for axx in ax:
+            if num < len(features_to_boxplot_in_order_male if run == 'male' else features_to_boxplot_in_order_female):
+                box1 = axx.boxplot(lists_bp[0][num][0], positions=[0], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                box2 = axx.boxplot(lists_bp[1][num][0], positions=[1.25], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                box3 = axx.boxplot(lists_bp[2][num][0], positions=[2.5], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                box4 = axx.boxplot(lists_bp[0][num][1], positions=[0.5], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                box5 = axx.boxplot(lists_bp[1][num][1], positions=[1.75], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                box6 = axx.boxplot(lists_bp[2][num][1], positions=[3.0], widths=0.4, notch=True, patch_artist=True, showfliers=False)
+                for (patch1, patch2, patch3, patch4, patch5, patch6) in \
+                        zip(box1['boxes'], box2['boxes'], box3['boxes'], box4['boxes'], box5['boxes'], box6['boxes']):
+                    # patch 1-3 unaffected, patch 4-6 affected
+                    patch1.set_facecolor(colors[0])
+                    patch2.set_facecolor(colors[1])
+                    patch3.set_facecolor(colors[2])
+                    patch4.set_facecolor(colors[0])
+                    patch4.set_hatch('++++')
+                    patch5.set_facecolor(colors[1])
+                    patch5.set_hatch('++++')
+                    patch6.set_facecolor(colors[2])
+                    patch6.set_hatch('++++')
+                axx.set_xticks([])
+                axx.set_ylabel(ylabel=y_label_boxplot_in_order_male[num] if run == 'male' else y_label_boxplot_in_order_female[num],
+                               fontsize=12, fontweight='bold')
+                axx.set_title(f'{features_to_boxplot_in_order_male[num] if run == "male" else features_to_boxplot_in_order_female[num]}',
+                              fontsize=14, fontweight='bold')
+            if num == len(features_to_boxplot_in_order_male if run == 'male' else features_to_boxplot_in_order_female):
+                axx.set_axis_off()
+            num += 1
+    # generate a legend based on legend from any of the above acxes
+    lgd = plt.legend(loc='lower right', # bbox_to_anchor=(1, -0.15),
+                     fontsize=12)
+    handles, labs = lgd.axes.get_legend_handles_labels()
+    handles.append(Patch(facecolor='white', edgecolor='black', hatch='++++'))
+    labs.append('Frail')
+    handles.append(Patch(facecolor='white', edgecolor='black'))
+    labs.append('Non-frail')
+    lgd.set_title('Conditions')
+    lgd._legend_box = None
+    lgd._init_legend_box(handles, labs)
+    lgd._set_loc(lgd._loc)
+    lgd.set_title(lgd.get_title().get_text())
+    for text in lgd.get_texts():
+        text.set_weight('bold')
+    fig.tight_layout()
+    plt.savefig(f'./{run}_combined_box_plot_of_significant_biomarkers.png')
+    plt.close()
 ######################################################
 # END Combining the interesting ones after inspection
 ######################################################
