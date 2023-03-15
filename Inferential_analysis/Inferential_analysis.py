@@ -178,28 +178,35 @@ comp_features_female = np.concatenate((comp_features_female, comp_frailty_female
 # features, and select the ones with the best correlations or p values).
 data_sets = [train_features, test_features,
              comp_features,
-             train_men_features, test_men_features,
+             train_men_features,
+             test_men_features,
              comp_features_male,
              train_female_features, test_female_features,
-             comp_features_female]
-data_sets_verbosity = ['mixed training', 'mixed test',
+             comp_features_female
+            ]
+data_sets_verbosity = ['mixed training',
+                       'mixed test',
                        'mixed complete',
-                       'male training', 'male test',
+                       'male training',
+                       'male test',
                        'male complete',
                        'female training', 'female test',
-                       'female complete']
+                       'female complete'
+                      ]
 target_labels = [train_labels, test_labels,
                  np.concatenate((train_labels, test_labels)),
                  train_men_labels, test_men_labels,
                  np.concatenate((train_men_labels, test_men_labels)),
                  train_female_labels, test_female_labels,
-                 np.concatenate((train_female_labels, test_female_labels))]
+                 np.concatenate((train_female_labels, test_female_labels))
+                ]
 feature_lists = [feature_list, feature_list,
                  feature_list,
                  feature_list_male, feature_list_male,
                  feature_list_male,
                  feature_list_female, feature_list_female,
-                 feature_list_female]
+                 feature_list_female
+                ]
 features_of_interest = ['PM-age_Charite', 'PM-WHR', 'PM-height', 'PM-BMI', 'PM-ALM', 'PM-ALM_BMI']
 y_label_boxes = ['Age [years]', 'Waist-hip ratio', 'Height [cm]', 'Body Mass Index [kg/m\N{SUPERSCRIPT TWO}]',
                  'Appendicular Lean Mass [kg]', 'BMI-adjusted ALM']
@@ -230,6 +237,7 @@ y_label_boxes = ['Age [years]', 'Height [cm]', 'Mean corpuscular hemoglobin conc
 
 sns.set_style("whitegrid")
 plt.rcParams["font.family"] = "serif"
+
 
 #########################################
 # Starting loop for inferential analysis
@@ -387,6 +395,7 @@ ax1.hlines(-np.log10(0.05), xmin=-0.5, xmax=len(features_of_interest) - 0.5, col
 ax1.set_xticks(ref)
 ax1.set_xticklabels(labels=np.array(features_of_interest)[final_rank], fontsize=12, fontweight='bold')
 ax1.set_ylabel(ylabel='-log10(p-value)', fontsize=12, fontweight='bold')
+ax1.set_xlim([-0.4, len(features_of_interest) - 0.6])
 plt.xticks(fontsize=10, fontweight='bold', rotation=15 if len(features_of_interest) > 6 else 0)
 plt.title("Welch's unequal variance T-test of hallmark risk factors between non-frail and frail patients",
           fontsize=14, fontweight='bold')
@@ -397,12 +406,18 @@ plt.close()
 
 # after inspection , we want to show some that are common and unique in male and female
 # sorted by p value: PM-ALM_BMI, PM-age_Charite, PM-ALM, PM-WHR
-features_to_boxplot_in_order = ['PM-ALM_BMI', 'PM-age_Charite', 'PM-ALM', 'PM-WHR']
-y_label_boxplot = ['BMI-adjusted ALM', 'Age [years]', 'Appendicular Lean Mass [kg]', 'Waist-hip ratio']
+features_to_boxplot_in_order = ['PM-ALM_BMI', 'PM-BMI', 'PM-age_Charite', 'PM-height', 'PM-ALM', 'PM-WHR']
+y_label_boxplot = ['BMI-adjusted ALM', 'Body Mass Index [kg/m\N{SUPERSCRIPT TWO}]', 'Age [years]', 'Height [cm]',
+                   'Appendicular Lean Mass [kg]', 'Waist-hip ratio']
 # get that data
-data_sets_boxplot = [comp_features,
+data_sets_boxplot = [# train_features, test_features,
+                     comp_features,
+                     # train_men_features,
+                     # test_men_features,
                      comp_features_male,
-                     comp_features_female]
+                     # train_female_features, test_female_features,
+                     comp_features_female
+]
 
 mixed_frailty_bp = []
 male_frailty_bp = []
