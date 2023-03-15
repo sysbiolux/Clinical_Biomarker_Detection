@@ -1745,7 +1745,7 @@ for kern in kernels:
           cv_pr_mean_female, cv_pr_std_female = [None] * 8
 
     # Confusion matrix full data
-    cm = confusion_matrix(test_labels, predictions)
+    cm = confusion_matrix(test_labels, predictions, labels=[False, True])
     print(f"\nFull data confusion matrix for {kern.upper()} kernel:")
     plot_confusion_matrix(cm, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix', normalize=True)
@@ -1753,14 +1753,14 @@ for kern in kernels:
     plt.close()
     if enable_data_split:
         # Male data
-        cm_male = confusion_matrix(test_men_labels, male_predictions)
+        cm_male = confusion_matrix(test_men_labels, male_predictions, labels=[False, True])
         print(f"\nMale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
         plt.savefig(folder_name + f'/male_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
         plt.close()
         # Female data
-        cm_female = confusion_matrix(test_female_labels, female_predictions)
+        cm_female = confusion_matrix(test_female_labels, female_predictions, labels=[False, True])
         print(f"\nFemale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
@@ -1775,15 +1775,15 @@ for kern in kernels:
                 enumerate(sample_tagging_feature.split()):
             if sum(sample_tag_idx_train[k]) != 0:
                 cm_tagged_train = confusion_matrix(train_labels[sample_tag_idx_train[k]],
-                                                   train_predictions[sample_tag_idx_train[k]])
+                                                   train_predictions[sample_tag_idx_train[k]], labels=[False, True])
             if sum(sample_tag_idx_test[k]) != 0:
                 cm_tagged_test = confusion_matrix(test_labels[sample_tag_idx_test[k]],
-                                                  predictions[sample_tag_idx_test[k]])
+                                                  predictions[sample_tag_idx_test[k]], labels=[False, True])
             # combine train and test
             cm_tagged = confusion_matrix(np.concatenate((train_labels[sample_tag_idx_train[k]],
                                                          test_labels[sample_tag_idx_test[k]])),
                                          np.concatenate((train_predictions[sample_tag_idx_train[k]],
-                                                         predictions[sample_tag_idx_test[k]])))
+                                                         predictions[sample_tag_idx_test[k]])), labels=[False, True])
             tag_op = f'{tag_threshold[0] if np.count_nonzero(tag_threshold) == 1 else tag_threshold[num][0]}'
             tag_val = f'{tag_threshold[1] if np.count_nonzero(tag_threshold) == 1 else tag_threshold[num][1]}'
             print(f"\nFull data confusion matrix of tagged samples with {k, tag_op, tag_val} for "
@@ -1797,15 +1797,18 @@ for kern in kernels:
                 # male
                 if sum(sample_tag_idx_male_train[k]) != 0:
                     cm_tagged_train_male = confusion_matrix(train_men_labels[sample_tag_idx_male_train[k]],
-                                                            train_male_predictions[sample_tag_idx_male_train[k]])
+                                                            train_male_predictions[sample_tag_idx_male_train[k]],
+                                                            labels=[False, True])
                 if sum(sample_tag_idx_male_test[k]) != 0:
                     cm_tagged_test_male = confusion_matrix(test_men_labels[sample_tag_idx_male_test[k]],
-                                                           male_predictions[sample_tag_idx_male_test[k]])
+                                                           male_predictions[sample_tag_idx_male_test[k]],
+                                                           labels=[False, True])
                 # combine train and test
                 cm_tagged_male = confusion_matrix(np.concatenate((train_men_labels[sample_tag_idx_male_train[k]],
                                                                   test_men_labels[sample_tag_idx_male_test[k]])),
                                                   np.concatenate((train_male_predictions[sample_tag_idx_male_train[k]],
-                                                                  male_predictions[sample_tag_idx_male_test[k]])))
+                                                                  male_predictions[sample_tag_idx_male_test[k]])),
+                                                  labels=[False, True])
                 print(f"\nMale data confusion matrix of tagged samples with {k, tag_op, tag_val} "
                       f"for {kern.upper()} kernel:")
                 plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(),
@@ -1818,16 +1821,19 @@ for kern in kernels:
                 # female
                 if sum(sample_tag_idx_female_train[k]) != 0:
                     cm_tagged_train_female = confusion_matrix(train_female_labels[sample_tag_idx_female_train[k]],
-                                                              train_female_predictions[sample_tag_idx_female_train[k]])
+                                                              train_female_predictions[sample_tag_idx_female_train[k]],
+                                                              labels=[False, True])
                 if sum(sample_tag_idx_female_test[k]) != 0:
                     cm_tagged_test_female = confusion_matrix(test_female_labels[sample_tag_idx_female_test[k]],
-                                                             female_predictions[sample_tag_idx_female_test[k]])
+                                                             female_predictions[sample_tag_idx_female_test[k]],
+                                                             labels=[False, True])
                 # combine train and test
                 cm_tagged_female = confusion_matrix(np.concatenate((train_female_labels[sample_tag_idx_female_train[k]],
                                                                     test_female_labels[sample_tag_idx_female_test[k]])),
                                                     np.concatenate((train_female_predictions[
                                                                         sample_tag_idx_female_train[k]],
-                                                                    female_predictions[sample_tag_idx_female_test[k]])))
+                                                                    female_predictions[sample_tag_idx_female_test[k]])),
+                                                    labels=[False, True])
                 print(f"\nFemale data confusion matrix of tagged samples with {k, tag_op, tag_val} "
                       f"for {kern.upper()} kernel:")
                 plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(),
