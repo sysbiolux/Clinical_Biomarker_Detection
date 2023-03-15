@@ -1789,7 +1789,7 @@ for kern in kernels:
             print(f"\nFull data confusion matrix of tagged samples with {k, tag_op, tag_val} for "
                   f"{kern.upper()} kernel:")
             plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
-                                  title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}', normalize=True)
+                                  title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}', normalize=True)
             plt.savefig(folder_name + f'/full_{kern}_cm_tagged_{k}.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
             plt.close()
             # sub samples if enabled
@@ -1810,7 +1810,7 @@ for kern in kernels:
                       f"for {kern.upper()} kernel:")
                 plot_confusion_matrix(cm_tagged_male, classes=[negative_class.capitalize(),
                                                                positive_class.capitalize()],
-                                      title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}',
+                                      title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}',
                                       normalize=True)
                 plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{k}.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
@@ -1832,7 +1832,7 @@ for kern in kernels:
                       f"for {kern.upper()} kernel:")
                 plot_confusion_matrix(cm_tagged_female, classes=[negative_class.capitalize(),
                                                                  positive_class.capitalize()],
-                                      title=f'Confusion Matrix of tagged samples for {k, tag_op, tag_val}',
+                                      title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}',
                                       normalize=True)
                 plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{k}.tiff',
                             bbox_inches='tight', dpi=tiff_figure_dpi)
