@@ -64,6 +64,7 @@ sample_tagging_feature = output_related + ['BF-VitDDef']  # Feature used to defi
 # if percentile, give data as x
 tag_threshold = (('>=', '3'), ('==', '1'), ('==', '1'), ('==', '1'),
                  ('==', '1'), ('==', '1'), ('<=', 'np.nanpercentile(x, 20)'), ('==', '1'))
+# use ('.between', '(1, 2)') if you wish to look for tags between 2 values
 
 ###################################################################################################################
 # ## Machine learning classification estimator specific configurations (in this case Support Vector Machine (SVM))
