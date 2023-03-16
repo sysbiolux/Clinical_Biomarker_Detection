@@ -1,7 +1,7 @@
 ########################################################################################################################
 # SCRIPT WITH ALL UTIL FUNCTIONS FOR CLINICAL DATA ANALYSIS ############################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - January 2023, University of Luxembourg, v.01/31/2023 (M/d/y) #########################################
+# November 2021 - March 2023, University of Luxembourg, v.03/16/2023 (M/d/y) ###########################################
 ########################################################################################################################
 
 # Script of util functions for the classification and evaluation of predictive machine learning models to detect
@@ -47,13 +47,13 @@ def tag_samples(train, test, sample_tagging_feature, tag_threshold):
     Parameters
     ----------
     train : pandas.DataFrame
-        train data set
+        model to use as prediction method, best estimator will be selected to update the feature lists
     test : pandas.DataFrame
-        test data set
+        model to use as prediction method, best estimator will be selected to update the feature lists
     sample_tagging_feature : str, list
-        list of features to be tagged
+        number of correlation metrics to show in the legend
     tag_threshold : tuple
-        threshold of tagged feature, e.g., ('>=', 'np.nanpercentile(x, 20)')
+        correlation method to use (e.g. pearson)
 
     Returns
     -------
@@ -241,7 +241,7 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     fontsize : int
         fontsize for the ROC curve figure
     data_group : str
-        name of the data subgroup to be analysed.     
+        name of the data subgroup to be analysed.
     """
     # Calculate and store baseline, test and train results
     baseline = {'Recall': recall_score(testlabels, [1 for _ in range(len(testlabels))]),
@@ -270,7 +270,7 @@ def evaluate_model(pred, prob, train_pred, train_prob, testlabels, trainlabels, 
     plt.ylabel('True Positive Rate')
     plt.title(f'{data_group.capitalize()} ROC AUC Curve in test: %.2f' % float(results['ROC']))
 
-    
+
 def plot_pr(prob, testlabels, fontsize, data_group):
     """
     Function to plot the precision - recall curve on validation set.
@@ -353,7 +353,7 @@ def plot_roc_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None,
             tpr = np.interp(base_fpr, fpr, tpr)
             tpr[0] = 0.0
             tprs.append(tpr)
-    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')  # force roc curve at 0,0
+    ax.plot(0, 0, "b", alpha=0.1, label='n times k-fold cross-validation')  # force start roc curve at 0.0
     tprs = np.array(tprs)
     mean_tprs = tprs.mean(axis=0)
     mean_scores = np.mean(scores)
@@ -361,7 +361,7 @@ def plot_roc_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None,
     std = tprs.std(axis=0)
     tprs_upper = np.minimum(mean_tprs + std, 1)
     tprs_lower = mean_tprs - std
-    ax.plot(base_fpr, mean_tprs, "b", linewidth=3, label='average ROC curve')
+    ax.plot(base_fpr, mean_tprs, "b", linewidth=3, label='average n times k-fold cross-validation')
     ax.fill_between(base_fpr, tprs_lower, tprs_upper, color="grey", alpha=0.3, label='confidence interval')
     ax.plot([0, 1], [0, 1], "r--", linewidth=1.2, label='baseline')
     ax.xlim([-0.01, 1.01])
@@ -431,7 +431,7 @@ def plot_pr_validation(data_group, x, y, final_model, reps=5, folds=5, ax=None, 
     y_real = np.concatenate(y_real)
     y_proba = np.concatenate(y_proba)
     precision, recall, _ = precision_recall_curve(y_real, y_proba)
-    ax.plot(0, 1, "b", alpha=0.1, label='n times k-fold cross-validation')  # force pr curve at 0,1
+    ax.plot(0, 1, "b", alpha=0.1, label='n times k-fold cross-validation')  # force start pr curve at 0, 1
     mean_precision = np.mean(precision_array, axis=0)
     std_precision = np.std(precision_array, axis=0)
     mean_scores = np.mean(mean_precision)
@@ -1196,7 +1196,7 @@ def check_constant_features(features_list, training_features, datatype, nbr_spli
             if tmp < nbr_splits:
                 constants.append(col)
                 near_constants_cat.append(col)
-                
+
     if len(near_constants_cont) > 0:
         print(f'Found {len(near_constants_cont)} near-constant continuous feature(s) where the variance-to-mean ratio '
               f'is below the {near_constant_thresh} threshold, thus we assume them as being constant features, '
@@ -1332,7 +1332,7 @@ def corr_cramer_kbest(x, y):
             result = np.sqrt(phi2corr / min((k_corr - 1), (r_corr - 1)))
             cramer_list.append(result)
             cramer_pv_list.append(p)
-    return cramer_list, cramer_pv_list
+    return np.array(cramer_list), np.array(cramer_pv_list)
 
 
 def applied_cramer(train_features, categorical_idx, col_idx):
@@ -2066,7 +2066,7 @@ def rhcf_update_summary(training_features, testing_features, features_list, fin_
 #############################################
 # Visualizing the highly correlated heatmaps
 #############################################
-def cramer_heatmap(cramer_corr, cramer_threshold, datatype, categorical, folder_dir, tiff_size):
+def cramer_heatmap(cramer_corr, cramer_threshold, datatype, categorical, folder_dir, fig_dpi, fig_format):
     """
     Function to plot the heatmap of the corrected Cramers V correlation results.
 
@@ -2083,8 +2083,10 @@ def cramer_heatmap(cramer_corr, cramer_threshold, datatype, categorical, folder_
         list of indices of the categorical features that underwent the correlation calculations
     folder_dir : str
         string referring to the folder directory where the plots should be saved
-    tiff_size : int
-        dot-per-inch size when saving the figure as .tiff file
+    fig_dpi : int
+        dot-per-inch size when saving the figure
+    fig_format : str
+        format of generated figure
     """
     if cramer_threshold[1] == 'decimal':
         cramer_hm = sns.heatmap(cramer_corr, center=cramer_threshold[0],
@@ -2111,11 +2113,11 @@ def cramer_heatmap(cramer_corr, cramer_threshold, datatype, categorical, folder_
     cbar.ax.tick_params(labelsize=10)
     plt.xlabel('# Categorical feature', fontsize=10)
     plt.ylabel('# Categorical feature', fontsize=10)
-    cramer_hm.figure.savefig(folder_dir + f"/{datatype}_cramer_hm.tiff", dpi=tiff_size, bbox_inches='tight')
+    cramer_hm.figure.savefig(folder_dir + f"/{datatype}_cramer_hm.{fig_format}", dpi=fig_dpi, bbox_inches='tight')
     plt.close(cramer_hm.figure)
 
 
-def spearman_heatmap(spearman_corr, spearman_thresh, datatype, continuous, folder_dir, tiff_size):
+def spearman_heatmap(spearman_corr, spearman_thresh, datatype, continuous, folder_dir, fig_dpi, fig_format):
     """
     Function to plot the heatmap of the Spearman's Rank Order correlation results.
 
@@ -2132,8 +2134,10 @@ def spearman_heatmap(spearman_corr, spearman_thresh, datatype, continuous, folde
         list of indices of the continuous features that underwent the correlation calculations
     folder_dir : str
         string referring to the folder directory where the plots should be saved
-    tiff_size : int
-        dot-per-inch size when saving the figure as .tiff file
+    fig_dpi : int
+        dot-per-inch size when saving the figure
+    fig_format : str
+        format of generated figure
     """
     if spearman_thresh[1] == 'decimal':
         spearman_hm = sns.heatmap(spearman_corr, center=spearman_thresh[0], vmin=spearman_corr.min(),
@@ -2160,11 +2164,12 @@ def spearman_heatmap(spearman_corr, spearman_thresh, datatype, continuous, folde
     cbar.ax.tick_params(labelsize=10)
     plt.xlabel('# Continuous feature', fontsize=10)
     plt.ylabel('# Continuous feature', fontsize=10)
-    spearman_hm.figure.savefig(folder_dir + f"/{datatype}_spearman_hm.tiff", dpi=tiff_size, bbox_inches='tight')
+    spearman_hm.figure.savefig(folder_dir + f"/{datatype}_spearman_hm.{fig_format}", dpi=fig_dpi, bbox_inches='tight')
     plt.close(spearman_hm.figure)
 
 
-def pbs_heatmap(pbs_corr, pbs_threshold, datatype, remaining_cats, remaining_cont, longer, folder_dir, tiff_size):
+def pbs_heatmap(pbs_corr, pbs_threshold, datatype, remaining_cats, remaining_cont, longer, folder_dir, fig_dpi,
+                fig_format):
     """
     Function to plot the heatmap of the Point Bi-Serial correlation results.
 
@@ -2187,8 +2192,10 @@ def pbs_heatmap(pbs_corr, pbs_threshold, datatype, remaining_cats, remaining_con
         list of the feature type indices that is the longest (continuous or categorical)
     folder_dir : str
         string referring to the folder directory where the plots should be saved
-    tiff_size : int
-        dot-per-inch size when saving the figure as .tiff file
+    fig_dpi : int
+        dot-per-inch size when saving the figure
+    fig_format : str
+        format of generated figure
     """
     if pbs_threshold[1] == 'decimal':
         pbserial_hm = sns.heatmap(pbs_corr, center=pbs_threshold[0],
@@ -2221,14 +2228,14 @@ def pbs_heatmap(pbs_corr, pbs_threshold, datatype, remaining_cats, remaining_con
     else:
         plt.xlabel('# Categorical feature', fontsize=10)
         plt.ylabel('# Continuous feature', fontsize=10)
-    pbserial_hm.figure.savefig(folder_dir + f"/{datatype}_pbserial_hm.tiff", dpi=tiff_size, bbox_inches='tight')
+    pbserial_hm.figure.savefig(folder_dir + f"/{datatype}_pbserial_hm.{fig_format}", dpi=fig_dpi, bbox_inches='tight')
     plt.close(pbserial_hm.figure)
 
 
 # draw correlation plots of the features that passed RHCF with the output feature
 def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, output_feature, correlation):
     """
-    Function to plot the correlation of categorical features that passed RHCF with the output features using cramer's V.
+    Function to plot the correlation of features that passed RHCF with the output features.
 
     Parameters
     ----------
@@ -2281,7 +2288,7 @@ def draw_corr_after_rhcf(train_features, train_labels, feature_list, col_idx, ou
         plt.title(f"Point bi-serial correlation above 0.001 between remaining continuous features and {output_feature}")
     plt.tight_layout()
 
-    
+
 # draw grouped correlation plots for cont-target and cat-target of features that go through pipeline after RHCF
 # sort by male or female?
 def draw_grouped_correlation_plot(train_features, train_labels, feature_list, col_idx,
@@ -2466,8 +2473,8 @@ def draw_grouped_correlation_plot(train_features, train_labels, feature_list, co
         plt.title(f"Grouped Point bi-serial correlation between remaining continuous features and {output_feature}\n"
                   f"ranked by: {'Mixed' if rank_by == 'full' else rank_by.capitalize()}, showing top {top}")
     plt.tight_layout()
-    
-    
+
+
 ###############################################################################################################
 # Functions to plot PCA or LDA of remaining continuous features depending on selected transformation technique
 ###############################################################################################################
@@ -2655,8 +2662,8 @@ def plot_lda(train_features=None, train_labels=None, col_idx=None, color_by=None
             f.tight_layout()
     else:
         raise ValueError('Either X or y or label is not set.')
-        
-        
+
+
 ###################################################################
 # Function to plot top important features after feature importance
 ###################################################################
@@ -2758,13 +2765,13 @@ def write_importance(datatype, method, kern, idx_sorted, features_list, importan
                 f'{" +- " + str(np.round(importance_std[feat], 5)) if importance_std is not None else ""}\n')
     f.close()
     print("Writing done!")
-    
-    
+
+
 ###################################################################
 # Function to plot box and bar plot of the most important features
 ###################################################################
 def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feature, feature_names, features_above_zero,
-                     target_feature, negative_class, positive_class, datatype, kernel, folder_dir, tiff_size,
+                     target_feature, negative_class, positive_class, datatype, kernel, folder_dir, fig_dpi, fig_format,
                      importance_method, graphs='combined', fontsize=18):
     """
     Function to create either separate or combined box and bar plots of the most important continuous and categorical
@@ -2798,8 +2805,10 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         string referring to the current SVC kernel tested, appears in title
     folder_dir : str
         string referring to the folder direction where figures should be saved
-    tiff_size : int
-        integer of desired .tiff size
+    fig_dpi : int
+        integer of desired figure dpi
+    fig_format : str
+        format of generated figure
     importance_method : str
         string referring to the feature importance calculation method, appears in title
     graphs : str
@@ -2854,8 +2863,8 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             sns.move_legend(ax, bbox_to_anchor=(0.99, 0.95), loc='upper right')
             # Layout, save and close
             ax.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=4)
-            plt.savefig(folder_dir + f"/{datatype}_{kernel}_continuous_boxplot_{importance_method}.tiff",
-                        dpi=tiff_size, bbox_inches='tight')
+            plt.savefig(folder_dir + f"/{datatype}_{kernel}_continuous_boxplot_{importance_method}.{fig_format}",
+                        dpi=fig_dpi, bbox_inches='tight')
             plt.close(ax.figure)
     else:
         melted_cont_data_frame = None
@@ -2905,8 +2914,8 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
             sns.move_legend(ax, loc='upper right', title=f'{target_feature} classes', bbox_to_anchor=(0.99, 0.95))
             # Layout, save and close
             ax.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=2)
-            plt.savefig(folder_dir + f"/{datatype}_{kernel}_categorical_barplot_{importance_method}.tiff",
-                        dpi=tiff_size, bbox_inches='tight')
+            plt.savefig(folder_dir + f"/{datatype}_{kernel}_categorical_barplot_{importance_method}.{fig_format}",
+                        dpi=fig_dpi, bbox_inches='tight')
             plt.close(ax.figure)
     else:
         melted_cat_data_frame = None
@@ -2920,7 +2929,7 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         if len(poss_cols) == 2 and max(poss_cols) > 3:
             cols = int(np.ceil(1 / 4 * len(sorted_top_feature)))
             rows = int(np.ceil(len(sorted_top_feature) / cols))
-        # In case where only 1 feature shows up after permutation importance
+        # In case where only 1-2 feature shows up after permutation importance
         if len(poss_cols) in np.array([1, 2]) and max(poss_cols) < 3:
             cols = 2
             rows = 2
@@ -2989,8 +2998,8 @@ def box_and_bar_plot(x_features, x_labels, y_features, y_labels, sorted_top_feat
         fig.supxlabel('Feature categories in bar plots; target classes in box plots', fontsize=int(3/4 * fontsize))
         # Layout, save and close
         fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.9], h_pad=4)
-        plt.savefig(folder_dir + f"/{datatype}_{kernel}_combined_box_and_barplot_{importance_method}.tiff",
-                    dpi=tiff_size, bbox_inches='tight')
+        plt.savefig(folder_dir + f"/{datatype}_{kernel}_combined_box_and_barplot_{importance_method}.{fig_format}",
+                    dpi=fig_dpi, bbox_inches='tight')
         plt.close(fig)
 
 
@@ -3049,7 +3058,7 @@ class CustomUnpickler(pickle.Unpickler):
         except AttributeError:
             return super().find_class(module, name)
 
-        
+
 #############################################################################################
 # Function to process built-in feature importance by the linear SVM classifier for PCA & LDA
 #############################################################################################
@@ -3356,7 +3365,7 @@ def scatter_plot_importance_technique(kernel, datatype, mean1, mean2, mean3, mea
             # Define axis text, uncomment next 3 lines if you wish to have r squared and equation displayed
             if len(dicts[tuple_of_names[_]][0]) > 1:
                 text = r"$r^2$ = " \
-                  + f'{round(pg.corr(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1])["r"].values[0] ** 2, 4)}' \
+                  + f'{round(pg.corr(dicts[tuple_of_names[_]][0], dicts[tuple_of_names[_]][1])["r"].values[0]**2, 4)}' \
                   + '\nequation = ' + f'{round(m, 4)}*x + {round(b, 4)}'
                 axx.plot([], label=text)
             axx.legend(handlelength=0, loc='upper left', fontsize=fontsize)
@@ -3421,7 +3430,7 @@ def dor_score(y_true, y_pred):
         floating dor score
     """
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-        # correcting contingency table to ensure DOR approximation in case we encounter division by zero
+    # correcting contingency table to ensure DOR approximation in case we encounter division by zero
     tn = tn + .5
     fp = fp + .5
     fn = fn + .5
