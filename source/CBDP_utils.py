@@ -608,7 +608,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         fig_cont.supxlabel('Predicted label', size=20)
         fig_cont.tight_layout(pad=1)
         list_of_cont_figures.append(fig_cont)
-        fig_cont.close()
+        plt.close()
         top += 1
 
     # to plot categorical als bar plot, we first need to rearrange things....
@@ -712,7 +712,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
         fig_cat.supxlabel('Predicted label', size=20)
         plt.tight_layout(pad=1)
         list_of_cat_figures.append(fig_cat)
-        fig_cat.close()
+        plt.close()
         top += 1
     # return both figures
     return list_of_cont_figures, list_of_cat_figures
