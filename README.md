@@ -2,7 +2,7 @@
 PRIDE-DRIVEN-DTU WP13:  
 Biomarker Detection In Clinical Cohort Data Using Machine Learning
 ---
-version 01/31/2023 (M/d/y)
+version 03/16/2023 (M/d/y)
 
 ---
 ## Description
@@ -87,7 +87,7 @@ Classification model of the selected output-target, model evaluation summaries a
 Depending of the configured setup and user preferences, the pipeline can either be deployed using a local machine or using HPC clusters. Please note that this choice will have large effects on the required computational time for the analysis, and therefore the configuration settings should be selected appropriately and with care. The input data must exist as training and test data, preferrably cleaned and imputed (no empty values). The feature names in the data set should be preceeded by a prefix that refers to the subgroup of clinical data, e.g. body fluids (BF-), physical measurements (PM-), survey (SV-), individual medications (IM-), individual devices (ID-), ...
 
 ### Pipeline Configuration
-The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 83 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
+The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Biomarker_Detection/blob/main/CBDP_config.py) presents 84 configurable variables and parameters that define the enabled steps, techniques, and specifications that should be highly specific to the clinical data of interest. The table below summarises the configurable variables, and more precise descriptions are available in the configuration file.
 
 #### General Settings
 
@@ -99,7 +99,8 @@ The configuration file [CBDP_config.py](https://github.com/sysbiolux/Clinical_Bi
 | plot_style | 'fivethirtyeight' | Matplotlib plot style | str |
 | fig_max_open_warning | 0 | Warning shown by matplotlib after number of open figures | int |
 | pandas_col_display_option | 5 | Number of columns displayed in pandas dataframe | int |
-| tiff_figure_dpi | 300 | Dot per inches resolution of the result figures | int |
+| figure_dpi | 300 | Dot per inches resolution of the result figures | int |
+| figure_format | 'png' | Desired format for the generated figures | str |
 | debug | False | Debug statement to decide if figures should be displayed for debugging, select False to avoid 'RuntimeError: main thread is not in main loop' errors when the complete pipeline runs on local machine with threading | bool |
 
 #### Data and Topic-specific Settings
