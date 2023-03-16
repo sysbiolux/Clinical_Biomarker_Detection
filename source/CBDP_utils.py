@@ -585,27 +585,27 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     list_of_cont_figures = []
     top = 1
     for key in cont_dict['TN'].keys():
-        fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10), sharey='all')
+        fig_cont, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 16), sharey='all')
         ax1.boxplot(list(cont_dict['TN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TN
-        ax1.set_title(f'True negatives, n={len(tn)}', fontsize=14)
+        ax1.set_title(f'True negatives, n={len(tn)}', fontsize=20)
         ax1.set_xticklabels([])
-        ax1.set_ylabel('Non-frail')
+        ax1.set_ylabel('Non-frail', fontsize=18)
         ax2.boxplot(list(cont_dict['FP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FP
-        ax2.set_title(f'False positives, n={len(fp)}', fontsize=14)
+        ax2.set_title(f'False positives, n={len(fp)}', fontsize=20)
         ax2.set_xticklabels([])
         ax3.boxplot(list(cont_dict['FN'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # FN
-        ax3.set_title(f'False negatives, n={len(fn)}', fontsize=14)
+        ax3.set_title(f'False negatives, n={len(fn)}', fontsize=20)
         ax3.set_xticklabels([])
-        ax3.set_xlabel('Non-frail')
-        ax3.set_ylabel('Frail')
+        ax3.set_xlabel('Non-frail', fontsize=18)
+        ax3.set_ylabel('Frail', fontsize=18)
         ax4.boxplot(list(cont_dict['TP'][key]), vert=True, patch_artist=True, notch=True, showfliers=False)  # TP
-        ax4.set_title(f'True positives, n={len(tp)}', fontsize=14)
+        ax4.set_title(f'True positives, n={len(tp)}', fontsize=20)
         ax4.set_xticklabels([])
-        ax4.set_xlabel('Frail')
+        ax4.set_xlabel('Frail', fontsize=18)
         fig_cont.suptitle(f'{datatype.capitalize()} #{top} important continuous feature by '
-                          f'{"linear" if perm == "linear" else "non-linear"} importance\n({key})', size=20)
-        fig_cont.supylabel('True label', size=14)
-        fig_cont.supxlabel('Predicted label', size=14)
+                          f'{"linear" if perm == "linear" else "non-linear"} importance\n({key})', size=22)
+        fig_cont.supylabel('True label', size=20)
+        fig_cont.supxlabel('Predicted label', size=20)
         fig_cont.tight_layout(pad=1)
         list_of_cont_figures.append(fig_cont)
         top += 1
@@ -622,14 +622,14 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
             dict_of_arranged_axis["ax{0}_bar{1}".format(num + 1, pos + 1)] = tmp
     # Create consistent color maps for sets larger and smaller than 20
     cm = plt.get_cmap('twilight')
-    consistent_cmap = [cm(count*15) for count in np.arange(long)] if long > 15 else \
-        [cm(count*25) for count in np.arange(long)]
+    consistent_cmap = [cm(count*10) for count in np.arange(long)] if long > 15 else \
+        [cm(count*20) for count in np.arange(long)]
     cm_small = plt.get_cmap('tab20')  # only if 20 or less
     # plotting the categorical as bar plot
     list_of_cat_figures = []
     top = 1
     for feat_num, feat in enumerate(cat_dict['TN'].keys()):  # we loop through each feature
-        fig_cat, axes = plt.subplots(2, 2, figsize=(10, 10), sharey='all')  # for each feature do a new figure
+        fig_cat, axes = plt.subplots(2, 2, figsize=(16, 16), sharey='all')  # for each feature do a new figure
         containers = []
         labels = []
         for num, ax in enumerate(axes.flatten()):  # flatten to have 1 vector of 4 axes, loop through the 4 axes
@@ -662,7 +662,7 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                                  f'False positives, n={len(fp)}' if num == 1 else
                                  f'False negatives, n={len(fn)}' if num == 2 else
                                  f'True positives, n={len(tp)}',  # if num == 3
-                                 fontsize=14)
+                                 fontsize=20)
                     # add text on top of box bars, sum if case 1 or above (x position, y position, text)
                     ax.text(x_axis[feat_num] - 0.2 if message == 'unaffected' else x_axis[feat_num] + 0.2,
                             items[feat_num] + 0.5 if f'{int(key.split("bar")[-1]) - 1}' == '0' else
@@ -683,15 +683,15 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                                     num == 2 and f'{int(key.split("bar")[-1]) - 1}' == '1') else
                             sum(cat_dict['TP'][feat][1:]) if (
                                     num == 3 and f'{int(key.split("bar")[-1]) - 1}' == '1') else '',
-                            fontsize=15)
+                            fontsize=20)
                     ax.set_xticks([])
                     if num == 0:
-                        ax.set_ylabel('Non-frail')
+                        ax.set_ylabel('Non-frail', fontsize=18)
                     if num == 2:
-                        ax.set_ylabel('Frail')
-                        ax.set_xlabel('Non-frail')
+                        ax.set_ylabel('Frail', fontsize=18)
+                        ax.set_xlabel('Non-frail', fontsize=18)
                     if num == 3:
-                        ax.set_xlabel('Frail')
+                        ax.set_xlabel('Frail', fontsize=18)
             containers.append(ax.containers)
             labels.append([i for i, e in enumerate(cat_dict['TN'][feat]) if e != 0] if num == 0 else
                           [i for i, e in enumerate(cat_dict['FP'][feat]) if e != 0] if num == 1 else
@@ -699,12 +699,16 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
                           [i for i, e in enumerate(cat_dict['TP'][feat]) if e != 0])
         # get the unique legends across all 4 plots for one single legend containing all possible cases
         final_legend_handles = unique_legend_handles(containers, labels)
-        fig_cat.legend(final_legend_handles[0], final_legend_handles[1], loc=1, bbox_to_anchor=(1, 0.93),
-                       ncol=int(np.sqrt(len(np.unique(np.concatenate(labels))))))
+        fig_cat.legend(final_legend_handles[0], final_legend_handles[1], loc=1, bbox_to_anchor=(1.06, 0.93),
+                       ncol=1,
+                       # int(np.sqrt(len(np.unique(np.concatenate(labels))))) if len(
+                       #     np.unique(np.concatenate(labels))) == 2 else
+                       # int(np.sqrt(len(np.unique(np.concatenate(labels)))) * np.sqrt(2)),
+                       fontsize=16)
         fig_cat.suptitle(f'{datatype.capitalize()} #{top} important categorical feature by '
-                         f'{"linear" if perm == "linear" else "non-linear"} importance\n({feat})', size=20)
-        fig_cat.supylabel('True label', size=14)
-        fig_cat.supxlabel('Predicted label', size=14)
+                         f'{"linear" if perm == "linear" else "non-linear"} importance\n({feat})', size=22)
+        fig_cat.supylabel('True label', size=20)
+        fig_cat.supxlabel('Predicted label', size=20)
         plt.tight_layout(pad=1)
         list_of_cat_figures.append(fig_cat)
         top += 1
