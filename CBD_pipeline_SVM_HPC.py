@@ -2,7 +2,7 @@
 # HPC PARALLELIZATION SCRIPT WITH IPYPARALLEL BACKEND ##################################################################
 # REMOVING HIGHLY CORRELATED FEATURES, RESAMPLING, FEATURE TRANSFORMATION, PARAMETER GRID SEARCH, DATA SPLIT BY GENDER #
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - January 2023, University of Luxembourg, v.01/31/2023 (M/d/y) #########################################
+# November 2021 - March 2023, University of Luxembourg, v.03/16/2023 (M/d/y) ###########################################
 ########################################################################################################################
 
 # SUMMARY: Full clinical cohort data as well as split data based on gender, updated and revised functions and comments,
@@ -39,7 +39,7 @@
 # OutdatedPackageWarning: The package outdated is out of date. Your version is 0.2.1, the latest is 0.2.2.
 # Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. SUPPRESSED, MINOR CHANGES NOT WORTH UPDATING
 
-# OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.1.
+# OutdatedPackageWarning: The package pingouin is out of date. Your version is 0.5.0, the latest is 0.5.3.
 # Set the environment variable OUTDATED_IGNORE=1 to disable these warnings. SUPPRESSED, MINOR CHANGES NOT WORTH UPDATING
 
 # ConvergenceWarning: Solver terminated early (max_iter=150000).  Consider pre-processing your data with StandardScaler
@@ -91,13 +91,13 @@ logo = '\n  _________________  ________         ______\n'\
        '/  /      |  /__/  /  /    |  | ___ /  /__/  /\n'\
        '|  |     /  ___  </  /    /  / /__//   _____/\n'\
        '\\  \\____/  /___\\  \\ /____/  /     /  /\n'\
-       ' \\_____/__________/________/     /__/ v.01/31/2023 (M/d/y)\n'\
+       ' \\_____/__________/________/     /__/ v.03/16/2023 (M/d/y)\n'\
        '---=====================================---\n'\
        '  CLINICAL BIOMARKER DETECTION - PIPELINE\n\n'
 print(logo)
 print(f"For the documentation see the link below:\n"
       f"https://github.com/sysbiolux/Clinical_Biomarker_Detection#readme\n\n"
-      f"Starting the Clinical Biomarker Detection Pipeline v.01/31/2023.\n\n")
+      f"Starting the Clinical Biomarker Detection Pipeline v.03/16/2023.\n\n")
 # Loading the CBD-P utils file
 print(f"******************************************\nLOADING DEPENDENT FILES:\n\nLoading the CBD-P utils file ...")
 try:
@@ -262,14 +262,16 @@ for string in (output_feature, positive_class, negative_class):
     if len(string) == 0:
         raise TypeError("**One or more of the following information is missing in the configuration file to start the "
                         "pipeline: output_feature, positive_class, or negative_class. Got %s instead.**" % string)
-
+# check figure format
+if figure_format not in ('png', 'tif', 'tiff', 'jpg', 'jpeg'):
+    figure_format = 'png'
+    warnings.warn("**Figure format setting not among the suggested ones. Default 'png' is loaded.**")
 # check if kernels and non linear kernels are properly defined
 possible_non_linear_svm_kernels = ['poly', 'rbf', 'sigmoid']
 tmp = []
 for kern in kernels:
     if kern in possible_non_linear_svm_kernels:
         tmp.append(kern)
-
 
 if set(non_linear_kernels) != set(tmp):
     non_linear_kernels = tmp if len(tmp) > 0 else [None]
@@ -305,7 +307,8 @@ if not all(os.path.isfile(i) for i in [train_path, test_path]):
 # Variables check that should strictly be a string
 config_str = [plot_style, pipeline_order, output_feature, split_feature, decision_func_shape, parallel_method,
               resampling_tech, folder_prefix, pca_tech, da_tech, scaler_tech, scorer, feature_importance_method,
-              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features]
+              box_bar_figures, negative_class, positive_class, kbest_tech, drop_or_pass_non_treated_features,
+              figure_format]
 if not (all(isinstance(i, str) for i in config_str)):
     if not hasattr(kbest_tech, '__call__'):
         raise TypeError('The following configured variables must be single strings: plot_style, pipeline_order, '
@@ -562,7 +565,7 @@ print("******************************************\nSCRIPT CONFIGURATION SUMMARY 
       f"Figure max open warning set to: {fig_max_open_warning}\n"
       f"Matplotlib figure style: {plot_style}\n"
       f"Number of displayed pandas columns: {pandas_col_display_option}\n"
-      f"Selected figure tiff format dot-per-inches: {tiff_figure_dpi}\n\n"
+      f"Selected figure format and dot-per-inches: {figure_format, figure_dpi}\n\n"
       f"Current directory: {curr_dir.replace(backslash, '/')}\n"
       f"Folder name prefix for this analysis: {folder_prefix}\n"
       f"Training set absolute pathway: {train_path.replace(backslash, '/')}\n"
@@ -691,7 +694,7 @@ if enable_data_split:
 else:
     sample_tag_idx_male_train, sample_tag_idx_male_test, \
       sample_tag_idx_female_train, sample_tag_idx_female_test = 4 * [None]
-              
+
 # Remove features that were used to calculate the selected output feature
 print(f'\nRemoving the following {len(output_related)} output related features:\n{output_related}')
 train = train.drop(columns=[out for out in output_related])
@@ -808,7 +811,7 @@ else:  # If engineered features removal is disabled, male and female feature lis
 ##############################################
 # ## Checking for remaining constant features
 ##############################################
-print("\nChecking and removing constant features in the training set ...\n")
+print("\nChecking and removing constant features in the full training set ...\n")
 # Full data
 constant_all = check_constant_features(feature_list, train_features, 'full', nbr_splits=splits,
                                        near_constant_thresh=thresh_near_constant)
@@ -875,7 +878,7 @@ if enable_rhcf:
             categorical=categorical_idx, n_job=n_jobs, cramer_threshold=thresh_cramer, directory=curr_dir,
             folder=folder_name, datatype='full')
         # Heatmap of the cramer matrix (saving process inside function)
-        cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name, tiff_figure_dpi)
+        cramer_heatmap(cramer_res, thresh_cramer, 'full', categorical_idx, folder_name, figure_dpi, figure_format)
     else:
         cat_to_drop, cramer_set = [], set()
 
@@ -888,7 +891,7 @@ if enable_rhcf:
                                                                      directory=curr_dir, folder=folder_name,
                                                                      datatype='full')
         # Heatmap of the spearman matrix (saving process inside function)
-        spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name, tiff_figure_dpi)
+        spearman_heatmap(spearman_res, thresh_spearman, 'full', continuous_idx, folder_name, figure_dpi, figure_format)
     else:
         cont_to_drop, spearman_set = [], set()
     # General data update after continuous and categorical correlation features were identified
@@ -904,7 +907,7 @@ if enable_rhcf:
             feat_idx_after_rhcf=rem_idx, n_job=n_jobs, pbs_threshold=thresh_pbs, directory=curr_dir, folder=folder_name,
             datatype='full')
         # Heatmap of the point bi-serial matrix (saving process inside function)
-        pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name, tiff_figure_dpi)
+        pbs_heatmap(res_pb_r, thresh_pbs, 'full', rem_cat, rem_cont, longest, folder_name, figure_dpi, figure_format)
     else:
         pbs_to_drop, rem_cat, rem_cont, pbs_set = [], [], [], set()
 
@@ -943,7 +946,8 @@ if enable_rhcf:
                 categorical=categorical_idx_male, n_job=n_jobs, cramer_threshold=thresh_cramer, directory=curr_dir,
                 folder=folder_name, datatype='male')
             # Heatmap of the male cramer matrix (saving process inside function)
-            cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name, tiff_figure_dpi)
+            cramer_heatmap(cramer_res_male, thresh_cramer, 'male', categorical_idx_male, folder_name, figure_dpi,
+                           figure_format)
         else:
             cat_to_drop_male, cramer_set_male = [], set()
 
@@ -954,7 +958,7 @@ if enable_rhcf:
                 spearman_threshold=thresh_spearman, directory=curr_dir, folder=folder_name, datatype='male')
             # Heatmap of the male spearman matrix (saving process inside function)
             spearman_heatmap(spearman_res_male, thresh_spearman, 'male', continuous_idx_male, folder_name,
-                             tiff_figure_dpi)
+                             figure_dpi, figure_format)
         else:
             cont_to_drop_male, spearman_set_male = [], set()
         # General data update after continuous and categorical correlation features were identified
@@ -972,7 +976,7 @@ if enable_rhcf:
                     n_job=n_jobs, pbs_threshold=thresh_pbs, directory=curr_dir, folder=folder_name, datatype='male')
             # Heatmap of the male point bi-serial matrix (saving process inside function)
             pbs_heatmap(res_pb_r_male, thresh_pbs, 'male', rem_cat_male, rem_cont_male, longest_male, folder_name,
-                        tiff_figure_dpi)
+                        figure_dpi, figure_format)
         else:
             pbs_to_drop_male, rem_cont_male, rem_cat_male, pbs_set_male = [], [], [], set()
 
@@ -1013,7 +1017,7 @@ if enable_rhcf:
                 cramer_threshold=thresh_cramer, directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female cramer matrix (saving process inside function)
             cramer_heatmap(cramer_res_female, thresh_cramer, 'female', categorical_idx_female, folder_name,
-                           tiff_figure_dpi)
+                           figure_dpi, figure_format)
         else:
             cat_to_drop_female, cramer_set_female = [], set()
 
@@ -1025,7 +1029,7 @@ if enable_rhcf:
                 directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female spearman matrix (saving process inside function)
             spearman_heatmap(spearman_res_female, thresh_spearman, 'female', continuous_idx_female, folder_name,
-                             tiff_figure_dpi)
+                             figure_dpi, figure_format)
         else:
             cont_to_drop_female, spearman_set_female = [], set()
 
@@ -1045,7 +1049,7 @@ if enable_rhcf:
                     directory=curr_dir, folder=folder_name, datatype='female')
             # Heatmap of the female point bi-serial matrix (saving process inside function)
             pbs_heatmap(res_pb_r_female, thresh_pbs, 'female', rem_cat_female, rem_cont_female, longest_female,
-                        folder_name, tiff_figure_dpi)
+                        folder_name, figure_dpi, figure_format)
         else:
             pbs_to_drop_female, rem_cont_female, rem_cat_female, pbs_set_female = [], [], [], set()
 
@@ -1069,19 +1073,20 @@ if enable_rhcf:
         plot_venn(kernel='correlation', datatype="Cramer's V", set1=cramer_set, set2=cramer_set_male,
                   set3=cramer_set_female, tuple_of_names=("Full data", "Male data", "Female data"), label_fontsize=8,
                   feat_info='top Cramer correlated', weighted=False)
-        plt.savefig(folder_name + f'/RHCF_cramer_features_venn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/RHCF_cramer_features_venn.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
         # Spearman's Rank Order correlation
         plot_venn(kernel='correlation', datatype="Spearman's Rank Order", set1=spearman_set, set2=spearman_set_male,
                   set3=spearman_set_female, tuple_of_names=("Full data", "Male data", "Female data"), label_fontsize=8,
                   feat_info='top Spearman correlated', weighted=False)
-        plt.savefig(folder_name + f'/RHCF_spearman_features_venn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/RHCF_spearman_features_venn.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
         # Point Bi-serial correlation
         plot_venn(kernel='correlation', datatype="Point Bi-Serial", set1=pbs_set, set2=pbs_set_male,
                   set3=pbs_set_female, tuple_of_names=("Full data", "Male data", "Female data"), label_fontsize=8,
                   feat_info='top Point bi-serial correlated', weighted=False)
-        plt.savefig(folder_name + f'/RHCF_point_biserial_features_venn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name +
+                    f'/RHCF_point_biserial_features_venn.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
 
     # End of removing highly correlated features
@@ -1115,62 +1120,62 @@ if enable_rhcf:
         draw_corr_after_rhcf(train_features, train_labels, feature_list,
                              categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
                              output_feature, corr)
-        plt.savefig(folder_name + f'/full_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/full_RHCF_remaining_correlation_{corr}.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         if enable_data_split:
-              # male
-              draw_corr_after_rhcf(train_men_features, train_men_labels, feature_list_male,
-                                   categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
-                                   output_feature, corr)
-              plt.savefig(folder_name + f'/male_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
-                          dpi=tiff_figure_dpi)
-              plt.close()
-              # female
-              draw_corr_after_rhcf(train_female_features, train_female_labels, feature_list_female,
-                                   categorical_idx_female if corr in ('cramer', 'chi') else continuous_idx_female,
-                                   output_feature, corr)
-              plt.savefig(folder_name + f'/female_RHCF_remaining_correlation_{corr}.tiff', bbox_inches='tight',
-                          dpi=tiff_figure_dpi)
-              plt.close()
-              
-              # if data split enable, produce combined correlation figure grouped by features showing full, male & female
-              # if ranked by mixed
-              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
-                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
-                                            train_men_features, train_men_labels, feature_list_male,
-                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
-                                            train_female_features, train_female_labels, feature_list_female,
-                                            categorical_idx_female if corr in ('cramer', 'chi') else
-                                            continuous_idx_female,
-                                            output_feature, corr, 'full', top_features)
-              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"full"}.tiff',
-                          bbox_inches='tight', dpi=tiff_figure_dpi)
-              plt.close()
-              # if ranked by male
-              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
-                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
-                                            train_men_features, train_men_labels, feature_list_male,
-                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
-                                            train_female_features, train_female_labels, feature_list_female,
-                                            categorical_idx_female if corr in ('cramer', 'chi') else
-                                            continuous_idx_female,
-                                            output_feature, corr, 'male', top_features)
-              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"male"}.tiff',
-                          bbox_inches='tight', dpi=tiff_figure_dpi)
-              plt.close()
-              # if ranked by female
-              draw_grouped_correlation_plot(train_features, train_labels, feature_list,
-                                            categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
-                                            train_men_features, train_men_labels, feature_list_male,
-                                            categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
-                                            train_female_features, train_female_labels, feature_list_female,
-                                            categorical_idx_female if corr in ('cramer', 'chi') else
-                                            continuous_idx_female,
-                                            output_feature, corr, 'female', top_features)
-              plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"female"}.tiff',
-                          bbox_inches='tight', dpi=tiff_figure_dpi)
-              plt.close()
+            # male
+            draw_corr_after_rhcf(train_men_features, train_men_labels, feature_list_male,
+                                 categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                 output_feature, corr)
+            plt.savefig(folder_name + f'/male_RHCF_remaining_correlation_{corr}.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
+            plt.close()
+            # female
+            draw_corr_after_rhcf(train_female_features, train_female_labels, feature_list_female,
+                                 categorical_idx_female if corr in ('cramer', 'chi') else continuous_idx_female,
+                                 output_feature, corr)
+            plt.savefig(folder_name + f'/female_RHCF_remaining_correlation_{corr}.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
+            plt.close()
+
+            # if data split enable, produce combined correlation figure grouped by features showing full, male & female
+            # if ranked by mixed
+            draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                          categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                          train_men_features, train_men_labels, feature_list_male,
+                                          categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                          train_female_features, train_female_labels, feature_list_female,
+                                          categorical_idx_female if corr in ('cramer', 'chi') else
+                                          continuous_idx_female,
+                                          output_feature, corr, 'full', top_features)
+            plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"full"}.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
+            plt.close()
+            # if ranked by male
+            draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                          categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                          train_men_features, train_men_labels, feature_list_male,
+                                          categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                          train_female_features, train_female_labels, feature_list_female,
+                                          categorical_idx_female if corr in ('cramer', 'chi') else
+                                          continuous_idx_female,
+                                          output_feature, corr, 'male', top_features)
+            plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"male"}.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
+            plt.close()
+            # if ranked by female
+            draw_grouped_correlation_plot(train_features, train_labels, feature_list,
+                                          categorical_idx if corr in ('cramer', 'chi') else continuous_idx,
+                                          train_men_features, train_men_labels, feature_list_male,
+                                          categorical_idx_male if corr in ('cramer', 'chi') else continuous_idx_male,
+                                          train_female_features, train_female_labels, feature_list_female,
+                                          categorical_idx_female if corr in ('cramer', 'chi') else
+                                          continuous_idx_female,
+                                          output_feature, corr, 'female', top_features)
+            plt.savefig(folder_name + f'/Grouped_RHCF_remaining_correlation_{corr}_rankedby_{"female"}.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
+            plt.close()
 
 ##########################################################################################
 # ## Plot PCA or LDA of the continuous features if one of them is selected as transformer
@@ -1191,8 +1196,8 @@ if pca_tech == 'normal_pca':
     plot_pca(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
              title=f'Mixed BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
              comp=15, scaler=scaler_tech)
-    plt.savefig(folder_name + f'/full_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                dpi=figure_dpi)
     plt.close()
     if enable_data_split:
         # male
@@ -1200,16 +1205,16 @@ if pca_tech == 'normal_pca':
                  color_by=output_feature,
                  title=f'Male BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
                  comp=15, scaler=scaler_tech)
-        plt.savefig(folder_name + f'/male_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         # female
         plot_pca(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
                  color_by=output_feature,
                  title=f'Female BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
                  comp=15, scaler=scaler_tech)
-        plt.savefig(folder_name + f'/female_{pca_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
 # if LDA
 if da_tech == 'lda':
@@ -1217,8 +1222,8 @@ if da_tech == 'lda':
     plot_lda(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
              title=f'Mixed BASE-II LDA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
              scaler=scaler_tech)
-    plt.savefig(folder_name + f'/full_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{da_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                dpi=figure_dpi)
     plt.close()
     if enable_data_split:
         # male
@@ -1226,18 +1231,18 @@ if da_tech == 'lda':
                  color_by=output_feature,
                  title=f'Male BASE-II LDA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
                  scaler=scaler_tech)
-        plt.savefig(folder_name + f'/male_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{da_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         # female
         plot_lda(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
                  color_by=output_feature,
                  title=f'Female BASE-II LDA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
                  scaler=scaler_tech)
-        plt.savefig(folder_name + f'/female_{da_tech}_plot_after_RHCF.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{da_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
-              
+
 #########################################################################
 # ## Machine learning preparations including feature transformation (FT)
 #########################################################################
@@ -1359,8 +1364,8 @@ if enable_ft:
                 ('categorical', k_filter, categorical_idx_female)], n_jobs=n_jobs)
         elif len(continuous_idx_female) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
-                ('continuous', continuous_pipeline, continuous_idx_female)], remainder=drop_or_pass_non_treated_features,
-                n_jobs=n_jobs)
+                ('continuous', continuous_pipeline, continuous_idx_female)],
+                remainder=drop_or_pass_non_treated_features, n_jobs=n_jobs)
         elif len(categorical_idx_male) >= 1:
             feature_trans_female = ColumnTransformer(transformers=[
                 ('categorical', k_filter, categorical_idx_female)], remainder=drop_or_pass_non_treated_features,
@@ -1392,18 +1397,18 @@ if scorer in ('balanced_accuracy', 'matthews_corrcoef'):
         [1 if y == 0 else round(np.bincount(train_labels)[0] / np.bincount(train_labels)[1], 3) for y in train_labels]
     if enable_data_split:
         test_weights_male = \
-            [1 if y == 0 else 
+            [1 if y == 0 else
              round(np.bincount(test_men_labels)[0] / np.bincount(test_men_labels)[1], 3) for y in test_men_labels]
         train_weights_male = \
-            [1 if y == 0 else 
+            [1 if y == 0 else
              round(np.bincount(train_men_labels)[0] / np.bincount(train_men_labels)[1], 3) for y in train_men_labels]
         test_weights_female = \
-            [1 if y == 0 else 
+            [1 if y == 0 else
              round(
                  np.bincount(test_female_labels)[0] / np.bincount(test_female_labels)[1], 3
              ) for y in test_female_labels]
         train_weights_female = \
-            [1 if y == 0 else 
+            [1 if y == 0 else
              round(
                  np.bincount(train_female_labels)[0] / np.bincount(train_female_labels)[1], 3
              ) for y in train_female_labels]
@@ -1509,7 +1514,7 @@ for kern in kernels:
                 Pipeline([('samples', sampler_female), ('features', feature_trans_female), ('clf', svm_clf)])
         else:
             pipeline_male, pipeline_female = [None] * 2
-    else:  # If pipeline order is reversed if resampling is deactivated (sampler will become 'passthrough' then)
+    else:  # If pipeline order is reversed
         pipeline = Pipeline([('features', feature_trans), ('samples', sampler), ('clf', svm_clf)])
         if enable_data_split:
             pipeline_male = Pipeline([('features', feature_trans_male), ('samples', sampler_male), ('clf', svm_clf)])
@@ -1648,24 +1653,26 @@ for kern in kernels:
     print(f"Full data model evaluation for {kern.upper()} kernel:")
     # test set roc_auc
     evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels, 16, 'full')
-    plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_roc_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
     plt.close()
     # test set pr_auc
     plot_pr(probs, test_labels, 16, 'full')
-    plt.savefig(folder_name + f'/full_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_pr_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
     plt.close()
 
     # cross-validated training set roc_auc
     cv_roc_mean, cv_roc_std = plot_roc_validation('full', pd.DataFrame(train_features), pd.DataFrame(train_labels),
                                                   grid_imba.best_estimator_, reps=5, folds=splits, ax=plt)
-    plt.savefig(folder_name + f'/full_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name +
+                f'/full_{kern}_cross_validation_roc_auc.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
     plt.close()
     print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
           % (5, splits, float(cv_roc_mean), float(cv_roc_std)))
     # cross-validated training set pr_curve
     cv_pr_mean, cv_pr_std = plot_pr_validation('full', pd.DataFrame(train_features), pd.DataFrame(train_labels),
                                                grid_imba.best_estimator_, reps=5, folds=splits, ax=plt)
-    plt.savefig(folder_name + f'/full_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name +
+                f'/full_{kern}_cross_validation_pr_auc.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
     plt.close()
     print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
           % (5, splits, float(cv_pr_mean), float(cv_pr_std)))
@@ -1676,21 +1683,21 @@ for kern in kernels:
         # test set roc_auc
         evaluate_model(male_predictions, male_probs, train_male_predictions, train_male_probs, test_men_labels,
                        train_men_labels, 16, 'male')
-        plt.savefig(folder_name + f'/male_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_roc_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
         # test set pr_auc
         plot_pr(male_probs, test_men_labels, 16, 'male')
-        plt.savefig(folder_name + f'/male_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_pr_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
-        
+
         # cross-validated training set roc_auc
         cv_roc_mean_male, cv_roc_std_male = plot_roc_validation('male',
                                                                 pd.DataFrame(train_men_features),
                                                                 pd.DataFrame(train_men_labels),
                                                                 grid_imba_male.best_estimator_,
                                                                 reps=5, folds=splits, ax=plt)
-        plt.savefig(folder_name + f'/male_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_cross_validation_roc_auc.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
               % (5, splits, float(cv_roc_mean_male), float(cv_roc_std_male)))
@@ -1700,32 +1707,32 @@ for kern in kernels:
                                                              pd.DataFrame(train_men_labels),
                                                              grid_imba_male.best_estimator_,
                                                              reps=5, folds=splits, ax=plt)
-        plt.savefig(folder_name + f'/male_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_cross_validation_pr_auc.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
               % (5, splits, float(cv_pr_mean_male), float(cv_pr_std_male)))
-              
+
         # Female data
         print(f"\n\nFemale data model evaluation for {kern.upper()} kernel:")
         # test set roc_auc
         evaluate_model(female_predictions, female_probs, train_female_predictions, train_female_probs,
                        test_female_labels, train_female_labels, 16, 'female')
-        plt.savefig(folder_name + f'/female_{kern}_roc_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_roc_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
         # test set pr_auc
         plot_pr(female_probs, test_female_labels, 16, 'female')
-        plt.savefig(folder_name + f'/female_{kern}_pr_auc_curve.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_pr_auc_curve.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
-        
+
         # cross-validated training set roc_auc
         cv_roc_mean_female, cv_roc_std_female = plot_roc_validation('female',
                                                                     pd.DataFrame(train_female_features),
                                                                     pd.DataFrame(train_female_labels),
                                                                     grid_imba_female.best_estimator_,
                                                                     reps=5, folds=splits, ax=plt)
-        plt.savefig(folder_name + f'/female_{kern}_cross_validation_roc_auc.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_cross_validation_roc_auc.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         print(f"\nTraining ROC_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f"
               % (5, splits, float(cv_roc_mean_female), float(cv_roc_std_female)))
@@ -1735,8 +1742,8 @@ for kern in kernels:
                                                                  pd.DataFrame(train_female_labels),
                                                                  grid_imba_female.best_estimator_,
                                                                  reps=5, folds=splits, ax=plt)
-        plt.savefig(folder_name + f'/female_{kern}_cross_validation_pr_auc.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_cross_validation_pr_auc.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         print(f"\nTraining PR_AUC in %d-times stratified %d-fold CV: %.3f +- %.3f\n"
               % (5, splits, float(cv_pr_mean_female), float(cv_pr_std_female)))
@@ -1749,7 +1756,7 @@ for kern in kernels:
     print(f"\nFull data confusion matrix for {kern.upper()} kernel:")
     plot_confusion_matrix(cm, classes=[negative_class.capitalize(), positive_class.capitalize()],
                           title='Confusion Matrix', normalize=True)
-    plt.savefig(folder_name + f'/full_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+    plt.savefig(folder_name + f'/full_{kern}_cm.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
     plt.close()
     if enable_data_split:
         # Male data
@@ -1757,18 +1764,18 @@ for kern in kernels:
         print(f"\nMale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_male, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/male_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/male_{kern}_cm.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
         # Female data
         cm_female = confusion_matrix(test_female_labels, female_predictions, labels=[False, True])
         print(f"\nFemale data confusion matrix for {kern.upper()} kernel:")
         plot_confusion_matrix(cm_female, classes=[negative_class.capitalize(), positive_class.capitalize()],
                               title='Confusion Matrix', normalize=True)
-        plt.savefig(folder_name + f'/female_{kern}_cm.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/female_{kern}_cm.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
         plt.close()
     else:
         cm_male, cm_female = [None] * 2
-              
+
     # Confusion matrix of tagged samples in train and test combined, but also only train and only test if possible
     if sample_tagging_feature != '':
         for num, k in enumerate(sample_tagging_feature) if np.count_nonzero(sample_tagging_feature) > 1 else \
@@ -1790,7 +1797,8 @@ for kern in kernels:
                   f"{kern.upper()} kernel:")
             plot_confusion_matrix(cm_tagged, classes=[negative_class.capitalize(), positive_class.capitalize()],
                                   title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}', normalize=True)
-            plt.savefig(folder_name + f'/full_{kern}_cm_tagged_{k}.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name +
+                        f'/full_{kern}_cm_tagged_{k}.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # sub samples if enabled
             if enable_data_split:
@@ -1815,8 +1823,8 @@ for kern in kernels:
                                                                positive_class.capitalize()],
                                       title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}',
                                       normalize=True)
-                plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{k}.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_cm_tagged_{k}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # female
                 if sum(sample_tag_idx_female_train[k]) != 0:
@@ -1840,10 +1848,10 @@ for kern in kernels:
                                                                  positive_class.capitalize()],
                                       title=f'Confusion Matrix of tagged samples for\n{k, tag_op, tag_val}',
                                       normalize=True)
-                plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{k}.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_cm_tagged_{k}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
-       
+
     # Turn the original feature lists into np arrays with technically just shorter names for later use
     features = np.array(feature_list)
     if enable_data_split:
@@ -1943,8 +1951,8 @@ for kern in kernels:
             importance_plot(datatype='full', method='sklearn', kern=kern, idx_sorted=sorted_idx, features_list=features,
                             importance_mean=perm_importance.importances_mean, importance_above_zero=sk_above_zero_imp,
                             importance_std=perm_importance.importances_std)
-            plt.savefig(
-                folder_name + f'/full_{kern}_feature_importance_sklearn.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name +
+                        f'/full_{kern}_feature_importance_sklearn.{figure_format}', bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -1961,8 +1969,8 @@ for kern in kernels:
                                 importance_mean=perm_importance_male.importances_mean,
                                 importance_above_zero=sk_above_zero_imp_male,
                                 importance_std=perm_importance_male.importances_std)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_sklearn.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_sklearn.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 print("In female data ...")
@@ -1979,8 +1987,8 @@ for kern in kernels:
                                 importance_mean=perm_importance_female.importances_mean,
                                 importance_above_zero=sk_above_zero_imp_female,
                                 importance_std=perm_importance_female.importances_std)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_sklearn.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_sklearn.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
             else:
                 sorted_idx_male, sk_above_zero_imp_male, sorted_idx_female, sk_above_zero_imp_female = [None] * 4
@@ -2003,8 +2011,8 @@ for kern in kernels:
             importance_plot(datatype='full', method='eli5', kern=kern, idx_sorted=sorted_idx_eli,
                             features_list=features, importance_mean=perm_mean, importance_above_zero=el_above_zero_imp,
                             importance_std=std_perm)
-            plt.savefig(folder_name + f'/full_{kern}_feature_importance_eli5.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_eli5.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -2023,8 +2031,8 @@ for kern in kernels:
                                 importance_mean=perm_mean_male,
                                 importance_above_zero=el_above_zero_imp_male,
                                 importance_std=std_perm_male)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_eli5.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_eli5.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 print("In female data ...")
@@ -2039,8 +2047,8 @@ for kern in kernels:
                 importance_plot(datatype='female', method='eli5', kern=kern, idx_sorted=sorted_idx_eli_female,
                                 features_list=features_female, importance_mean=perm_mean_female,
                                 importance_above_zero=el_above_zero_imp_female, importance_std=std_perm_female)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_eli5.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_eli5.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
             else:
                 sorted_idx_eli_male, el_above_zero_imp_male,\
@@ -2063,8 +2071,8 @@ for kern in kernels:
             # Figure of most important features
             importance_plot(datatype='full', method='mlxtend', kern=kern, idx_sorted=indices, features_list=features,
                             importance_mean=imp_vals, importance_above_zero=ml_above_zero_imp, importance_std=std)
-            plt.savefig(folder_name + f'/full_{kern}_feature_importance_mlxtend.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_mlxtend.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -2082,8 +2090,8 @@ for kern in kernels:
                                 importance_mean=imp_vals_male,
                                 importance_above_zero=ml_above_zero_imp_male,
                                 importance_std=std_male)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_mlxtend.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_mlxtend.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 print("In female data ...")
@@ -2100,8 +2108,8 @@ for kern in kernels:
                                 importance_mean=imp_vals_female,
                                 importance_above_zero=ml_above_zero_imp_female,
                                 importance_std=std_female)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_mlxtend.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_mlxtend.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
             else:
                 indices_male, ml_above_zero_imp_male, indices_female, ml_above_zero_imp_female,\
@@ -2207,17 +2215,19 @@ for kern in kernels:
                             -ml_above_zero_imp_female:]][::-1][:top_features] if perm_meth == 'mlxtend' else ''
             else:
                 features_of_interest_male, features_of_interest_female = 2 * [None]
-                     
+
             # draw the plots
             # ## within the test set
             box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
                                                                     test_features, feature_list, 'full', 'non-linear')
             for box_num, box_fig in enumerate(box_of_interest):
-                box_fig.savefig(folder_name + f'/full_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name +
+                                f'/full_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest):
-                bar_fig.savefig(folder_name + f'/full_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name +
+                                f'/full_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             if enable_data_split:
                 # male
                 box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
@@ -2225,11 +2235,13 @@ for kern in kernels:
                                                                             test_men_features, feature_list_male,
                                                                             'male', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_m):
-                    box_fig.savefig(folder_name + f'/male_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                                    bbox_inches='tight', dpi=tiff_figure_dpi)
+                    box_fig.savefig(folder_name +
+                                    f'/male_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
                 for bar_num, bar_fig in enumerate(bar_of_interest_m):
-                    bar_fig.savefig(folder_name + f'/male_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                                    bbox_inches='tight', dpi=tiff_figure_dpi)
+                    bar_fig.savefig(folder_name +
+                                    f'/male_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
                 # female
                 box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                             features_of_interest_female,
@@ -2237,22 +2249,24 @@ for kern in kernels:
                                                                             feature_list_female, 'female', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_f):
                     box_fig.savefig(
-                        folder_name + f'/female_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                        folder_name + f'/female_{kern}_TEST_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
                 for bar_num, bar_fig in enumerate(bar_of_interest_f):
                     bar_fig.savefig(
-                        folder_name + f'/female_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                        folder_name + f'/female_{kern}_TEST_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             # ## within the train set
             box_of_interest, bar_of_interest = box_bar_in_confusion(train_labels, train_predictions,
                                                                     features_of_interest, train_features, feature_list,
                                                                     'full', 'non-linear')
             for box_num, box_fig in enumerate(box_of_interest):
-                box_fig.savefig(folder_name + f'/full_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name +
+                                f'/full_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest):
-                bar_fig.savefig(folder_name + f'/full_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name +
+                                f'/full_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             if enable_data_split:
                 # male
                 box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(train_men_labels, train_male_predictions,
@@ -2260,11 +2274,13 @@ for kern in kernels:
                                                                             train_men_features, feature_list_male,
                                                                             'male', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_m):
-                    box_fig.savefig(folder_name + f'/male_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                                    bbox_inches='tight', dpi=tiff_figure_dpi)
+                    box_fig.savefig(folder_name +
+                                    f'/male_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
                 for bar_num, bar_fig in enumerate(bar_of_interest_m):
-                    bar_fig.savefig(folder_name + f'/male_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                                    bbox_inches='tight', dpi=tiff_figure_dpi)
+                    bar_fig.savefig(folder_name +
+                                    f'/male_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
                 # female
                 box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(train_female_labels,
                                                                             train_female_predictions,
@@ -2272,13 +2288,13 @@ for kern in kernels:
                                                                             train_female_features,
                                                                             feature_list_female, 'female', 'non-linear')
                 for box_num, box_fig in enumerate(box_of_interest_f):
-                    box_fig.savefig(
-                        folder_name + f'/female_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                    box_fig.savefig(folder_name +
+                                    f'/female_{kern}_TRAIN_box_of_interest_{perm_meth}_#{box_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
                 for bar_num, bar_fig in enumerate(bar_of_interest_f):
-                    bar_fig.savefig(
-                        folder_name + f'/female_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+                    bar_fig.savefig(folder_name +
+                                    f'/female_{kern}_TRAIN_bar_of_interest_{perm_meth}_#{bar_num + 1}.{figure_format}',
+                                    bbox_inches='tight', dpi=figure_dpi)
 
         ####################################################
         # ## Evaluate non-linear feature importance methods
@@ -2293,8 +2309,8 @@ for kern in kernels:
             plot_venn(kernel=kern, datatype='Full', set1=sklearn, set2=eli5, set3=mlxtend,
                       tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                       feat_info='top important', weighted=True)
-            plt.savefig(folder_name + f'/full_{kern}_feature_importance_venn_diagram.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_venn_diagram.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -2305,8 +2321,8 @@ for kern in kernels:
                 plot_venn(kernel=kern, datatype='Male', set1=sklearn_male, set2=eli5_male, set3=mlxtend_male,
                           tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                           feat_info='top important', weighted=True)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_venn_diagram.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_venn_diagram.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 sklearn_female = set(features_female[sorted_idx_female[-sk_above_zero_imp_female:]])
@@ -2316,8 +2332,8 @@ for kern in kernels:
                 plot_venn(kernel=kern, datatype='Female', set1=sklearn_female, set2=eli5_female, set3=mlxtend_female,
                           tuple_of_names=('sklearn', 'eli5', 'mlxtend'), label_fontsize=8,
                           feat_info='top important', weighted=True)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_venn_diagram.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_venn_diagram.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
 
             # Scatter plot comparing the feature importance measuring effect between the three methods
@@ -2326,23 +2342,23 @@ for kern in kernels:
             scatter_comparison(kernel=kern, datatype='Full', mean1=perm_importance.importances_mean, mean2=perm_mean,
                                mean3=imp_vals,
                                new_feat_idx=range(len(features)), metric_list=metrics)
-            plt.savefig(folder_name + f'/full_{kern}_feature_importance_comparison.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_comparison.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 scatter_comparison(kernel=kern, datatype='Male', mean1=perm_importance_male.importances_mean,
                                    mean2=perm_mean_male, mean3=imp_vals_male,
                                    new_feat_idx=range(len(features_male)), metric_list=metrics)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_comparison.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_comparison.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 scatter_comparison(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
                                    mean2=perm_mean_female, mean3=imp_vals_female,
                                    new_feat_idx=range(len(features_female)), metric_list=metrics)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_comparison.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_comparison.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
 
             # Scatter plot to check correlation between the three methods using r2 and linear equation
@@ -2351,8 +2367,8 @@ for kern in kernels:
                               mean3=imp_vals,
                               tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                               new_feat_idx=range(len(features)), fontsize=12)
-            plt.savefig(folder_name + f'/full_{kern}_feature_importance_r2.tiff', bbox_inches='tight',
-                        dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_feature_importance_r2.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
@@ -2360,16 +2376,16 @@ for kern in kernels:
                                   mean2=perm_mean_male, mean3=imp_vals_male,
                                   tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                                   new_feat_idx=range(len(features_male)), fontsize=12)
-                plt.savefig(folder_name + f'/male_{kern}_feature_importance_r2.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_feature_importance_r2.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 scatter_r_squared(kernel=kern, datatype='Female', mean1=perm_importance_female.importances_mean,
                                   mean2=perm_mean_female, mean3=imp_vals_female,
                                   tuple_of_names=('Sklearn vs Eli5', 'Sklearn vs Mlxtend', 'Eli5 vs Mlxtend'),
                                   new_feat_idx=range(len(features_female)), fontsize=12)
-                plt.savefig(folder_name + f'/female_{kern}_feature_importance_r2.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_feature_importance_r2.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
 
         # Violin plot of the shuffling effect on the most important feature scores
@@ -2377,63 +2393,64 @@ for kern in kernels:
         if feature_importance_method in ('all', 'sklearn'):
             plot_violin(kern, 'Full sklearn', perm_importance.importances[sorted_idx[-sk_above_zero_imp:]],
                         features[sorted_idx[-sk_above_zero_imp:]], fontsize=7)
-            plt.savefig(folder_name + f'/full_{kern}_violin_plot_sklearn.tiff', bbox_inches='tight',
-                        dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_sklearn.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 plot_violin(kern, 'Male sklearn',
                             perm_importance_male.importances[sorted_idx_male[-sk_above_zero_imp_male:]],
                             features_male[sorted_idx_male[-sk_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/male_{kern}_violin_plot_sklearn.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_sklearn.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female sklearn',
                             perm_importance_female.importances[sorted_idx_female[-sk_above_zero_imp_female:]],
                             features_female[sorted_idx_female[-sk_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/female_{kern}_violin_plot_sklearn.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_sklearn.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
         # ELI5 on full data
         if feature_importance_method in ('all', 'eli5'):
             plot_violin(kern, 'Full eli5', perm_all[sorted_idx_eli[-el_above_zero_imp:]],
                         features[sorted_idx_eli[-el_above_zero_imp:]], fontsize=7)
-            plt.savefig(folder_name + f'/full_{kern}_violin_plot_eli5.tiff', bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_eli5.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 plot_violin(kern, 'Male eli5', perm_all_male[sorted_idx_eli_male[-el_above_zero_imp_male:]],
                             features_male[sorted_idx_eli_male[-el_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/male_{kern}_violin_plot_eli5.tiff', bbox_inches='tight',
-                            dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_eli5.{figure_format}', bbox_inches='tight',
+                            dpi=figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female eli5', perm_all_female[sorted_idx_eli_female[-el_above_zero_imp_female:]],
                             features_female[sorted_idx_eli_female[-el_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/female_{kern}_violin_plot_eli5.tiff', bbox_inches='tight',
-                            dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_eli5.{figure_format}', bbox_inches='tight',
+                            dpi=figure_dpi)
                 plt.close()
         # MLXTEND on full data
         if feature_importance_method in ('all', 'mlxtend'):
             plot_violin(kern, 'Full mlxtend',
                         imp_all[indices[-ml_above_zero_imp:]], features[indices[-ml_above_zero_imp:]],
                         fontsize=7)
-            plt.savefig(folder_name + f'/full_{kern}_violin_plot_mlxtend.tiff', bbox_inches='tight',
-                        dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_violin_plot_mlxtend.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # Male data
             if enable_data_split:
                 plot_violin(kern, 'Male mlxtend', imp_all_male[indices_male[-ml_above_zero_imp_male:]],
                             features_male[indices_male[-ml_above_zero_imp_male:]], fontsize=7)
-                plt.savefig(folder_name + f'/male_{kern}_violin_plot_mlxtend.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_violin_plot_mlxtend.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # Female data
                 plot_violin(kern, 'Female mlxtend', imp_all_female[indices_female[-ml_above_zero_imp_female:]],
                             features_female[indices_female[-ml_above_zero_imp_female:]], fontsize=7)
-                plt.savefig(folder_name + f'/female_{kern}_violin_plot_mlxtend.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_violin_plot_mlxtend.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
 
         #############################################################################
@@ -2446,23 +2463,23 @@ for kern in kernels:
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels,
                                  sorted_idx[-sk_above_zero_imp:], features, sk_above_zero_imp, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'full', kern, folder_name,
-                                 importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 importance_method='sklearn', fig_dpi=figure_dpi, fig_format=figure_format,
+                                 graphs=box_bar_figures, fontsize=fix_font)
 
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
                                      sorted_idx_male[-sk_above_zero_imp_male:], features_male, sk_above_zero_imp_male,
                                      output_feature, negative_class.capitalize(), positive_class.capitalize(), 'male',
-                                     kern, folder_name, importance_method='sklearn', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
+                                     kern, folder_name, importance_method='sklearn', fig_dpi=figure_dpi,
+                                     fig_format=figure_format, graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, sorted_idx_female[-sk_above_zero_imp_female:], features_female,
                                      sk_above_zero_imp_female, output_feature, negative_class.capitalize(),
                                      positive_class.capitalize(), 'female', kern, folder_name,
-                                     importance_method='sklearn', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                     fontsize=fix_font)
+                                     importance_method='sklearn', fig_dpi=figure_dpi, fig_format=figure_format,
+                                     graphs=box_bar_figures, fontsize=fix_font)
 
                     # Case of eli5 method
             if feature_importance_method in ('all', 'eli5'):
@@ -2470,43 +2487,45 @@ for kern in kernels:
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels,
                                  sorted_idx_eli[-el_above_zero_imp:], features, el_above_zero_imp, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'full', kern, folder_name,
-                                 importance_method='eli5', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 importance_method='eli5', fig_dpi=figure_dpi, fig_format=figure_format,
+                                 graphs=box_bar_figures, fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
                                      sorted_idx_eli_male[-el_above_zero_imp_male:], features_male,
                                      el_above_zero_imp_male, output_feature, negative_class.capitalize(),
                                      positive_class.capitalize(), 'male', kern, folder_name, importance_method='eli5',
-                                     tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                     fig_dpi=figure_dpi, fig_format=figure_format, graphs=box_bar_figures,
+                                     fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, sorted_idx_eli_female[-el_above_zero_imp_female:],
                                      features_female, el_above_zero_imp_female, output_feature,
                                      negative_class.capitalize(), positive_class.capitalize(), 'female', kern,
-                                     folder_name, importance_method='eli5', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
+                                     folder_name, importance_method='eli5', fig_dpi=figure_dpi,
+                                     fig_format=figure_format, graphs=box_bar_figures, fontsize=fix_font)
             # Case of mlxtend method
             if feature_importance_method in ('all', 'mlxtend'):
                 # Full data
                 box_and_bar_plot(train_features, train_labels, test_features, test_labels, indices[-ml_above_zero_imp:],
                                  features, ml_above_zero_imp, output_feature, negative_class.capitalize(),
                                  positive_class.capitalize(), 'full', kern, folder_name, importance_method='mlxtend',
-                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                 fig_dpi=figure_dpi, fig_format=figure_format, graphs=box_bar_figures,
+                                 fontsize=fix_font)
                 if enable_data_split:
                     # Male data
                     box_and_bar_plot(train_men_features, train_men_labels, test_men_features, test_men_labels,
                                      indices_male[-ml_above_zero_imp_male:], features_male, ml_above_zero_imp_male,
                                      output_feature, negative_class.capitalize(), positive_class.capitalize(), 'male',
-                                     kern, folder_name, importance_method='mlxtend', tiff_size=tiff_figure_dpi,
-                                     graphs=box_bar_figures, fontsize=fix_font)
+                                     kern, folder_name, importance_method='mlxtend', fig_dpi=figure_dpi,
+                                     fig_format=figure_format, graphs=box_bar_figures, fontsize=fix_font)
                     # Female data
                     box_and_bar_plot(train_female_features, train_female_labels, test_female_features,
                                      test_female_labels, indices_female[-ml_above_zero_imp_female:], features_female,
                                      ml_above_zero_imp_female, output_feature, negative_class.capitalize(),
                                      positive_class.capitalize(), 'female', kern, folder_name,
-                                     importance_method='mlxtend', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                     fontsize=fix_font)
+                                     importance_method='mlxtend', fig_dpi=figure_dpi, fig_format=figure_format,
+                                     graphs=box_bar_figures, fontsize=fix_font)
 
             # Reset matplotlib style conflict with seaborn for next plots if data split is skipped
             plt.style.use(plot_style)
@@ -2562,8 +2581,8 @@ for kern in kernels:
         importance_plot(datatype='full', method='SVM_coef', kern=kern, idx_sorted=lin_idx,
                         features_list=lin_out_features, importance_mean=lin_imp,
                         importance_above_zero=lin_above_zero_imp, importance_std=None)
-        plt.savefig(folder_name + f'/full_{kern}_feature_importance.tiff', bbox_inches='tight',
-                    dpi=tiff_figure_dpi)
+        plt.savefig(folder_name + f'/full_{kern}_feature_importance.{figure_format}', bbox_inches='tight',
+                    dpi=figure_dpi)
         plt.close()
         # write feature importance
         write_importance('Mixed', 'SVM_coef', 'linear', idx_sorted=lin_idx, features_list=lin_out_features,
@@ -2616,8 +2635,8 @@ for kern in kernels:
             importance_plot(datatype='male', method='SVM_coef', kern=kern, idx_sorted=lin_idx_male,
                             features_list=lin_out_features_male, importance_mean=lin_imp_male,
                             importance_above_zero=lin_above_zero_imp_male, importance_std=None)
-            plt.savefig(folder_name + f'/male_{kern}_feature_importance.tiff', bbox_inches='tight',
-                        dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/male_{kern}_feature_importance.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # write feature importance
             write_importance('Male', 'SVM_coef', 'linear', idx_sorted=lin_idx_male, features_list=lin_out_features_male,
@@ -2669,8 +2688,8 @@ for kern in kernels:
             importance_plot(datatype='female', method='SVM_coef', kern=kern, idx_sorted=lin_idx_female,
                             features_list=lin_out_features_female, importance_mean=lin_imp_female,
                             importance_above_zero=lin_above_zero_imp_female, importance_std=None)
-            plt.savefig(folder_name + f'/female_{kern}_feature_importance.tiff', bbox_inches='tight',
-                        dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/female_{kern}_feature_importance.{figure_format}', bbox_inches='tight',
+                        dpi=figure_dpi)
             plt.close()
             # write feature importance
             write_importance('Female', 'SVM_coef', 'linear', idx_sorted=lin_idx_female,
@@ -2693,7 +2712,7 @@ for kern in kernels:
             features_of_interest_female = lin_out_features_female[lin_idx_female][::-1][:top_features]
         else:
             features_of_interest_male, features_of_interest_female = 2 * [None]
-       
+
         # remove (PC ##) from feature names, if LDA, we need to put it in a list if it is alone
         for num, k in enumerate(features_of_interest.split("'") if isinstance(features_of_interest, str) else
                                 features_of_interest):
@@ -2730,64 +2749,64 @@ for kern in kernels:
         box_of_interest, bar_of_interest = box_bar_in_confusion(test_labels, predictions, features_of_interest,
                                                                 test_features, feature_list, 'full', 'linear')
         for box_num, box_fig in enumerate(box_of_interest):
-            box_fig.savefig(folder_name + f'/full_box_of_interest_TEST_{kern}_#{box_num + 1}.tiff', bbox_inches='tight',
-                            dpi=tiff_figure_dpi)
+            box_fig.savefig(folder_name + f'/full_box_of_interest_TEST_{kern}_#{box_num + 1}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
         for bar_num, bar_fig in enumerate(bar_of_interest):
-            bar_fig.savefig(folder_name + f'/full_bar_of_interest_TEST_{kern}_#{bar_num + 1}.tiff', bbox_inches='tight',
-                            dpi=tiff_figure_dpi)
+            bar_fig.savefig(folder_name + f'/full_bar_of_interest_TEST_{kern}_#{bar_num + 1}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
         if enable_data_split:
             # male
             box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(test_men_labels, male_predictions,
                                                                         features_of_interest_male, test_men_features,
                                                                         feature_list_male, 'male', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_m):
-                box_fig.savefig(folder_name + f'/male_box_of_interest_TEST_{kern}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name + f'/male_box_of_interest_TEST_{kern}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest_m):
-                bar_fig.savefig(folder_name + f'/male_bar_of_interest_TEST_{kern}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name + f'/male_bar_of_interest_TEST_{kern}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             # female
             box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(test_female_labels, female_predictions,
                                                                         features_of_interest_female,
                                                                         test_female_features,
                                                                         feature_list_female, 'female', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_f):
-                box_fig.savefig(folder_name + f'/female_box_of_interest_TEST_{kern}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name + f'/female_box_of_interest_TEST_{kern}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest_f):
-                bar_fig.savefig(folder_name + f'/female_bar_of_interest_TEST_{kern}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name + f'/female_bar_of_interest_TEST_{kern}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
         # ## within training
         box_of_interest, bar_of_interest = box_bar_in_confusion(train_labels, train_predictions, features_of_interest,
                                                                 train_features, feature_list, 'full', 'linear')
         for box_num, box_fig in enumerate(box_of_interest):
-            box_fig.savefig(folder_name + f'/full_box_of_interest_TRAIN_{kern}_#{box_num + 1}.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+            box_fig.savefig(folder_name + f'/full_box_of_interest_TRAIN_{kern}_#{box_num + 1}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
         for bar_num, bar_fig in enumerate(bar_of_interest):
-            bar_fig.savefig(folder_name + f'/full_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+            bar_fig.savefig(folder_name + f'/full_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
         if enable_data_split:
             # male
             box_of_interest_m, bar_of_interest_m = box_bar_in_confusion(train_men_labels, train_male_predictions,
                                                                         features_of_interest_male, train_men_features,
                                                                         feature_list_male, 'male', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_m):
-                box_fig.savefig(folder_name + f'/male_box_of_interest_TRAIN_{kern}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name + f'/male_box_of_interest_TRAIN_{kern}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest_m):
-                bar_fig.savefig(folder_name + f'/male_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name + f'/male_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             # female
             box_of_interest_f, bar_of_interest_f = box_bar_in_confusion(train_female_labels, train_female_predictions,
                                                                         features_of_interest_female,
                                                                         train_female_features,
                                                                         feature_list_female, 'female', 'linear')
             for box_num, box_fig in enumerate(box_of_interest_f):
-                box_fig.savefig(folder_name + f'/female_box_of_interest_TRAIN_{kern}_#{box_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                box_fig.savefig(folder_name + f'/female_box_of_interest_TRAIN_{kern}_#{box_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
             for bar_num, bar_fig in enumerate(bar_of_interest_f):
-                bar_fig.savefig(folder_name + f'/female_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.tiff',
-                                bbox_inches='tight', dpi=tiff_figure_dpi)
+                bar_fig.savefig(folder_name + f'/female_bar_of_interest_TRAIN_{kern}_#{bar_num + 1}.{figure_format}',
+                                bbox_inches='tight', dpi=figure_dpi)
 
         ############################################################
         # ## Box and bar plots in case of linear feature importance
@@ -2810,13 +2829,13 @@ for kern in kernels:
             if da_tech == 'lda' and any(['#2' not in s for s in lin_out_features]):  # only if 1 comp
                 lin_out_real_idx_for_bbp = \
                     [list(features).index(x.split(' (')[0]) for x in lin_out_features if x.split(' (')[0] in features]
-            
+
             # plot
             box_and_bar_plot(train_features, train_labels, test_features, test_labels,
                              np.array(lin_out_real_idx_for_bbp)[lin_idx][-lin_above_zero_imp:],
                              features, lin_above_zero_imp, output_feature, negative_class.capitalize(),
                              positive_class.capitalize(), 'full', kern, folder_name, importance_method='SVM_coef',
-                             tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                             fig_dpi=figure_dpi, fig_format=figure_format, graphs=box_bar_figures, fontsize=fix_font)
 
             if enable_data_split:
                 # Male data
@@ -2835,7 +2854,8 @@ for kern in kernels:
                                  np.array(lin_out_real_idx_for_bbp_male)[lin_idx_male][-lin_above_zero_imp_male:],
                                  features_male, lin_above_zero_imp_male, output_feature, negative_class.capitalize(),
                                  positive_class.capitalize(), 'male', kern, folder_name, importance_method='SVM_coef',
-                                 tiff_size=tiff_figure_dpi, graphs=box_bar_figures, fontsize=fix_font)
+                                 fig_dpi=figure_dpi, fig_format=figure_format, graphs=box_bar_figures,
+                                 fontsize=fix_font)
                 # Female data
                 if pca_tech == 'kernel_pca' and len(lin_idx_female) != len(lin_out_real_idx_for_bbp_female):
                     # remove kernel pca components
@@ -2853,8 +2873,8 @@ for kern in kernels:
                                  np.array(lin_out_real_idx_for_bbp_female)[lin_idx_female][-lin_above_zero_imp_female:],
                                  features_female, lin_above_zero_imp_female, output_feature,
                                  negative_class.capitalize(), positive_class.capitalize(), 'female', kern, folder_name,
-                                 importance_method='SVM_coef', tiff_size=tiff_figure_dpi, graphs=box_bar_figures,
-                                 fontsize=fix_font)
+                                 importance_method='SVM_coef', fig_dpi=figure_dpi, fig_format=figure_format,
+                                 graphs=box_bar_figures, fontsize=fix_font)
 
             # Reset matplotlib style conflict with seaborn for next plots if data split is skipped
             plt.style.use(plot_style)
@@ -2885,8 +2905,8 @@ for kern in kernels:
                                                               'SVM_coef vs Mlxtend'),
                                               fontsize=12, permutation_technique=feature_importance_method,
                                               lin_out_real_idx=lin_out_real_idx_for_bbp)
-            plt.savefig(folder_name + f'/full_{kern}_scatter_permutation_versus_svm.tiff',
-                        bbox_inches='tight', dpi=tiff_figure_dpi)
+            plt.savefig(folder_name + f'/full_{kern}_scatter_permutation_versus_svm.{figure_format}',
+                        bbox_inches='tight', dpi=figure_dpi)
             plt.close()
 
             # Same for split data sets if enabled
@@ -2910,8 +2930,8 @@ for kern in kernels:
                                                                   'SVM_coef vs Mlxtend'),
                                                   fontsize=12, permutation_technique=feature_importance_method,
                                                   lin_out_real_idx=lin_out_real_idx_for_bbp_male)
-                plt.savefig(folder_name + f'/male_{kern}_scatter_permutation_versus_svm.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/male_{kern}_scatter_permutation_versus_svm.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
                 # female
                 if pca_tech == 'kernel_pca':
@@ -2933,8 +2953,8 @@ for kern in kernels:
                                                                   'SVM_coef vs Mlxtend'),
                                                   fontsize=12, permutation_technique=feature_importance_method,
                                                   lin_out_real_idx=lin_out_real_idx_for_bbp_female)
-                plt.savefig(folder_name + f'/female_{kern}_scatter_permutation_versus_svm.tiff',
-                            bbox_inches='tight', dpi=tiff_figure_dpi)
+                plt.savefig(folder_name + f'/female_{kern}_scatter_permutation_versus_svm.{figure_format}',
+                            bbox_inches='tight', dpi=figure_dpi)
                 plt.close()
 
     #############################################
