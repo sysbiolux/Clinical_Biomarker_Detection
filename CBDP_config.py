@@ -1,10 +1,10 @@
 ########################################################################################################################
 # CLINICAL BIOMARKER DETECTION - PIPELINE (CBD-P) CONFIGURATION FILE ###################################################
 # Jeff DIDIER - Faculty of Science, Technology and Medicine (FSTM), Department of Life Sciences and Medicine (DLSM) ####
-# November 2021 - January 2023, University of Luxembourg, v.01/31/2023 (M/d/y) #########################################
+# November 2021 - March 2023, University of Luxembourg, v.03/16/2023 (M/d/y) ###########################################
 ########################################################################################################################
 
-# Configure up to 83 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
+# Configure up to 84 variables specific for the CBD_pipeline_SVM_HPC.py script. Configured variables will undergo
 # legal violation checks in the main script and will be adopted to the correctly enabled pipeline steps if necessary.
 
 # /!\ When launching a given configuration, wait until the job has started running before modifying the config file. /!\
@@ -32,7 +32,8 @@ imp_font = 8  # Specific font size for feature importance plots, 8, int
 plot_style = 'fivethirtyeight'  # Matplotlib plot style, str
 fig_max_open_warning = 0  # Warning shown by matplotlib after number of open figures, int
 pandas_col_display_option = 5  # Number of columns displayed in pandas dataframe, int
-tiff_figure_dpi = 300  # Dot per inches resolution of the result figures, int
+figure_dpi = 300  # Dot per inches resolution of the result figures, int
+figure_format = 'png'  # Desired format for the generated figures, 'png', str
 # Other font sizes for titles, ticks, or labels are defined in the corresponding function
 # Later all fonts will be generalized
 debug = False  # Debug statement to decide if figures should be displayed for debugging, select False to avoid
