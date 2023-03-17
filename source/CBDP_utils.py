@@ -554,6 +554,8 @@ def box_bar_in_confusion(test_labels, predictions, features_of_interest, test_fe
     list_of_cat_figures : list
         List of matplotlib categorical bar plots figures of samples within confusion matrix.
     """
+    # /!\ Reduce number of top features where we plot this to 10, else it will just give to many figures ... /!\
+    features_of_interest = features_of_interest[:10]
     # Collect indices of TP, TN, FP, and FN samples
     tp, fp, tn, fn = [], [], [], []
     for num, val in enumerate(test_labels):
