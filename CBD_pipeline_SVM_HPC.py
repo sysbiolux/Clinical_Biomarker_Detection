@@ -1195,7 +1195,7 @@ if pca_tech == 'normal_pca':
     # mixed
     plot_pca(train_features=train_features, train_labels=train_labels, col_idx=continuous_idx, color_by=output_feature,
              title=f'Mixed BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
-             comp=15, scaler=scaler_tech)
+             comp=5, scaler=scaler_tech)
     plt.savefig(folder_name + f'/full_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
                 dpi=figure_dpi)
     plt.close()
@@ -1204,7 +1204,7 @@ if pca_tech == 'normal_pca':
         plot_pca(train_features=train_men_features, train_labels=train_men_labels, col_idx=continuous_idx_male,
                  color_by=output_feature,
                  title=f'Male BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
-                 comp=15, scaler=scaler_tech)
+                 comp=5, scaler=scaler_tech)
         plt.savefig(folder_name + f'/male_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
                     dpi=figure_dpi)
         plt.close()
@@ -1212,7 +1212,7 @@ if pca_tech == 'normal_pca':
         plot_pca(train_features=train_female_features, train_labels=train_female_labels, col_idx=continuous_idx_female,
                  color_by=output_feature,
                  title=f'Female BASE-II PCA analysis of continuous features that passed RHCF ({scaler_tech} scaler)',
-                 comp=15, scaler=scaler_tech)
+                 comp=5, scaler=scaler_tech)
         plt.savefig(folder_name + f'/female_{pca_tech}_plot_after_RHCF.{figure_format}', bbox_inches='tight',
                     dpi=figure_dpi)
         plt.close()
