@@ -2483,7 +2483,7 @@ def draw_grouped_correlation_plot(train_features, train_labels, feature_list, co
 # Functions to plot PCA or LDA of remaining continuous features depending on selected transformation technique
 ###############################################################################################################
 def plot_pca(train_features=None, train_labels=None, col_idx=None, color_by=None, title='my_plot',
-             comp=15, scaler=None):
+             comp=5, scaler=None):
     """
     Function to calculate and plot PCA and to colorize by multiple target labels.
     Parameters
