@@ -151,6 +151,12 @@ feature_list = [feature_list[x] for x in range(len(feature_list)) if x in cont_m
 feature_list_male = [feature_list_wo_gender[x] for x in range(len(feature_list_wo_gender)) if x in cont_male]
 feature_list_female = [feature_list_wo_gender[x] for x in range(len(feature_list_wo_gender)) if x in cont_female]
 
+# Use the following 3 feature list variables if you wish to analyse for a specific combination of features instead
+# of subgroups (If you wish so, you can also adapt the 'subgroups' variable further below to ['SPECIFIC'] only
+#feature_list = []
+#feature_list_male = []
+#feature_list_female = []
+
 # Testing for: Mixed, male, female, complete, train, test, constancy threshold 0.01, 0.001, ALL, PM, BF, NT, CG,
 # before and after RHCF, standard, robust, minmax scaler, PCA, LDA, t-SNE perplexities, UMAP neighbors
 data_sets = [train_features, test_features, comp_features,
@@ -191,7 +197,10 @@ for num, data in enumerate(data_sets):
         if subs == 'ALL':
             data_sg = data.copy()
             new_feature_list_sg = feature_lists[num].copy()
-        else:
+        if subs == 'SPECIFIC':  # specific combination of features
+            data_sg = pd.DataFrame(data, columns=feature_lists[num])
+            new_feature_list_sg = feature_lists[num].copy()
+        else:  # defined subgroups
             data_sg = pd.DataFrame(data, columns=feature_lists[num])  # from array in to pandas to easily drop
             new_feature_list_sg = \
                 [feature_lists[num][x] for x in range(len(feature_lists[num])) if feature_lists[num][x].startswith(subs)]
