@@ -199,10 +199,7 @@ for num, data in enumerate(data_sets):
             new_feature_list_sg = feature_lists[num].copy()
         if subs == 'SPECIFIC':  # specific combination of features
             data_sg = data.copy()
-            all_features = data.columns
-            new_feature_list_sg = \
-                [x for x in range(len(all_features)) if all_features[x] in new_feature_list_sg]
-            data_sg = np.array(data_sg[new_feature_list_sg])
+            new_feature_list_sg = feature_lists[num].copy()
         else:  # defined subgroups
             data_sg = pd.DataFrame(data, columns=feature_lists[num])  # from array in to pandas to easily drop
             new_feature_list_sg = \
@@ -276,10 +273,7 @@ for num, data in enumerate(data_sets):
                 new_feature_list_sg = new_feature_list.copy()
             if subs == 'SPECIFIC':  # specific combination of features
                 data_sg = data.copy()
-                all_features = data.columns
-                new_feature_list_sg = \
-                    [x for x in range(len(all_features)) if all_features[x] in new_feature_list_sg]
-                data_sg = np.array(data_sg[new_feature_list_sg])
+                new_feature_list_sg = feature_lists[num].copy()
             else:  # defined subgroups
                 data_sg = pd.DataFrame(data_rem, columns=new_feature_list)  # from array in to pandas to easily drop
                 new_feature_list_sg = \
