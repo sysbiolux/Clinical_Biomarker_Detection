@@ -153,9 +153,9 @@ feature_list_female = [feature_list_wo_gender[x] for x in range(len(feature_list
 
 # Use the following 3 feature list variables if you wish to analyse for a specific combination of features instead
 # of subgroups (If you wish so, you can also adapt the 'subgroups' variable further below to ['SPECIFIC'] only
-#feature_list = []
-#feature_list_male = []
-#feature_list_female = []
+feature_list_spec = []
+feature_list_male_spec = []
+feature_list_female_spec = []
 
 # Testing for: Mixed, male, female, complete, train, test, constancy threshold 0.01, 0.001, ALL, PM, BF, NT, CG,
 # before and after RHCF, standard, robust, minmax scaler, PCA, LDA, t-SNE perplexities, UMAP neighbors
@@ -171,6 +171,9 @@ data_sets_verbosity = ['mixed training', 'mixed test', 'mixed complete',
 feature_lists = [feature_list, feature_list, feature_list,
                  feature_list_male, feature_list_male, feature_list_male,
                  feature_list_female, feature_list_female, feature_list_female]
+feature_lists_specs = [feature_list_spec, feature_list_spec, feature_list_spec,
+                       feature_list_male_spec, feature_list_male_spec, feature_list_male_spec,
+                       feature_list_female_spec, feature_list_female_spec, feature_list_female_spec]
 scalers = ['standard', 'robust', 'minmax']
 near_constancy_thresholds = [0.01, 0.001]
 subgroups = ['ALL', 'PM-', 'BF-', 'NT-', 'CG-']  # all other subgroups have no or only 1 continuous feature
@@ -197,9 +200,12 @@ for num, data in enumerate(data_sets):
         if subs == 'ALL':
             data_sg = data.copy()
             new_feature_list_sg = feature_lists[num].copy()
-        if subs == 'SPECIFIC':  # specific combination of features
-            data_sg = data.copy()
-            new_feature_list_sg = feature_lists[num].copy()
+        if subs == 'SPECIFIC':
+            data_sg = pd.DataFrame(data, columns=feature_lists[num])
+            new_feature_list_sg = \
+                [feature_lists_specs[num][x] for x in range(len(feature_lists_specs[num])) if
+                 feature_lists_specs[num][x] in feature_lists[num]]
+            data_sg = np.array(data_sg[new_feature_list_sg])  # drop and back to np array
         else:  # defined subgroups
             data_sg = pd.DataFrame(data, columns=feature_lists[num])  # from array in to pandas to easily drop
             new_feature_list_sg = \
@@ -271,9 +277,12 @@ for num, data in enumerate(data_sets):
             if subs == 'ALL':
                 data_sg = data_rem.copy()
                 new_feature_list_sg = new_feature_list.copy()
-            if subs == 'SPECIFIC':  # specific combination of features
-                data_sg = data.copy()
-                new_feature_list_sg = feature_lists[num].copy()
+            if subs == 'SPECIFIC':
+                data_sg = pd.DataFrame(data, columns=feature_lists[num])
+                new_feature_list_sg = \
+                    [feature_lists_specs[num][x] for x in range(len(feature_lists_specs[num])) if
+                     feature_lists_specs[num][x] in feature_lists[num]]
+                data_sg = np.array(data_sg[new_feature_list_sg])  # drop and back to np array
             else:  # defined subgroups
                 data_sg = pd.DataFrame(data_rem, columns=new_feature_list)  # from array in to pandas to easily drop
                 new_feature_list_sg = \
