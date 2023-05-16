@@ -152,7 +152,8 @@ feature_list_male = [feature_list_wo_gender[x] for x in range(len(feature_list_w
 feature_list_female = [feature_list_wo_gender[x] for x in range(len(feature_list_wo_gender)) if x in cont_female]
 
 # Use the following 3 feature list variables if you wish to analyse for a specific combination of features instead
-# of subgroups (If you wish so, you can also adapt the 'subgroups' variable further below to ['SPECIFIC'] only
+# of subgroups (If you wish so, you can also adapt the 'subgroups' variable further below to ['SPECIFIC'] only,
+# in the same way, you may want to adapt the 'with_rhcf' variable further below to ['before RHCF'] only
 feature_list_spec = []
 feature_list_male_spec = []
 feature_list_female_spec = []
