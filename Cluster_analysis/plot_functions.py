@@ -55,7 +55,7 @@ def plot_PCA(X=None, y=None, label=None, title='my_plot', seed=42):
     """
     if X is not None and y is not None and label is not None:
         # fit PCA
-        pca = PCA(n_components=14, random_state=seed)  # we now we only need 14 here, the 15th is very close to zero
+        pca = PCA(n_components=5, random_state=seed)  # we now we only need 14 here, the 15th is very close to zero
         pca.fit(X)
         PCs = pca.fit_transform(X)
         PCdf = pd.DataFrame(data=PCs, columns=["PC"+str(i) for i in range(1, PCs.shape[1]+1)])
